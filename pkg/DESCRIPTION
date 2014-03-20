@@ -1,0 +1,13 @@
+Package: 
+Type: Package
+Title: 
+Version: 
+Author: 
+Maintainer: 
+Description: 
+License: file LICENSE
+Depends:
+Suggests: testthat
+Imports:
+Collate:
+

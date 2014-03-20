@@ -1,0 +1,14 @@
+*.el
+*~
+*.o
+.Rhistory
+*/ltxpng/*
+*Rcheck/*
+*.Rproj
+.Rproj.user/*
+.RData
+.*.dll
+.*.so
+man/*.Rd
+NAMESPACE
+vignettes/*pdf
