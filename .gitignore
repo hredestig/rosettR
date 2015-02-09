@@ -12,3 +12,5 @@
 man/*.Rd
 NAMESPACE
 vignettes/*pdf
+/pkg/man/
+*.tar.gz

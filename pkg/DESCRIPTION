@@ -1,13 +1,17 @@
-Package: 
+Package: ezplate
 Type: Package
-Title: 
-Version: 
-Author: 
-Maintainer: 
+Title: Easy image based phenotyping of plants grown in plates
+Version: 0.0.1
+Author: Henning Redestig
+Maintainer: Henning Redestig <henning.red@gmail.com>
 Description: 
-License: file LICENSE
-Depends:
-Suggests: testthat
+License: GPL-3
+Suggests:
+    testthat
 Imports:
-Collate:
-
+    methods,
+    EBImage,
+    Rcpp,
+    dplyr
+LinkingTo: Rcpp
+SystemRequirements: Rcpp

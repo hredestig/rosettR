@@ -1,5 +1,4 @@
-pkg = the name of your package
-#     ^^^^^^^^^^^^^^^^^^^^^^^^ replace with the name of your package
+pkg = ezplate
 
 local_library := ~/R-dev
 R_LIBS := $(local_library):${R_LIBS}
