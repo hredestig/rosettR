@@ -10,9 +10,8 @@
 #'
 #'
 #' @name ezplate
-#' @aliases ezplate
 #' @docType package
-#' @title ezplate
+#' @title Easy phenotyping of plants grown in paltes
 #' @useDynLib ezplate
 #' @import dplyr
 #' @import EBImage

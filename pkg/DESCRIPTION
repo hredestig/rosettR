@@ -12,6 +12,6 @@ Imports:
     methods,
     EBImage,
     Rcpp,
-    dplyr
+    plyr
 LinkingTo: Rcpp
 SystemRequirements: Rcpp
