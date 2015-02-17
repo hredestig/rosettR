@@ -95,7 +95,7 @@ optimAngle <- function(im, pxlsmm, d, r, angles=c(-3,3)) {
 rotationSigmaFun <- function(par, im, pxlsmm, d, r) {
   dp <- pxlsmm * d
   rim <- rotate(im, par[[1]])
-  rim <- round_image(rim)
+  rim <- roundImage(rim)
   center_x <- floor(nrow(rim) / 2)
   center_y <- floor(ncol(rim) / 2)
   data_x <- row(rim)[rim > 0]
@@ -395,7 +395,7 @@ analyzeImage <- function(file, griddf, pixelsmm, d, r, plate_radius, thresh=NULL
     rotation <- optimAngle(small_bin, pixelsmm_small, d, r, ...)
   if(verbose) message("plate rotation: ", rotation)
   large_rgb <- rotate(large_rgb, rotation)
-  large_bin <- round_image(rotate(large_bin, rotation))
+  large_bin <- roundImage(rotate(large_bin, rotation))
 
   df <- addWellCenters(griddf, large_bin, pixelsmm, d, r)
   df$rotation <- rotation
@@ -483,21 +483,21 @@ analyzeImage <- function(file, griddf, pixelsmm, d, r, plate_radius, thresh=NULL
     qcpic <- resize(qcpic, lowres)
     scaling <- lowres / nrow(large_rgb)
     pixelsmm_small <- pixelsmm * scaling
-    font_11 <- draw_font(weight=500, size=11)
+    font_11 <- drawFont(weight=500, size=11)
     xy <- as.matrix(ddply(df, c("ROW", "RANGE"), function(dd) {
       c((dd$centerx * scaling) - (d * pixelsmm_small) / 3,
         (dd$centery * scaling) - (d * pixelsmm_small) / 3)
     })[,c("V1", "V2")])
-    qcpic <- draw_text(qcpic, xy=xy,
-                       labels=paste(df$ROW, df$RANGE, sep=":"),
-                       font=font_11, col="black")
+    qcpic <- drawText(qcpic, xy=xy,
+                      labels=paste(df$ROW, df$RANGE, sep=":"),
+                      font=font_11, col="black")
     param_lab <- sprintf("dx=%.2f\ndy=%.2f\nr=%.2f",
                          location$deltax, location$deltay, rotation)
     param_xy <- c(min(xy[,1]) - .5 * (d * pixelsmm_small),
                   min(xy[,2]) - .5 * (d * pixelsmm_small))
-    qcpic <- draw_text(qcpic, xy=param_xy,
-                       labels=param_lab,
-                       font=font_11, col="black")
+    qcpic <- drawText(qcpic, xy=param_xy,
+                      labels=param_lab,
+                      font=font_11, col="black")
     if(!file.exists(savedir))
       dir.create(savedir, recursive=TRUE)
     writeImage(qcpic, qcpath)
@@ -598,14 +598,13 @@ processPlateImages <- function(path, mf=readManifest(path), meta=readMeta(path),
 #' Not intended for user-level usage. 
 #' @param path 
 #' @param mf the manifest - a data frame describing all images to be processed
-#' @param meta a list with parameters to use for \code{\link{analyzeImage}}
+#' @param meta a list with parameters to use for \code{\link{analyzeImage}}, see
+#' \code{\link{metaTemplate}}
 #' @param verbose if true, display progress bar
 #' @param .progress passed to \code{\link{ddply}}
 #' @param .parallel passed to \code{\link{ddply}}
 #' @param ... passed on to \code{analyzeImage}. Named arguments have precedence
 #' over arguments in the \code{meta} list.
-#' @param config the configuration object, see \code{\link{newConfig}}
-#' @param outpath the directory where the images are stored
 #' @return the resulting data frame
 #' @export
 #' @author Henning Redestig
@@ -693,8 +692,8 @@ reprocessPlateImages <- function(path, mf, meta=readMeta(path), verbose=FALSE,
   df <- readPhenodata(path)
   newphenodata <-
     doProcessPlateImages(path, mf, meta, ...)
-  df <- rbind(df[!(df$image %in% dataset(newphenodata)$image), , drop=FALSE],
-              dataset(newphenodata))
+  df <- rbind(df[!(df$image %in% newphenodata$image), , drop=FALSE],
+              newphenodata)
   if(save)
     writePhenodata(path, df)
   invisible(phenodata)
@@ -833,7 +832,7 @@ labelGridImage <- function(im, griddf, wellWidth) {
 drawFont <- function(family=switch(.Platform$OS.type, windows="Arial",
                        "helvetica"),
                      style="n", size=14, weight=200, antialias=TRUE) {
-  ## draw_font
+  ## drawFont
   res <- list(family=family, style=style, size=size, weight=weight, antialias=antialias)
   class(res) <- "DrawFont"
   res
@@ -848,7 +847,7 @@ drawFont <- function(family=switch(.Platform$OS.type, windows="Arial",
 #' @param labels A character vector (or a list of vectors if
 #' \code{img} contains multiple frames) containing the labels to be
 #' output.
-#' @param font A font object, returned by \code{\link{draw_font}}. If
+#' @param font A font object, returned by \code{\link{drawFont}}. If
 #' missing, a default OS-dependent font will be chosen.
 #' @param col A character vector of font colors.
 #' @return An \code{Image} object or an array, containing the
@@ -862,12 +861,12 @@ drawFont <- function(family=switch(.Platform$OS.type, windows="Arial",
 #' display(lena, method="raster")
 #' @author Oleg Sklyar and copied by Henning Redestig
 drawText <- function(img, xy, labels, font, col) {
-  ## draw_text
+  ## drawText
   if(is.numeric(xy)) {
     xy <- list(as.numeric(xy))
     labels <- list(labels)
   }
-  if(missing(font)) font <- draw_font()
+  if(missing(font)) font <- drawFont()
   if(missing(col)) col <- "white"
   
   if (length(xy) != length(labels) || length(xy) != getNumberOfFrames(img, "render"))

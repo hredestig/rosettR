@@ -13,7 +13,7 @@ See: ../LICENSE for license, LGPL
 /*----------------------------------------------------------------------- */
 Image *
 sexp2Magick (SEXP x) {
-    int nx, ny, nc, nz, colormode, i, * dim;
+    int nx, ny, nz, colormode, i, * dim;
     Image * image, * res;
     ExceptionInfo exception;
     void * data;
@@ -36,7 +36,7 @@ sexp2Magick (SEXP x) {
 	case MODE_COLOR:
 	  // GP: Using a temporary double to constitute an ImageMagick Image
 	  // GP: I didn't find a better way to do it in ImageMagick...
-	  nc=getNumberOfChannels(x);
+	  /* nc=getNumberOfChannels(x); */
 	  dp=REAL(x);
 	  data2=(double *)R_Calloc(nx*ny*3,double);
 	  getColorStrides(x,i,&redstride,&greenstride,&bluestride);

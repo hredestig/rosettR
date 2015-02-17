@@ -13,7 +13,8 @@
 #' @docType package
 #' @title Easy phenotyping of plants grown in paltes
 #' @useDynLib ezplate
-#' @import dplyr
+#' @import plyr
+#' @import reshape2
 #' @import EBImage
 #' @import methods
 #' @importFrom Rcpp evalCpp

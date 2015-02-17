@@ -1,3 +1,87 @@
+#' Make a thumbnail gallery of the input images 
+#'
+#' Creates a html thumbnail gallery of the input images where the
+#' images are arranged after how the will be interpreted by the
+#' renaming facilities and which day they were taken. The images are
+#' clickable and links to the original input images.
+#' @param path a resolvable path to the experiment.
+#' @param what either 'qc' or 'raw' for galleries of qc images or raw
+#' images respectively.
+#' @return nothing, used for its side effect.
+#' @export
+#' @examples
+#' dummyExperimentId <- createDummyPlateExperiment(242)
+#' plate_gallery(dummyExperimentId, "raw")
+#' trashExperiment(as(dummyExperimentId, "Oni"))
+#' @author Henning Redestig
+plateGallery <- function(path, what=c("raw", "qc")) {
+  what <- match.arg(what)
+  switch(what, qc={
+    pda <- readPhenodata(path)
+    cols <- c("plate", "timepoint", "image", "qc_picture")
+    if(!all(cols %in% names(pda))) {
+      message("missing qc pictures or images in phenodata, skipping thumbnails")
+      return(NULL)
+    }
+    df <- unique(pda[,cols])
+    df$orig <- file.path('..', df$image)
+    df$thumb <- file.path('..', df$qc_picture)
+    plateMakeTng(df, 'qc-thumbnails.html', path)
+  }, raw={
+    version <- system("convert --version", intern=TRUE)
+    if(!any(grepl("ImageMagick", version)))
+      stop("ImageMagick's 'convert' utility not available")
+    mf <- readManifest(path)
+    rnm_df <- ddply(mf, "timepoint", function(dd) {
+      daydir <- unique(dirname(as.character(dd$image)))
+      dd <- dd[with(dd, order(BLOCK, position)),]
+      first_region <- unique(dd$germplasm_region)[1]
+      expected_pics <-
+        basename(as.character(subset(dd, dd$germplasm_region ==
+                                       first_region)$image)) 
+      renaming_df(cleanPath(file.path(path, daydir), mustWork=TRUE),
+                  expected_pics)
+    })
+    for(s in unique(rnm_df$subdir)) {
+      pi <- file.path(path, s)
+      pt <- file.path(path, "Output", "thumbs", s)
+      if(!file.exists(pt)) dir.create(pt, recursive=TRUE)
+      system.time(res <- llply(rnm_df$image[rnm_df$subdir == s], function(im) {
+        system2("convert", c("-define jpeg:size=1000x500 -thumbnail 400x200",
+                             sprintf('"%s/%s"', pi, im),
+                             sprintf('"%s/%s"', pt, im)))
+      }, .progress=ifelse(interactive(), "text", "none")))
+    }
+    df <- data.frame(orig=file.path("..", rnm_df$subdir, rnm_df$image),
+                     thumb=file.path("thumbs", rnm_df$subdir, rnm_df$image),
+                     plate=rnm_df$newname,
+                     timepoint=as.numeric(gsub(".*_*D(\\d+)", "\\1",
+                       rnm_df$subdir)))
+    plateMakeTng(df, "raw-thumbnails.html", path)
+  })
+}
+
+plateMakeTng <- function(df, output, path) {
+  df <- with(df, df[order(plate, orig),])
+  df$link <- paste('<a href="', file.path(df$orig), '">',
+                   '<img src="', file.path(df$thumb), '", rel="lightbox"></a>',
+                   sep="")
+  cdf <- reshape2::dcast(df, plate ~ timepoint, value.var="link")
+  rownames(df) <- NULL
+  if(nrow(df) == 0)
+    return(NULL)
+  html_out <- file.path(path, "Output", output)
+  cat( "<!DOCTYPE html>"
+      ,"<html> <head>"
+      ,'<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>'
+      ,"<title>Plates for experiment", basename(path), "</title></head>"
+      ,"<body>"
+      ,"<h1>Plates for experiment", basename(path), "</h1>", file=html_out)
+  tab <- print(xtable::xtable(cdf), "html", sanitize.text.function=identity,
+               file=html_out, append=TRUE)
+  cat("</body></html>", file=html_out, append=TRUE)
+}
+
 #' Update the meta object
 #'
 #' Meta object is a list of parameters to use as defaults for a given
@@ -6,7 +90,7 @@
 #' with these tweaks
 #' @param ... named arguments
 #' @param meta the meta object
-#' @return 
+#' @return the updated meta object
 #' @author Henning Redestig
 updateMeta <- function(..., meta) {
   newArgs <- list(...)
@@ -32,7 +116,7 @@ cleanPath <- function (path, mustWork=NA) {
 #' Quality control statistics for plate images
 #'
 #' Creates a data frame with QC statistics from the result of the
-#' image processing pipeline \code{process_images}
+#' image processing pipeline
 #'
 #' The following components are given \describe{
 #' 
@@ -110,6 +194,12 @@ dateTaken <- function(file) {
   as.POSIXct(strptime(exif_date,"%Y:%m:%d %H:%M:%S"))
 }
 
+readMeta <- function(path)
+  readRDS(file.path(path, "meta.rda"))
+
+writeMeta <- function(path, meta)
+  writeRDS(meta, file.path(path, "meta.rda"))
+
 #' Write manifest to an experiment
 #'
 #' Not intended for common use. Write manifest to a given
@@ -148,8 +238,6 @@ readManifest <- function(path)
 #' \code{\link{sprintf}}.
 #' @param plateoffset the number that the plate numbering should be
 #' offset to. The number of the first plate is 1 + plateoffset.
-#' @param germplasm_regions the regions for different germplasms that
-#' the plate is divided into
 #' @param plate_order An pre-defined order of the plate after they
 #' have been randomized. The plate order \emph{must} sort to correct
 #' order when using \code{\link{rank}} but can be either numerical or
@@ -252,7 +340,7 @@ removeBoxes <- function(path, pattern, platere="plate\\s*\\d+", remove=TRUE) {
   if(any(!grepl(paste(".+/", platere, "/.+:.+", sep=""), pattern)))
     stop(paste("malformatted plate indication. should be [day]/[plateXXX]/[row]:[col],",
                "for example 18/plate120/2:3"))
-  df <- readPhenodat(path)
+  df <- readPhenodata(path)
   day_plate <-
     with(df, paste(timepoint,
                    gsub(".jpg", "", basename(as.character(image))), sep="/"))
@@ -285,7 +373,7 @@ removeBoxes <- function(path, pattern, platere="plate\\s*\\d+", remove=TRUE) {
 #'
 #' This function is intended for interactive use. You probably do not
 #' want to use it in programs directly, instead you may want to look
-#' at \code{\link{analyze_image}} and \code{\link{process_plate_images}}.
+#' at \code{\link{analyzeImage}} and \code{\link{processPlateImages}}.
 #' @param path the directory where to find data for this experiment.
 #' @param meta the metadata object for this experiment. Read from the
 #' experiment's manifest file if missing.
@@ -479,31 +567,31 @@ renameImages <- function(path, df, dry, verbose) {
   df
 }
 
-#' Create a dummy plate experiment
-#'
-#' To be used for testing purposed in documentation and unit-tests. Creates an
-#' experiment with an entry in the database.
-#' @param number Either experiment 242 or 999 (two different examples that have
-#' historically been used for testing purposed)
-#' @param id optionally give the experiment an identifier
-#' @return the created experiment identifier
-#' @export 
-#' @author Henning Redestig
-createDummyPlateExperiment <- function(number, id) {
-  if(missing(id))
-    dummyExperimentId <- basename(tempfile(pattern="bcsphenotypingUnitTest"))
-  else
-    dummyExperimentId <- id
-  meta <- oni(env=readRDS(system.file(sprintf("examples/plate/exampleMeta%d.rda", number),
-                package="BCS.Phenotyping"))$env)
-  meta$set_value("id", dummyExperimentId)
-  currentConfig <- getVar("_name", .pkg)
-  setVar('root_path', tempdir(), 'BCS.Phenotyping')
-  setVar("meta_template", meta, "BCS.Phenotyping")
-  createExperiment()
-  loadConfig(currentConfig, .pkg)
-  untar(system.file(sprintf('examples/plate/EXP%d.tar.gz', number), 
-                    package='BCS.Phenotyping'), exdir=expdir(dummyExperimentId),
-      extras='-o')
-  dummyExperimentId
-}
+#" Create a dummy plate experiment
+#"
+#" To be used for testing purposed in documentation and unit-tests. Creates an
+#" experiment with an entry in the database.
+#" @param number Either experiment 242 or 999 (two different examples that have
+#" historically been used for testing purposed)
+#" @param id optionally give the experiment an identifier
+#" @return the created experiment identifier
+#" @export 
+#" @author Henning Redestig
+## createDummyPlateExperiment <- function(number, id) {
+##   if(missing(id))
+##     dummyExperimentId <- basename(tempfile(pattern="bcsphenotypingUnitTest"))
+##   else
+##     dummyExperimentId <- id
+##   meta <- oni(env=readRDS(system.file(sprintf("examples/plate/exampleMeta%d.rda", number),
+##                 package="BCS.Phenotyping"))$env)
+##   meta$set_value("id", dummyExperimentId)
+##   currentConfig <- getVar("_name", .pkg)
+##   setVar('root_path', tempdir(), 'BCS.Phenotyping')
+##   setVar("meta_template", meta, "BCS.Phenotyping")
+##   createExperiment()
+##   loadConfig(currentConfig, .pkg)
+##   untar(system.file(sprintf('examples/plate/EXP%d.tar.gz', number), 
+##                     package='BCS.Phenotyping'), exdir=expdir(dummyExperimentId),
+##       extras='-o')
+##   dummyExperimentId
+## }
