@@ -329,6 +329,7 @@ emptyResult <- function(df, qcpath="", doqc=TRUE) {
 #' @return a data frame with information about plant areas, locations
 #' @export
 #' @examples
+#' \dontrun{
 #' file <- system.file('examples/plate', 'plate.jpg', package='BCS.Phenotyping')
 #' reps <- cbind(as.vector(sapply(1:6, rep, 6)), 1:6)
 #' griddf <- subset(data.frame(RANGE=reps[,2], ROW=LETTERS[reps[,1]]),
@@ -339,6 +340,7 @@ emptyResult <- function(df, qcpath="", doqc=TRUE) {
 #' verbose=TRUE)
 #' library(EBImage)
 #' display(readImage(df$qc_picture[1]), method='raster')
+#' }
 #' @author Henning Redestig
 analyzeImage <- function(file, griddf, pixelsmm, d, r, plate_radius, thresh=NULL,
                          deltax=0, deltay=0,
@@ -771,7 +773,7 @@ threshImage <- function(im, thresh) {
 #' @seealso \code{display} which is much faster and
 #' better for just showing a picture but does not work well in vignettes etc
 #' @examples
-#' im <- system.file("examples/plate_merged.jpg", package="ezplate")
+#' im <- system.file("examples/plate_merged.jpg", package="rosettR")
 #' plotimage(im)
 #' @author Henning Redestig
 plotimage <- function(im, ...) {

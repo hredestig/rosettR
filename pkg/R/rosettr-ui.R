@@ -114,19 +114,17 @@ isRstudio <- function()
 #' @return a list with meta data for the experiment
 #' @export 
 #' @author Henning Redestig
-metaTemplate <- function(name=c("6x6.abcd", "6x6.ab", "6x6.one"),
-                         germplasms=queryVector("germplasms"),
-                         treatments=queryVector("the different treatments",
-                           "control"),
-                         timepoints=queryVector("timepoints",
-                           c(11, 14, 16, 18)),
-                         nrepeats=queryVector("number of repeats",
-                           10, numeric()),
-                         pixelsmm=queryVector("number of pixels per mm",
-                           16),
+metaTemplate <- function(germplasms,
+                         treatments="control",
+                         timepoints=c(11, 14, 16, 18),
+                         nrepeats=10,
+                         pixelsmm=16,
+                         name=c("6x6.abcd", "6x6.ab", "6x6.one"),
                          plate_radius=76, r=6, d=20) {
   name <- match.arg(name)
-  template <- lapply(formals(sys.function(sys.parent())), eval)
+  template <- list(germplasms=germplasms, treatments=treatments,
+                   timepoints=timepoints, nrepeats=nrepeats,
+                   pixelsmm=pixelsmm, name=name, plate_radius=plate_radius)
   
   reps <- expand.grid(RANGE=1:6, ROW=1:6)
   griddf <- subset(data.frame(RANGE=reps$RANGE, ROW=reps$ROW), 

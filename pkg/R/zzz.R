@@ -1,1 +1,1 @@
-PKG <- "ezplate"
+PKG <- "rosettR"

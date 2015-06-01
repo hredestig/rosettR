@@ -1,3 +1,3 @@
-library(testthat)
-library(yourPackageName)
-test_check("yourPackageName", filter=NULL, reporter="summary")
+## library(testthat)
+## library(rosettR)
+## test_check("rosettR", filter=NULL, reporter="summary")

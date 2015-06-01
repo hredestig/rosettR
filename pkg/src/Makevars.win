@@ -1,0 +1,3 @@
+PKG_CFLAGS= -g -O2 -DWIN32 -DGLIB_GETTEXT -mms-bitfields -IC:/ImageMagick/$(R_ARCH)/include 
+PKG_CXXFLAGS= $(PKG_CFLAGS)
+PKG_LIBS= -shared -LC:/ImageMagick/$(R_ARCH) -lCORE_RL_magick_ -lCORE_RL_wand_

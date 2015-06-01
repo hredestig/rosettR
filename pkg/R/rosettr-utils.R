@@ -10,9 +10,11 @@
 #' @return nothing, used for its side effect.
 #' @export
 #' @examples
+#' \dontrun{
 #' dummyExperimentId <- createDummyPlateExperiment(242)
 #' plate_gallery(dummyExperimentId, "raw")
 #' trashExperiment(as(dummyExperimentId, "Oni"))
+#' }
 #' @author Henning Redestig
 plateGallery <- function(path, what=c("raw", "qc")) {
   what <- match.arg(what)
@@ -103,7 +105,7 @@ readPhenodata <- function(path)
   readRDS(file.path(path, "Output", "phenodata.rda"))
 
 writePhenodata <- function(path, df) {
-  writeRDS(df, file.path(path, "Output", "phenodata.rda"))
+  saveRDS(df, file.path(path, "Output", "phenodata.rda"))
   write.csv(df, file=file.path(path, "Output", "data.csv"))
 }
 
@@ -247,8 +249,8 @@ readManifest <- function(path)
 #' experiment
 #' @export
 #' @examples
-#' data(example_metadata)
-#' expandManifest(example_metadata)
+#' data(exampleMetadata)
+#' expandManifest(exampleMetadata)
 #' @author Henning Redestig
 expandManifest <- function(meta,
                            platename="plate%03d.jpg", plateoffset=0,
@@ -387,16 +389,16 @@ removeBoxes <- function(path, pattern, platere="plate\\s*\\d+", remove=TRUE) {
 #' otherwise \code{NULL}, both invisibly.
 #' ## unpack an example experiment to working directory.
 #' @examples
+#' \dontrun{
 #' dummyPath <- createDummyPlateExperiment(242)
 #' ## You may want to inspect the folder structure
 #' dir(dummyPath)
 #' processPlateExperiment(dummyPath, analyze=FALSE)
 #' readManifest(dummyExperimentId)
 #' ## optionally analyze the pictures as well
-#' \dontrun{
 #' processPlateExperiment(dummyExperimentId)
-#' }
 #' trashExperiment(as(dummyExperimentId, "Oni"))
+#' }
 #' @export
 #' @author Henning Redestig
 processPlateExperiment <- function(path, meta=readMeta(path), rename=TRUE,
@@ -472,6 +474,7 @@ processPlateExperiment <- function(path, meta=readMeta(path), rename=TRUE,
 #' good to save this data frame to be able to revert file renaming
 #' @export
 #' @examples
+#' \dontrun{
 #' dummyExperimentId <- createDummyPlateExperiment(242)
 #' newnames <- c('plate003.jpg', 'plate002.jpg', 'plate004.jpg', 'plate001.jpg')
 #' ## simulate renaming all files
@@ -488,6 +491,7 @@ processPlateExperiment <- function(path, meta=readMeta(path), rename=TRUE,
 #' file.path(expdir(dummyExperimentId), subdir, image)))
 #' list.files(file.path(expdir(dummyExperimentId), 'D11'))
 #' trashExperiment(as(dummyExperimentId, "Oni"))
+#' }
 #' @author Henning Redestig
 renamePlateImages <- function(path, newnames, dry=TRUE, verbose=TRUE,
                                 subdirs=NULL) {
