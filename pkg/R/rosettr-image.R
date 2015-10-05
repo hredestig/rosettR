@@ -577,8 +577,6 @@ calibrateScale <- function(file) {
 #' @param save should the created phenodata object and a csv file
 #' with the final dataset be placed in the output directory of the
 #' experiment or not
-#' @param cores number of cores to use. Can be left \code{NA} for
-#' using a separately registered parallel backend (see \code{ddply})
 #' @param ... passed on to \code{\link{analyzeImage}} and
 #' \code{\link{doProcessPlateImages}}
 #' @return invisibly, the \code{phenodata} object with the results.
@@ -857,10 +855,10 @@ drawFont <- function(family=switch(.Platform$OS.type, windows="Arial",
 #' @export
 #' @examples
 #' library(EBImage)
-#' lena <- readImage(system.file("images", "lena-color.png", package="EBImage"))
+#' plate <- readImage(system.file("examples", "plate_merged.jpg", package="rosettR"))
 #' font <- drawFont(weight=600, size=28)
-#' lena <- drawText(lena, xy=c(250, 450), labels="Lena", font=font, col="white")
-#' display(lena, method="raster")
+#' plate <- drawText(plate, xy=c(250, 450), labels="rosettR!", font=font, col="red")
+#' display(plate, method="raster")
 #' @author Oleg Sklyar and copied by Henning Redestig
 drawText <- function(img, xy, labels, font, col) {
   ## drawText
@@ -871,7 +869,7 @@ drawText <- function(img, xy, labels, font, col) {
   if(missing(font)) font <- drawFont()
   if(missing(col)) col <- "white"
   
-  if (length(xy) != length(labels) || length(xy) != getNumberOfFrames(img, "render"))
+  if (length(xy) != length(labels) || length(xy) != numberOfFrames(img, "render"))
     stop("lists of coordinates 'xy' labels 'labels' must",
          " be of the same length as the number of render frames")
   xy <- lapply(xy, as.numeric)
