@@ -14,6 +14,6 @@ Imports:
     Rcpp,
     reshape2,    
     plyr,
-	xtable
+    xtable
 LinkingTo: Rcpp
 SystemRequirements: Rcpp

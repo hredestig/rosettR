@@ -197,10 +197,10 @@ dateTaken <- function(file) {
 }
 
 readMeta <- function(path)
-  readRDS(file.path(path, "meta.rda"))
+  fromJSON(file.path(path, "meta"))
 
 writeMeta <- function(path, meta)
-  writeRDS(meta, file.path(path, "meta.rda"))
+  toJSON(meta, file.path(path, "meta"))
 
 #' Write manifest to an experiment
 #'
@@ -274,8 +274,8 @@ expandManifest <- function(meta,
   
   df <-
     data.frame(plate=rep(sprintf(platename,
-                 (plateoffset + 1):(plateoffset + (nger / nreg) * ntre * nrep)),
-                 each=nreg),
+                   (plateoffset + 1):(plateoffset + (nger / nreg) * ntre * nrep)),
+                   each=nreg),
                chunk=rep(1:((nger / nreg) * ntre), each=nrep * nreg),
                treatment=rep(meta$treatments, each=nger  * nrep),
                GERMPLASM=as.vector(apply(matrix(meta$germplasm, nrow=nreg),
