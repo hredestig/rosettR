@@ -199,8 +199,8 @@ dateTaken <- function(file) {
 readMeta <- function(path)
   fromJSON(file.path(path, "meta"))
 
-writeMeta <- function(path, meta)
-  toJSON(meta, file.path(path, "meta"))
+writeMeta <- function(meta, path)
+  cat(toJSON(meta), file=file.path(path, "meta"))
 
 #' Write manifest to an experiment
 #'
@@ -209,13 +209,12 @@ writeMeta <- function(path, meta)
 #' writing it.
 #' @param meta the meta data object of class \code{Oni} or
 #' \code{lmetadata}
-#' @param mf the manifest data.frame
+#' @param manifest the manifest data.frame
 #' @param path path to the experiment
 #' @return nothing
-#' @export
 #' @author Henning Redestig
-writeManifest <- function(path, mf)
-  write.table(mf, file=file.path(path, "manifest.txt"), row.names=FALSE, sep=",")
+writeManifest <- function(manifest, path)
+  write.table(manifest, file=file.path(path, "manifest.txt"), row.names=FALSE, sep=",")
 
 #' Read the manifest from an experiment
 #'
@@ -227,7 +226,7 @@ writeManifest <- function(path, mf)
 #' @export
 #' @author Henning Redestig
 readManifest <- function(path)
-  read.table(file.path(path, "manifest.txt"), row.names=FALSE, sep=",")
+  read.table(file.path(path, "manifest.txt"), header=TRUE, sep=",")
 
 #' Expand experiment design
 #'

@@ -14,13 +14,13 @@
 newExperiment <- function(path, meta) {
   if(!file.exists(path))
     dir.create(path, recursive=TRUE)
-  else if(list.files(path) != 0)
+  else if(length(list.files(path)) != 0)
     stop("directory exists but is not empty")
   dir.create(file.path(path, "Output"))
   lapply(meta$timepoints, function(day)
     dir.create(file.path(path, sprintf("D%02d", day))))
-  writeManifest(expandManifest(meta))
-  writeMeta(meta)
+  writeManifest(expandManifest(meta), path)
+  writeMeta(meta, path)
 }
 
 #' Create a meta data template
