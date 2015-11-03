@@ -1,0 +1,15 @@
+# -*- org -*-
+* DONE create a new experiment and get the sowing report
+#+BEGIN_SRC R
+  library(jsonlite)
+  sapply(list.files("c:/git/rosettr/pkg/R", pattern=".*R$", full.names=TRUE), source)
+  meta <- metaTemplate(letters[1:4], treatments=c("control", "osmotic"))
+  newExperiment("bla", meta)
+  file.copy("c:/git/rosettr/pkg/inst/reports/sowing.Rmd",
+            "c:/opt/R/library/rosettR/reports", overwrite=TRUE)
+
+  makeReport("c:/git/rosettr/bla", "sowing")
+#+END_SRC
+* TODO analyze the images
+** TODO gallery
+* TODO basic report
