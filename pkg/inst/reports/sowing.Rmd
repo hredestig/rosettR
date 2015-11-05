@@ -1,0 +1,126 @@
+# Sowing report
+
+```{r read-chunks, echo=FALSE, warning=FALSE}
+suppressMessages(library(rosettR))
+opts_chunk$set(fig.width=5, fig.height=5, tidy=TRUE, fig.align='center',
+               fig.show='hold', dev=c('png', 'pdf'), error=TRUE)
+options(width=68)
+options(markdown.HTML.options="mathjax")
+
+meta <- readMeta('../..')
+manifest <- readManifest('../..')
+```
+
+Plate phenotyping experiment with
+
+- **report compiled with working directory**: `r getwd()`
+- **germplasms:** `r paste(meta$germplasms, collapse=", ")`
+- **timepoints:** `r paste(meta$timepoints, collapse=", ")`
+- **treatments:** `r paste(meta$treatments, collapse=", ")`
+- **number of replicates:** `r paste(meta$nrepeats, collapse=", ")`
+- **number of used plates:** `r length(unique(manifest$plate))`
+- **configuration:** `r paste(meta$name, collapse=", ")`
+
+## Plate layout
+
+The images will be interpreted like this, using `r readManifest('../..')[1,'plate']`
+as an example
+
+```{r image-layout, results="asis", echo=FALSE}
+manifest <- subset(manifest, timepoint == meta$timepoints[1] & plate == manifest[1, 'plate'])
+fi <- merge(manifest, meta$griddf)
+fi$rn <- paste(fi$germplasm_region, fi$Sample_ID, fi$GERMPLASM, sep=",")
+dd <- reshape2::dcast(fi, ROW~RANGE, value.var='rn')[, -1]
+mark <- rep('', nrow(dd))
+mark[ceiling(length(mark) / 2)] <- '<- Mark'
+ds <- cbind(dd, mark)
+rownames(ds) <- 1:nrow(ds)
+colnames(ds) <- c(1:(ncol(ds) - 1), '')
+print(xtable::xtable(ds), 'html')
+```
+
+and the plates should be sown like this using the same example
+
+```{r plate-layout, results="asis", echo=FALSE}
+mark <- rep('', nrow(dd))
+mark[ceiling(length(mark) / 2)] <- 'Mark ->'
+dd <- cbind(mark, dd[nrow(dd):1, ncol(dd):1])
+rownames(dd) <- 1:nrow(dd)
+colnames(dd) <- c('', 1:(ncol(dd) - 1))
+print(xtable::xtable(dd), 'html')
+```
+
+## Plate sowing
+
+Sowing order is indicated below and also given as
+[sowing-order.csv](sowing-order.csv) and in long format with one row
+per germplasm in [sowing-order-long.csv](sowing-order-long.csv), and
+as short printable summary in
+[sowing-summary.csv](sowing-summary.csv)
+
+```{r sowing, results="asis", echo=FALSE}
+mfs <- subset(readManifest('../..'), timepoint == meta$timepoints[1])
+
+sowingdf <- plyr::ddply(mfs, 'plate', function(dd) {
+  data.frame(plate=unique(gsub('\\..*$', '', dd$plate)),
+             label=unique(dd$label),
+             block=unique(dd$BLOCK),
+             position=unique(dd$position),
+             treatment=unique(dd$treatment),
+             germplasms=paste(dd$GERMPLASM, collapse=','),
+             regions=paste(dd$germplasm_region, collapse=','))
+})
+sowingdf <- sowingdf[with(sowingdf, order(block, position)),]
+rownames(sowingdf) <- NULL
+print(xtable::xtable(sowingdf), 'html')
+write.csv(sowingdf, file='sowing-order.csv', row.names=FALSE)
+
+cols <- c('plate', 'label', 'BLOCK', 'position', 'treatment', 'GERMPLASM',
+          'germplasm_region')
+sowingdfLong <- mfs[,cols]
+sowingdfLong <- transform(sowingdfLong, plate=gsub('\\..*$', '', plate))
+colnames(sowingdfLong) <-
+  c('plate', 'label', 'block', 'position', 'treatment', 'germplasm', 'region')
+sowingdfLong <- sowingdfLong[with(sowingdfLong, order(block, position)),]
+rownames(sowingdfLong) <- NULL
+write.csv(sowingdfLong, file='sowing-order-long.csv', row.names=FALSE)
+```
+
+```{r sowing-summary, results="asis", echo=FALSE}
+manifest <- readManifest('../..')
+summary <- manifest[,c("plate","germplasm_region","treatment","GERMPLASM")]
+fun <- function(x) paste(unique(x),collapse=",")
+
+summary <- reshape2::melt(summary,
+                          id.vars=c("plate", "germplasm_region", "treatment", "GERMPLASM"))
+summary <- as.data.frame(reshape2::dcast(summary,
+                                         GERMPLASM + germplasm_region ~ treatment,
+                                         fun,
+                                         value.var=as.character('plate')))
+treatments <- unique(manifest$treatment)
+
+for (i in treatments){
+  plates <- plyr::ldply(summary[,i], function(x) {
+    string <- gsub(".jpg", "", gsub("plate0*", "", x))
+    s <- sort(unique(as.numeric((unlist(strsplit(string, ","))))))
+    dif <- s[seq(length(s))][-1] - s[seq(length(s)-1)]
+    new <- !c(0, dif == 1)
+    cs <- cumsum(new)
+    res <- vector(mode="list", max(cs))
+    for(i in seq(res)){
+      s.i <- s[which(cs == i)]
+      if(length(s.i) > 2){
+        res[[i]] <- paste(min(s.i), max(s.i), sep="-")
+      } else {
+        res[[i]] <- as.character(s.i)
+      }
+    }
+    paste(unlist(unique(res)), collapse=",")
+  })
+  summary[,i] <- plates
+}
+
+summary <- summary[order(summary[,treatments[1]], summary[,'germplasm_region']),]
+print(xtable::xtable(summary), 'html')
+write.csv(summary, row.names=FALSE, file='sowing-summary.csv')
+```

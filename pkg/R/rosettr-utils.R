@@ -197,10 +197,10 @@ dateTaken <- function(file) {
 }
 
 readMeta <- function(path)
-  readRDS(file.path(path, "meta.rda"))
+  fromJSON(file.path(path, "meta"))
 
-writeMeta <- function(path, meta)
-  writeRDS(meta, file.path(path, "meta.rda"))
+writeMeta <- function(meta, path)
+  cat(toJSON(meta), file=file.path(path, "meta"))
 
 #' Write manifest to an experiment
 #'
@@ -209,13 +209,12 @@ writeMeta <- function(path, meta)
 #' writing it.
 #' @param meta the meta data object of class \code{Oni} or
 #' \code{lmetadata}
-#' @param mf the manifest data.frame
+#' @param manifest the manifest data.frame
 #' @param path path to the experiment
 #' @return nothing
-#' @export
 #' @author Henning Redestig
-writeManifest <- function(path, mf)
-  write.table(mf, file=file.path(path, "manifest.txt"), row.names=FALSE, sep=",")
+writeManifest <- function(manifest, path)
+  write.table(manifest, file=file.path(path, "manifest.txt"), row.names=FALSE, sep=",")
 
 #' Read the manifest from an experiment
 #'
@@ -227,7 +226,7 @@ writeManifest <- function(path, mf)
 #' @export
 #' @author Henning Redestig
 readManifest <- function(path)
-  read.table(file.path(path, "manifest.txt"), row.names=FALSE, sep=",")
+  read.table(file.path(path, "manifest.txt"), header=TRUE, sep=",")
 
 #' Expand experiment design
 #'
@@ -274,8 +273,8 @@ expandManifest <- function(meta,
   
   df <-
     data.frame(plate=rep(sprintf(platename,
-                 (plateoffset + 1):(plateoffset + (nger / nreg) * ntre * nrep)),
-                 each=nreg),
+                   (plateoffset + 1):(plateoffset + (nger / nreg) * ntre * nrep)),
+                   each=nreg),
                chunk=rep(1:((nger / nreg) * ntre), each=nrep * nreg),
                treatment=rep(meta$treatments, each=nger  * nrep),
                GERMPLASM=as.vector(apply(matrix(meta$germplasm, nrow=nreg),
