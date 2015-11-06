@@ -16,7 +16,9 @@ Imports:
     reshape2,
     plyr,
     xtable,
-    jsonlite
+    jsonlite,
+    knitr,
+    markdown
 LinkingTo: Rcpp
 SystemRequirements: Rcpp
 RoxygenNote: 5.0.0

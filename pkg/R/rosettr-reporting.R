@@ -31,10 +31,9 @@ makeReport <- function(path, report, browse=interactive()) {
     browseURL(file.path(reportDir, paste0(chosen, ".html")))
 }
 
-
-#' Make a thumbnail gallery of the input images 
+#' Make a thumbnailDir gallery of the input images 
 #'
-#' Creates a html thumbnail gallery of the input images where the
+#' Creates a html thumbnailDir gallery of the input images where the
 #' images are arranged after how the will be interpreted by the
 #' renaming facilities and which day they were taken. The images are
 #' clickable and links to the original input images.
@@ -43,10 +42,10 @@ makeReport <- function(path, report, browse=interactive()) {
 #' images respectively.
 #' @return nothing, used for its side effect.
 #' @export
+#' @seealso reports
 #' @examples
 #' \dontrun{
-#' dummyExperimentId <- createDummyPlateExperiment(242)
-#' plateGallery(dummyExperimentId, "raw")
+#' plateGallery(pathToExperiment, "raw")
 #' }
 #' @author Henning Redestig
 plateGallery <- function(path, what=c("raw", "qc")) {
@@ -63,57 +62,48 @@ plateGallery <- function(path, what=c("raw", "qc")) {
     df$thumb <- file.path('..', df$qc_picture)
     plateMakeTng(df, 'qc-thumbnails.html', path)
   }, raw={
-    version <- system("convert --version", intern=TRUE)
-    if(!any(grepl("ImageMagick", version)))
-      stop("ImageMagick's 'convert' utility not available")
     mf <- readManifest(path)
-    rnm_df <- ddply(mf, "timepoint", function(dd) {
+    rnmDf <- ddply(mf, "timepoint", function(dd) {
       daydir <- unique(dirname(as.character(dd$image)))
       dd <- dd[with(dd, order(BLOCK, position)),]
       first_region <- unique(dd$germplasm_region)[1]
-      expected_pics <-
+      expectedPics <-
         basename(as.character(subset(dd, dd$germplasm_region ==
                                        first_region)$image)) 
-      renaming_df(cleanPath(file.path(path, daydir), mustWork=TRUE),
-                  expected_pics)
+      renamingDf(cleanPath(file.path(path, daydir), mustWork=TRUE),
+                  expectedPics)
     })
-    for(s in unique(rnm_df$subdir)) {
-      pi <- file.path(path, s)
-      pt <- file.path(path, "Output", "thumbs", s)
-      if(!file.exists(pt)) dir.create(pt, recursive=TRUE)
-      system.time(res <- llply(rnm_df$image[rnm_df$subdir == s], function(im) {
-        system2("convert", c("-define jpeg:size=1000x500 -thumbnail 400x200",
-                             sprintf('"%s/%s"', pi, im),
-                             sprintf('"%s/%s"', pt, im)))
-      }, .progress=ifelse(interactive(), "text", "none")))
+    for(dayDir in unique(rnmDf$subdir)) {
+      imSubDir <- file.path(path, dayDir)
+      thumbnailDir <- file.path(path, "Output", "thumbs", dayDir)
+      if(!file.exists(thumbnailDir)) dir.create(thumbnailDir, recursive=TRUE)
+      res <- llply(rnmDf$image[rnmDf$subdir == dayDir], function(imFile) {
+        if(!file.exists(file.path(thumbnailDir, imFile))) {
+          image <- readImage(file.path(path, dayDir, imFile))
+          thumb <- resize(image, w=300)
+          writeImage(thumb, file=file.path(thumbnailDir, imFile))
+        }
+      })
     }
-    df <- data.frame(orig=file.path("..", rnm_df$subdir, rnm_df$image),
-                     thumb=file.path("thumbs", rnm_df$subdir, rnm_df$image),
-                     plate=rnm_df$newname,
+    df <- data.frame(orig=file.path("../..", rnmDf$subdir, rnmDf$image),
+                     thumb=file.path("thumbs", rnmDf$subdir, rnmDf$image),
+                     plate=rnmDf$newname,
                      timepoint=as.numeric(gsub(".*_*D(\\d+)", "\\1",
-                       rnm_df$subdir)))
-    plateMakeTng(df, "raw-thumbnails.html", path)
+                       rnmDf$subdir)))
+    plateMakeTng(df)
   })
 }
 
-plateMakeTng <- function(df, output, path) {
+plateMakeTng <- function(df) {
   df <- with(df, df[order(plate, orig),])
   df$link <- paste('<a href="', file.path(df$orig), '">',
-                   '<img src="', file.path(df$thumb), '", rel="lightbox"></a>',
+                   '<img src="', "../",
+                   file.path(df$thumb), '", rel="lightbox"></a>',
                    sep="")
   cdf <- reshape2::dcast(df, plate ~ timepoint, value.var="link")
   rownames(df) <- NULL
   if(nrow(df) == 0)
     return(NULL)
-  html_out <- file.path(path, "Output", output)
-  cat( "<!DOCTYPE html>"
-      ,"<html> <head>"
-      ,'<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>'
-      ,"<title>Plates for experiment", basename(path), "</title></head>"
-      ,"<body>"
-      ,"<h1>Plates for experiment", basename(path), "</h1>", file=html_out)
-  tab <- print(xtable::xtable(cdf), "html", sanitize.text.function=identity,
-               file=html_out, append=TRUE)
-  cat("</body></html>", file=html_out, append=TRUE)
+  print(xtable::xtable(cdf), "html", sanitize.text.function=identity)
 }
 

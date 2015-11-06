@@ -1,18 +1,18 @@
 # -*- org -*-
 * DONE create a new experiment and get the sowing report
 #+BEGIN_SRC R
-  library(jsonlite)
-  library(knitr)
-  library(markdown)
+  library(rosettR)
   sapply(list.files("pkg/R", pattern=".*R$", full.names=TRUE), source)
-  meta <- metaTemplate(letters[1:4], treatments=c("control", "osmotic"), timepoints=1:2)
+  meta <- metaTemplate(letters[1:4], treatments=c("control", "osmotic"),
+                       timepoints=1:2)
   newExperiment("bla", meta)
   file.copy("pkg/inst/reports/sowing.Rmd",
             file.path(.libPaths()[1], "rosettR/reports"), overwrite=TRUE)
 
   makeReport("bla", "sowing", browse=FALSE)
 #+END_SRC
-* TODO image gallery
+* DONE raw image gallery
+  - State "DONE"       from "TODO"       [2015-11-05 Thu 22:49]
 #+BEGIN_SRC R
   file.copy(
     sprintf("EXP001_Daniel/D11/plate%03d.jpg", 1:20),
@@ -23,7 +23,10 @@
     sprintf("EXP001_Daniel/D11/plate%03d.jpg", 1:20),
     "bla/D02/"
     )
+  file.copy("pkg/inst/reports/overview.Rmd",
+            file.path(.libPaths()[1], "rosettR/reports"), overwrite=TRUE)
 
+  rosettR:::makeReport("bla", "overview", browse=FALSE)
 #+END_SRC
 * TODO analyze the images
 * TODO basic report
