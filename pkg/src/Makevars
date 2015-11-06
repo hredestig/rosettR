@@ -1,3 +1,0 @@
-PKG_CFLAGS = -Wall -I/tools/general/app/ImageMagick-6.7.8-3/include/ImageMagick -I/tools/general/app/ImageMagick-6.7.8-3/include/ImageMagick 
-PKG_CXXFLAGS = -Wall -I/tools/general/app/ImageMagick-6.7.8-3/include/ImageMagick -I/tools/general/app/ImageMagick-6.7.8-3/include/ImageMagick 
-PKG_LIBS = -L/tools/general/app/ImageMagick-6.7.8-3/lib -lMagickCore -L/tools/general/app/ImageMagick-6.7.8-3/lib -lMagickCore -L/tools/general/app/ImageMagick-6.7.8-3/lib -lMagickWand -lMagickCore
