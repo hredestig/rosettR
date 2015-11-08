@@ -60,7 +60,7 @@ plateGallery <- function(path, what=c("raw", "qc"), parallel=FALSE) {
       return(NULL)
     }
     df <- unique(pda[,cols])
-    df$orig <- file.path("..", df$image)
+    df$orig <- file.path("../..", df$image)
     df$thumb <- file.path("..", df$qc_picture)
     plateMakeTng(df)
   }, raw={
@@ -173,4 +173,22 @@ relativeGrowthRate <- function(x, timepoints) {
   rgr[!is.finite(rgr)] <- NA
   rgr[rgr < 0] <- NA
   rgr
+}
+
+#' Check for strong outliers
+#'
+#' Use the outlier test implemented in \code{boxplot} to mark outliers in a numeric vector.
+#' @param x numeric vector
+#' @return logical indicating for each value if it outlier or not
+#' @examples
+#' simpleOutlierTest(rnorm(100))
+#' @export
+simpleOutlierTest <- function(x) {
+  b <- boxplot(x, plot=FALSE)
+  low <- b$stats[1]
+  up <- b$stats[5]
+  out <- c()
+  for(i in 1:length(x))
+    out[i] <- x[i] < low || x[i] > up
+  return(out)
 }

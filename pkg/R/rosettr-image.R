@@ -259,7 +259,10 @@ emptyResult <- function(df, qcpath="", doqc=TRUE) {
           df$AREA <- df$nfeats <- df$qc_picture <- NA
   if(doqc) {
     file.copy(system.file("examples/empty-qc.jpg", package=PKG), qcpath)
-    df$qc_picture <- qcpath
+    splitPath <- strsplit(qcpath, .Platform$file.sep)[[1]]
+    df$qc_picture <-
+      paste(c(".", splitPath[(length(splitPath) - 3):length(splitPath)]),
+            collapse=.Platform$file.sep)
   }
   df
 }
@@ -456,7 +459,6 @@ analyzeImage <- function(file, griddf, pixelsmm, boxWidth, nBoxGrid, plateRadius
   df <- ddply(df, c("ROW", "RANGE"), function(dd) {
     totpix <- 0
     inThisBox <- feats$home_box == dd$box_num
-    is_bad <- any(feats$ambig_feat[inThisBox])
     totpix <- sum(feats$s.area[inThisBox])
     dd$total_area_pixels <- totpix
     dd$AREA <- dd$total_area_pixels / pixelsmm^2
@@ -510,7 +512,11 @@ analyzeImage <- function(file, griddf, pixelsmm, boxWidth, nBoxGrid, plateRadius
     if(!file.exists(savedir))
       dir.create(savedir, recursive=TRUE)
     writeImage(qcpic, qcpath)
-    df$qc_picture <- qcpath
+    splitPath <- strsplit(qcpath, .Platform$file.sep)[[1]]
+    df$qc_picture <-
+      paste(c(".", splitPath[(length(splitPath) - 3):length(splitPath)]),
+            collapse=.Platform$file.sep)
+    
   }
   rownames(df) <- paste(df$ROW, df$RANGE, sep='')
   df

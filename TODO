@@ -39,11 +39,11 @@
   processPlateExperiment("rosettrTest")
 #+END_SRC
 
-* TODO qc report
+* DONE qc report
 #+BEGIN_SRC R
   file.copy("pkg/inst/reports/quality-check.Rmd",
             file.path(.libPaths()[1], "rosettR/reports"), overwrite=TRUE)
-  makeReport("rosettrTest", "quality-check.Rmd")
+  makeReport("rosettrTest", "quality-check")
 #+END_SRC
 
 * TODO basic statistics report
