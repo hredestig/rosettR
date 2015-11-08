@@ -5,7 +5,8 @@
   sapply(list.files("pkg/R", pattern=".*R$", full.names=TRUE), source)
   meta <- metaTemplate(letters[1:4], treatments=c("control", "osmotic"),
                        timepoints=1:2)
-  newExperiment("bla", meta)
+  writeMeta(meta, "pkg/inst/examples/rosettrTest")
+  newExperiment("rosettrTest", meta)
   file.copy("pkg/inst/reports/sowing.Rmd",
             file.path(.libPaths()[1], "rosettR/reports"), overwrite=TRUE)
 
@@ -28,7 +29,22 @@
 
   rosettR:::makeReport("bla", "overview", browse=FALSE)
 #+END_SRC
-* TODO analyze the images
-* TODO basic report
+* DONE make test experiment
+#+BEGIN_SRC R 
+  library(rosettR)
+  file.copy("pkg/inst/examples/rosettrTest.zip",
+            file.path(.libPaths()[1], "rosettR/examples/rosettrTest.zip"),
+            overwrite=TRUE)
+  makeTestExperiment()
+#+END_SRC
+* DONE analyze the images
+  - State "DONE"       from "TODO"       [2015-11-08 Sun 12:59]
+#+BEGIN_SRC R
+  processPlateExperiment("rosettrTest", analyze=FALSE)
+  res <- processPlateImages("rosettrTest")
+#+END_SRC
+
+* TODO qc report
+* TODO basic statistics report
 * TODO prettify reports with css
 http://www.r-bloggers.com/fast-track-publishing-using-knitr-the-setup-using-rprofile-with-custom-css-some-html-goodies-part-ii/

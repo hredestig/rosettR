@@ -23,6 +23,24 @@ newExperiment <- function(path, meta) {
   writeMeta(meta, path)
 }
 
+#' Create a dummy plate experiment
+#'
+#' To be used for testing purposed in documentation and unit-tests. 
+#' @param exdir where to create the test experiment
+#' @return nothing, used for side effect
+#' @export
+#' @examples
+#' makeTestExperiment(tempdir())
+#' @author Henning Redestig
+makeTestExperiment <- function(exdir=".") {
+  path <- file.path(exdir, "rosettrTest")
+  unzip(system.file("examples/rosettrTest.zip", package=PKG))
+  meta <- metaTemplate(letters[1:4], treatments=c("control", "osmotic"),
+                       timepoints=1:2, pixelsmm=5.6)
+  writeManifest(expandManifest(meta), path)
+  writeMeta(meta, path)
+}
+
 #' Create a meta data template
 #'
 #' Each experiment is annotated with a set of parameters stored in a 'meta' data
@@ -50,7 +68,7 @@ newExperiment <- function(path, meta) {
 #' @param nrepeats the number of replicates
 #' @param pixelsmm the number of pixels per mm on a picture (must be the same
 #' for all pictures)
-#' @param plate_radius the radius of the plate (max radius of the lid)
+#' @param plateRadius the radius of the plate (max radius of the lid)
 #' @param r the number of wells in each row and column of a plate. Layout is
 #' assumed to be square but with the corner wells left-out.
 #' @param d the width of a well in millimeter
@@ -65,11 +83,12 @@ metaTemplate <- function(germplasms,
                          nrepeats=10,
                          pixelsmm=16,
                          name=c("6x6.abcd", "6x6.ab", "6x6.one"),
-                         plate_radius=76, r=6, d=20) {
+                         plateRadius=76, nBoxGrid=6, boxWidth=20) {
   name <- match.arg(name)
   template <- list(germplasms=germplasms, treatments=treatments,
+                   nBoxGrid=nBoxGrid, boxWidth=boxWidth,
                    timepoints=timepoints, nrepeats=nrepeats,
-                   pixelsmm=pixelsmm, name=name, plate_radius=plate_radius)
+                   pixelsmm=pixelsmm, name=name, plateRadius=plateRadius)
   
   reps <- expand.grid(RANGE=1:6, ROW=1:6)
   griddf <- subset(data.frame(RANGE=reps$RANGE, ROW=reps$ROW), 

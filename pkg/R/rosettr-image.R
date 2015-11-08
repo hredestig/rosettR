@@ -10,29 +10,29 @@ markPlate <- function(mat, radius, pixelsmm) {
   mat
 }
 
-colorWellFrames <- function(mat, df, dp) {
+colorWellFrames <- function(mat, df, boxWidthP) {
   for(i in which(!df$ambig_box)) {
-    bi <- box_index(df, i, dp)
+    bi <- box_index(df, i, boxWidthP)
     mat[bi$rows, bi$cols] <-
         frame_box(mat[bi$rows, bi$cols], 1)
   }
   for(i in which(df$ambig_box)) {
-    bi <- box_index(df, i, dp)
+    bi <- box_index(df, i, boxWidthP)
     mat[bi$rows, bi$cols] <-
         frame_box(mat[bi$rows, bi$cols], 2)
   }
   mat
 }
 
-wellOccupance <- function(large_labeled, df, feats, dp) {
-  nfeat <- max(large_labeled)
+wellOccupance <- function(largeLabeled, df, feats, boxWidthP) {
+  nfeat <- max(largeLabeled)
   res <- matrix(0, nrow=nfeat, ncol=nrow(df))
   rownames(res) <- as.character(1:nfeat)
   for(i in 1:nrow(df)) {
     dd <- df[i,]
-    rows <- floor(dd$centerx - (dp / 2)):floor(dd$centerx + (dp / 2))
-    cols <- floor(dd$centery - (dp / 2)):floor(dd$centery + (dp / 2))
-    box <- as.vector(imageData(large_labeled[rows, cols]))
+    rows <- floor(dd$centerx - (boxWidthP / 2)):floor(dd$centerx + (boxWidthP / 2))
+    cols <- floor(dd$centery - (boxWidthP / 2)):floor(dd$centery + (boxWidthP / 2))
+    box <- as.vector(imageData(largeLabeled[rows, cols]))
     if(any(box != 0)) {
       tab <- table(box[box > 0])
       res[names(tab),i] <- res[names(tab),i] + tab
@@ -41,13 +41,15 @@ wellOccupance <- function(large_labeled, df, feats, dp) {
   res
 }
 
-addWellCenters <- function(griddf, im, pxlsmm, d, r, plot=FALSE) {
-  if(r %% 2 > 0) stop("grid must be symmetric")
-  dp <- pxlsmm * d
-  center_x <- nrow(im) / 2
-  center_y <- ncol(im) / 2
-  vertical <- sapply(-(r/2):(r/2), function(i) center_x + i * dp)
-  horizontal <- sapply(-(r/2):(r/2), function(i) center_y + i * dp)
+addWellCenters <- function(griddf, im, pxlsmm, boxWidth, nBoxGrid, plot=FALSE) {
+  if(nBoxGrid %% 2 > 0) stop("grid must be symmetric")
+  boxWidthP <- pxlsmm * boxWidth
+  centerX <- nrow(im) / 2
+  centerY <- ncol(im) / 2
+  vertical <- sapply(-(nBoxGrid/2):(nBoxGrid/2), function(i)
+    centerX + i * boxWidthP)
+  horizontal <- sapply(-(nBoxGrid/2):(nBoxGrid/2), function(i)
+    centerY + i * boxWidthP)
   if(any(is.na(c(vertical, horizontal))))
       stop("lost coordinates, perhaps wrong pixels / mm")
   if(any(is.na(c(vertical, horizontal))))
@@ -56,8 +58,8 @@ addWellCenters <- function(griddf, im, pxlsmm, d, r, plot=FALSE) {
     plotimage(im)
     abline(v=vertical, col="red")
     abline(h=horizontal, col="blue")
-    abline(v=center_x, col="green")
-    abline(h=center_y, col="green")
+    abline(v=centerX, col="green")
+    abline(h=centerY, col="green")
   }
   ddply(griddf, c("ROW", "RANGE"), function(dd) {
     j <- as.integer(dd$ROW)
@@ -78,34 +80,36 @@ addWellCenters <- function(griddf, im, pxlsmm, d, r, plot=FALSE) {
 #' images with the goal to minimize a the common \eqn{\sigma}.
 #' @param im an image object
 #' @param pxlsmm the number of pixels per millimeter
-#' @param d the number of rows and columns in the expected symmetric grid
-#' @param r the width of a box
+#' @param boxWidth the number of rows and columns in the expected symmetric grid
+#' @param nBoxGrid the width of a box
 #' @param angles min and max values for rotation correction
+#' @param ... not used
 #' @return the suggested rotation correction in degrees
 #' @author Henning Redestig
-optimAngle <- function(im, pxlsmm, d, r, angles=c(-3,3)) {
+optimAngle <- function(im, pxlsmm, boxWidth, nBoxGrid, angles=c(-3,3), ...) {
   par <- list(0)
   opt <- optim(par, rotationSigmaFun,
-               im=im, pxlsmm=pxlsmm, d=d, r=r,
-               method='Brent', lower=min(angles),
+               im=im, pxlsmm=pxlsmm, boxWidth=boxWidth, nBoxGrid=nBoxGrid,
+               method="Brent", lower=min(angles),
                upper=max(angles))
   opt$par[[1]]
 }
 
-rotationSigmaFun <- function(par, im, pxlsmm, d, r) {
-  dp <- pxlsmm * d
+rotationSigmaFun <- function(par, im, pxlsmm, boxWidth, nBoxGrid) {
+  boxWidthP <- pxlsmm * boxWidth
   rim <- rotate(im, par[[1]])
   rim <- roundImage(rim)
-  center_x <- floor(nrow(rim) / 2)
-  center_y <- floor(ncol(rim) / 2)
-  data_x <- row(rim)[rim > 0]
-  data_y <- col(rim)[rim > 0]
-  sigmax <- rotationSigma(data_x, center_x, dp, r)
-  sigmay <- rotationSigma(data_y, center_y, dp, r)
+  centerX <- floor(nrow(rim) / 2)
+  centerY <- floor(ncol(rim) / 2)
+  dataX <- row(rim)[rim > 0]
+  dataY <- col(rim)[rim > 0]
+  sigmax <- rotationSigma(dataX, centerX, boxWidthP, nBoxGrid)
+  sigmay <- rotationSigma(dataY, centerY, boxWidthP, nBoxGrid)
   sigmax + sigmay
 }
 
-findCombinedCurve <- function(mu1=NULL, mu2=NULL, sigma=NULL, lambda=NULL, x=NULL) {
+findCombinedCurve <- function(mu1=NULL, mu2=NULL, sigma=NULL,
+                              lambda=NULL, x=NULL) {
   suppressWarnings(res <- lambda * dnorm(x, mean=mu1, sd=sigma) +
                    (1 - lambda) * dnorm(x, mean=mu2, sd=sigma))
   res[is.nan(res)] <- 0
@@ -121,14 +125,16 @@ diffFun <- function(par, fitX=NULL, fitY=NULL){
 }
 
 makeBinary <- function(im, pixelsmm, thresh=NULL, radius=85,
-                        fraction=0.25, min_non_empty=1e-3, max_prop=10,
+                        fraction=0.25, minNonEmpty=1e-3, max_prop=10,
                         step=0.01, verbose=FALSE) {
   plate_area <-
-    (row(im) - (nrow(im) / 2))^2 + (col(im) - (ncol(im) / 2))^2 < (pixelsmm * radius)^2
+      (row(im) - (nrow(im) / 2))^2 + (col(im) - (ncol(im) / 2))^2 <
+          (pixelsmm * radius)^2
   platevec <- as.vector(imageData(im)[plate_area])
   if(is.null(thresh)) {
     smpl <- sample(platevec, length(platevec) * fraction)
-    breaks <- seq(from = min(smpl) - step / 2, to = max(smpl) + 3 * step / 2, by=step)
+    breaks <- seq(from=min(smpl) - step / 2,
+                  to=max(smpl) + 3 * step / 2, by=step)
     max_bin_size <- length(platevec) / length(breaks) / max_prop
     smpl <- unlist(tapply(smpl, cut(smpl, breaks),
                           function(x) sample(x, min(length(x), max_bin_size))))
@@ -136,11 +142,12 @@ makeBinary <- function(im, pixelsmm, thresh=NULL, radius=85,
     fitY <- hist(smpl, breaks, plot=FALSE)$density
 
     par <- c(0.3, 0.95, 0.1, 0.05)
-    lower <- c(0.2, 0.9, 0.01, min_non_empty)
-    upper <- c(0.5, 1, 0.3, 1 - min_non_empty)
+    lower <- c(0.2, 0.9, 0.01, minNonEmpty)
+    upper <- c(0.5, 1, 0.3, 1 - minNonEmpty)
     names(lower) <- names(upper) <- names(par) <-
       c("mu1", "mu2", "sigma", "lambda")
-    optim_out <- optim(par, diffFun, lower=lower, upper=upper, fitX=fitX, fitY=fitY,
+    optim_out <- optim(par, diffFun, lower=lower, upper=upper,
+                       fitX=fitX, fitY=fitY,
                        method="L-BFGS-B")
     opar <- optim_out$par
     x <- seq(0,1,by=0.001)
@@ -149,10 +156,11 @@ makeBinary <- function(im, pixelsmm, thresh=NULL, radius=85,
     thresh <-
       x[which(mixd[,1] < mixd[,2])[1]]
     if(verbose)
-      message("mix model pars: ", paste(sapply(c(opar, thresh), signif, 2), collapse=", "))
+        message("mix model pars: ", paste(sapply(c(opar, thresh),
+                                                 signif, 2), collapse=", "))
   }
   emptiness <- sum(platevec <= thresh) / sum(platevec > thresh)
-  if(emptiness < min_non_empty)
+  if(emptiness < minNonEmpty)
     return(NULL)
   im_mat <- matrix(0, nrow=dim(im)[1], ncol=dim(im)[2])
   im_mat[imageData(im) < thresh] <- 1
@@ -268,9 +276,9 @@ emptyResult <- function(df, qcpath="", doqc=TRUE) {
 #' indicates the number of the box (running integer from 1 to number
 #' of boxes). One row per box.
 #' @param pixelsmm number of pixels that correspond to 1 mm.
-#' @param d the width (and height) of a single box in the grid in mm.
-#' @param r the number of boxes in the grid.
-#' @param plate_radius the radius of the plate in millimeters.
+#' @param boxWidth the width (and height) of a single box in the grid in mm.
+#' @param nBoxGrid the number of boxes in the grid.
+#' @param plateRadius the radius of the plate in millimeters.
 #' @param thresh the threshold to appply for deciding what is plant
 #' (close zero) or background (close to 1)
 #' @param deltax a shift of the places location in millimeters to
@@ -295,13 +303,13 @@ emptyResult <- function(df, qcpath="", doqc=TRUE) {
 #' subjected to grid-segmentation.
 #' @param channels the channels to use when converting to grey scale
 #' (R, G, B)
-#' @param rim_threshold a step of sorting features into different
+#' @param rimThreshold a step of sorting features into different
 #' boxes is to identify features that are too far from any box center
 #' that may be part of the plate edges or detections of the physical
 #' plate itself. Features that are farther away from any box center
 #' than half the box size times this constant are considered bad and
 #' removed.
-#' @param min_area minimum area of a plant. A box with a total
+#' @param minArea minimum area of a plant. A box with a total
 #' feature area less than this number will have area set to missing
 #' value.
 #' @param rotation the rotation of the plate in degrees
@@ -314,15 +322,15 @@ emptyResult <- function(df, qcpath="", doqc=TRUE) {
 #' deltay are set to a non-zero value.
 #' @param doqc generate quality control picture or not
 #' @param verbose print some messages about progress
-#' @param overwrite_qc overwrite any already exisiting QC
+#' @param overwriteQc overwrite any already exisiting QC
 #' images.
-#' @param square_width The desired width of the image after initial
+#' @param squareWidth The desired width of the image after initial
 #' cropping. Prior to any further analysis, the image is made square
 #' by cropping the left and right margins assuming that the max
 #' horizontal excentricity of the plate is smaller than top / bottom
 #' margin. Set this argument to zero for very excentric plates in
 #' which case cropping is skipped.
-#' @param min_non_empty the minimum fraction of pixels above the threshold for a
+#' @param minNonEmpty the minimum fraction of pixels above the threshold for a
 #' plate to be considered empty
 #' @param ... passed on to \code{\link{findPlate}} and
 #' \code{\link{optimAngle}}.
@@ -342,64 +350,64 @@ emptyResult <- function(df, qcpath="", doqc=TRUE) {
 #' display(readImage(df$qc_picture[1]), method='raster')
 #' }
 #' @author Henning Redestig
-analyzeImage <- function(file, griddf, pixelsmm, d, r, plate_radius, thresh=NULL,
+analyzeImage <- function(file, griddf, pixelsmm, boxWidth, nBoxGrid, plateRadius,
+                         thresh=NULL,
                          deltax=0, deltay=0,
                          savedir=".",
                          hires=1500, lowres=500, homeratio=1/2,
-                         channels=3, rim_threshold=0.9, min_area=1.5, rotation=0,
+                         channels=3, rimThreshold=0.9, minArea=1.5, rotation=0,
                          checkrotation=TRUE, checklocation=TRUE, doqc=TRUE,
-                         verbose=FALSE, overwrite_qc=FALSE, square_width=NULL,
-                         min_non_empty=1e-3, ...) {
-
+                         verbose=FALSE, overwriteQc=FALSE, squareWidth=NULL,
+                         minNonEmpty=1e-3, ...) {
   qcpath <- file.path(savedir, paste("qc_", basename(file), sep=""))
-  if(file.exists(qcpath) && !overwrite_qc)
+  if(file.exists(qcpath) && !overwriteQc)
     qcpath <-
-      tempfile(gsub(".jpg", "", basename(qcpath)), tmpdir=dirname(qcpath), fileext=".jpg")
-
+        tempfile(gsub(".jpg", "", basename(qcpath)),
+                 tmpdir=dirname(qcpath), fileext=".jpg")
   if(verbose) message("reading / cropping / scaling picture")
-  large_rgb <- readImage(file)
-  if(dim(large_rgb)[1] > hires) {
-    pixelsmm <- pixelsmm * (hires / nrow(large_rgb))
-    large_rgb <- resize(large_rgb, hires)
+  largeRgb <- readImage(file)
+  if(dim(largeRgb)[1] > hires) {
+    pixelsmm <- pixelsmm * (hires / nrow(largeRgb))
+    largeRgb <- resize(largeRgb, hires)
   }
-  large_rgb <- makeSquare(large_rgb, cx=square_width)
-  large_grey <- makeGrey(large_rgb, channels=channels)
-  small_grey <- resize(large_grey, lowres, filter="bilinear")
-  scaling <- lowres / nrow(large_rgb)
-  dp <- pixelsmm * d
-  pixelsmm_small <- pixelsmm * scaling
+  largeRgb <- makeSquare(largeRgb, cx=squareWidth)
+  largeGrey <- makeGrey(largeRgb, channels=channels)
+  smallGrey <- resize(largeGrey, lowres, filter="bilinear")
+  scaling <- lowres / nrow(largeRgb)
+  boxWidthP <- pixelsmm * boxWidth
+  pixelsmmSmall <- pixelsmm * scaling
   if(verbose) message("make binary")
-  large_bin <- makeBinary(large_grey, pixelsmm, thresh, verbose=verbose,
-                           min_non_empty=min_non_empty)
-  if(is.null(large_bin))
+  largeBin <- makeBinary(largeGrey, pixelsmm, thresh, verbose=verbose,
+                           minNonEmpty=minNonEmpty)
+  if(is.null(largeBin))
     return(emptyResult(griddf, qcpath, doqc))
-  small_bin <- resize(large_bin, lowres, filter="bilinear")
+  smallBin <- resize(largeBin, lowres, filter="bilinear")
 
   location <- list(deltax=deltax, deltay=deltay)
   if(checklocation & any(location$deltax != 0, location$deltay != 0))
     checklocation <- FALSE
   if(checklocation)
-    location <- findPlate(small_grey, plate_radius * pixelsmm_small,
-                           quantile(small_grey, 0.15))
+    location <- findPlate(smallGrey, plateRadius * pixelsmmSmall,
+                           quantile(smallGrey, 0.15))
   if(verbose) message("plate location: ", location[[1]], ", ", location[[2]])
-  large_grey <-
-      repositionImage(large_grey, deltax * pixelsmm, deltay * pixelsmm)
-  small_bin <- repositionImage(small_bin,
+  largeGrey <-
+      repositionImage(largeGrey, deltax * pixelsmm, deltay * pixelsmm)
+  smallBin <- repositionImage(smallBin,
                                 location$deltax, location$deltay)
-  large_bin <- repositionImage(large_bin, location$deltax /
+  largeBin <- repositionImage(largeBin, location$deltax /
                                 scaling, location$deltay / scaling)
-  large_rgb <- repositionImage(large_rgb, location$deltax /
+  largeRgb <- repositionImage(largeRgb, location$deltax /
                                 scaling, location$deltay / scaling)
 
   if(checkrotation & any(rotation != 0))
     checkrotation <- FALSE
   if(checkrotation)
-    rotation <- optimAngle(small_bin, pixelsmm_small, d, r, ...)
+    rotation <- optimAngle(smallBin, pixelsmmSmall, boxWidth, nBoxGrid, ...)
   if(verbose) message("plate rotation: ", rotation)
-  large_rgb <- rotate(large_rgb, rotation)
-  large_bin <- roundImage(rotate(large_bin, rotation))
+  largeRgb <- rotate(largeRgb, rotation)
+  largeBin <- roundImage(rotate(largeBin, rotation))
 
-  df <- addWellCenters(griddf, large_bin, pixelsmm, d, r)
+  df <- addWellCenters(griddf, largeBin, pixelsmm, boxWidth, nBoxGrid)
   df$rotation <- rotation
   df$deltax_mm <- location$deltax / pixelsmm
   df$deltay_mm <- location$deltay / pixelsmm
@@ -408,24 +416,24 @@ analyzeImage <- function(file, griddf, pixelsmm, d, r, plate_radius, thresh=NULL
   if(verbose) message("sorting features to boxes")
   repeat {
     ntries <- ntries + 1
-    large_labeled <- bwlabel(large_bin)
-    feats <- computeFeatures.shape(large_labeled)
+    largeLabeled <- bwlabel(largeBin)
+    feats <- computeFeatures.shape(largeLabeled)
     if(ntries > nrow(df)) {
       stop("(bug) failed to resolve all ambiguities")
     }
     feats <- as.data.frame(feats)
-    boxocc <- wellOccupance(large_labeled, df, feats, dp)
+    boxocc <- wellOccupance(largeLabeled, df, feats, boxWidthP)
     feats$home_box <- apply(boxocc, 1, which.max)
     overlapping <- apply(boxocc, 1, function(oc) {
       if(sum(oc) == 0) return(NA) #completely outside the grid
       o <- order(oc, decreasing=TRUE)
       oc[o[2]] / oc[o[1]] > homeratio
     })
-    mat <- imageData(large_labeled)
+    mat <- imageData(largeLabeled)
     points <- as.matrix(df[,c("centerx", "centery")])
-    closest_centers <-
+    closestCenters <-
       .Call("phenotyping_closest_point", mat, points, nrow(feats), PACKAGE=PKG)
-    far_away <- apply(closest_centers, 1, min) > (dp / 2) * 0.9
+    far_away <- apply(closestCenters, 1, min) > (boxWidthP / 2) * 0.9
     overlapping[far_away] <- NA
     if(any(na.omit(overlapping))) {
       problem_boxes <-
@@ -433,30 +441,30 @@ analyzeImage <- function(file, griddf, pixelsmm, d, r, plate_radius, thresh=NULL
                        function(x) order(x, decreasing=TRUE)[1:2]))
       df$ambig_box[problem_boxes] <- TRUE
       for(i in problem_boxes) {
-        bi <- wellIndex(df, i, dp)
-        box <- large_bin[bi$rows, bi$cols]
-        large_bin[bi$rows, bi$cols] <- frameWell(box, 0)
+        bi <- wellIndex(df, i, boxWidthP)
+        box <- largeBin[bi$rows, bi$cols]
+        largeBin[bi$rows, bi$cols] <- frameWell(box, 0)
       }
     }
     if(any(is.na(overlapping))) {
-      index_mat <- imageData(large_labeled) %in% which(is.na(overlapping))
-      imageData(large_bin)[index_mat] <- 0
+      index_mat <- imageData(largeLabeled) %in% which(is.na(overlapping))
+      imageData(largeBin)[index_mat] <- 0
     }
     if(!any(is.na(overlapping), overlapping))
         break
   }
   df <- ddply(df, c("ROW", "RANGE"), function(dd) {
     totpix <- 0
-    in_this_box <- feats$home_box == dd$box_num
-    is_bad <- any(feats$ambig_feat[in_this_box])
-    totpix <- sum(feats$s.area[in_this_box])
+    inThisBox <- feats$home_box == dd$box_num
+    is_bad <- any(feats$ambig_feat[inThisBox])
+    totpix <- sum(feats$s.area[inThisBox])
     dd$total_area_pixels <- totpix
     dd$AREA <- dd$total_area_pixels / pixelsmm^2
-    dd$nfeats <- sum(in_this_box)
-    if(sum(in_this_box) == 0)
+    dd$nfeats <- sum(inThisBox)
+    if(sum(inThisBox) == 0)
       dd$AREA <- NA
     if(!is.na(dd$AREA)) {
-      if(dd$AREA < min_area)
+      if(dd$AREA < minArea)
         dd$too_small <- TRUE
     }
     dd
@@ -464,8 +472,8 @@ analyzeImage <- function(file, griddf, pixelsmm, d, r, plate_radius, thresh=NULL
 
   if(doqc) {
     if(verbose) message("doing qc")
-    mat <- imageData(large_labeled)
-    nfeats <- max(large_labeled)
+    mat <- imageData(largeLabeled)
+    nfeats <- max(largeLabeled)
     for(i in 1:nrow(feats)) {
       box_idx <- match(feats$home_box[i], df$box_num)
       if(is.na(df$AREA[box_idx]) | df$too_small[box_idx])
@@ -475,31 +483,30 @@ analyzeImage <- function(file, griddf, pixelsmm, d, r, plate_radius, thresh=NULL
     }
     mat <- mat - nfeats
     mat[mat < 0] <- 0
-    mat <- colorWellFrames(mat, df, dp)
-    mat <- markPlate(mat, plate_radius, pixelsmm)
+    mat <- colorWellFrames(mat, df, boxWidthP)
+    mat <- markPlate(mat, plateRadius, pixelsmm)
     cols <- c("black", "black", "red", sample(rainbow(nrow(df))))
-    qcpic <- Image(cols[1 + imageData(mat)],
-                            dim=dim(mat))
-    large_rgb[mat != 0] <- 0
-    qcpic <- qcpic + large_rgb
+    qcpic <- Image(matrix(cols[1 + imageData(mat)], nrow=nrow(mat),
+                          ncol=ncol(mat)),
+                   colormode="color")
+    largeRgb[mat != 0] <- 0
+    qcpic <- qcpic + largeRgb
     qcpic <- resize(qcpic, lowres)
-    scaling <- lowres / nrow(large_rgb)
-    pixelsmm_small <- pixelsmm * scaling
-    font_11 <- drawFont(weight=500, size=11)
+    scaling <- lowres / nrow(largeRgb)
+    pixelsmmSmall <- pixelsmm * scaling
     xy <- as.matrix(ddply(df, c("ROW", "RANGE"), function(dd) {
-      c((dd$centerx * scaling) - (d * pixelsmm_small) / 3,
-        (dd$centery * scaling) - (d * pixelsmm_small) / 3)
+      c((dd$centerx * scaling) - (boxWidth * pixelsmmSmall) / 3,
+        (dd$centery * scaling) - (boxWidth * pixelsmmSmall) / 3)
     })[,c("V1", "V2")])
-    qcpic <- drawText(qcpic, xy=xy,
+    qcpic <- drawText(qcpic, x=xy[,1], y=xy[,2],
                       labels=paste(df$ROW, df$RANGE, sep=":"),
-                      font=font_11, col="black")
+                      col="black")
     param_lab <- sprintf("dx=%.2f\ndy=%.2f\nr=%.2f",
                          location$deltax, location$deltay, rotation)
-    param_xy <- c(min(xy[,1]) - .5 * (d * pixelsmm_small),
-                  min(xy[,2]) - .5 * (d * pixelsmm_small))
-    qcpic <- drawText(qcpic, xy=param_xy,
-                      labels=param_lab,
-                      font=font_11, col="black")
+    param_xy <- c(min(xy[,1]) - .5 * (boxWidth * pixelsmmSmall),
+                  min(xy[,2]) - .5 * (boxWidth * pixelsmmSmall))
+    qcpic <- drawText(qcpic, x=param_xy[1], y=param_xy[2],
+                      labels=param_lab)
     if(!file.exists(savedir))
       dir.create(savedir, recursive=TRUE)
     writeImage(qcpic, qcpath)
@@ -509,53 +516,33 @@ analyzeImage <- function(file, griddf, pixelsmm, d, r, plate_radius, thresh=NULL
   df
 }
 
-neighborWell <- function(griddf, i, direction=c("north", "south", "east", "west")) {
-  direction <- match.arg(direction)
-  rowcol <- switch(direction,
-                   north = {
-                     c(subset(griddf, griddf$box_num == i)$ROW - 1,
-                       subset(griddf, griddf$box_num == i)$RANGE)
-                   },
-                   south = {
-                     c(subset(griddf, griddf$box_num == i)$ROW + 1,
-                       subset(griddf, griddf$box_num == i)$RANGE)
-                   },
-                   east = {
-                     c(subset(griddf, griddf$box_num == i)$ROW,
-                       subset(griddf, griddf$box_num == i)$RANGE - 1)
-                   },
-                   south = {
-                     c(subset(griddf, griddf$box_num == i)$ROW,
-                       subset(griddf, griddf$box_num == i)$RANGE + 1)
-                   })
-  if(any(griddf$ROW == rowcol[1] & griddf$RANGE == rowcol[2]))
-    return(griddf$box_num[griddf$ROW == rowcol[1] & griddf$RANGE == rowcol[2]])
-  else
-    return(NA)
-}
-
 #' Calibrate the scale of an image
 #'
 #' Used to figure out how many pixels there are on 1 mm by allowing
-#' the user to click on an image
-#' @param file an image file to use
+#' the user to click on an image. Updates the meta data with the
+#' calculated pixels per millimeter
+#' @param path path to the experiment to calibrate the scale for
 #' @return the number of pixels per mm
 #' @export
-#' @author Henning Redestig
-calibrateScale <- function(file) {
-  im <- readImage(file)
+calibrateScale <- function(path) {
+  meta <- readMeta(path)
+  mf <- readManifest(path)
+  im <- readImage(file.path(path, mf$image[1]))
   done <- FALSE
   while(!done) {
     plotimage(im)
     answer <- readline("choose the distance to indicate [default=80mm]: ")
-    d <- ifelse(answer == "", 80, as.integer(answer))
-    message("left-click on two points separated ", d, "mm")
+    selectedDistance <- ifelse(answer == "", 80, as.integer(answer))
+    message("left-click on two points separated ", selectedDistance, "mm")
     pp <- locator(n=2, type="l")
     npixels <- sqrt(diff(pp$x)^2 + diff(pp$y)^2)
     answer <- readline("try again? [default=n]: ")
     done <- ifelse(answer %in% c("", "No", "NO", "n", "nO"), TRUE, FALSE)
   }
-  npixels / d
+  meta$pixelsmm <- npixels / selectedDistance
+  writeMeta(meta, path)
+  message(npixels / selectedDistance, " pixels per mm, meta has been updated")
+  invisible(npixels / selectedDistance)
 }
 
 #' Process a set of plate images
@@ -611,9 +598,9 @@ processPlateImages <- function(path, mf=readManifest(path), meta=readMeta(path),
 doProcessPlateImages <- function(path, mf=readManifest(path),
                                  meta=readMeta(path), verbose=FALSE, 
                                  .progress="text", .parallel=FALSE, ...) {
-  meta <- updateMeta(..., meta)
+  meta <- updateMeta(..., meta=meta)
   ddply(mf, "image", function(dd) {
-    file <- unique(as.character(dd$image))
+    file <- file.path(path, unique(as.character(dd$image)))
     tpt <- unique(as.integer((as.character(dd$timepoint))))
     if(length(file) != 1 | length(tpt) != 1)
       stop("multiple files or time points for the same image")
@@ -631,17 +618,17 @@ doProcessPlateImages <- function(path, mf=readManifest(path),
 #' measurements for plants that at at least one day are not larger
 #' than the specified minimum area as 'removed'.
 #' @param phenodata a phenodata object to post process
-#' @param min_area minimum area of a plant. A box with a total
+#' @param minArea minimum area of a plant. A box with a total
 #' feature area less than this number will have area set to missing
 #' value.
 #' @param ... not used
 #' @return phenodata object
 #' @author Henning Redestig
-postProcessPlatePhenodata <- function(phenodata, min_area=1.5, ...) {
+postProcessPlatePhenodata <- function(phenodata, minArea=1.5, ...) {
   ddply(phenodata, c("plate", "ROW", "RANGE"), function(dd) {
     tmp_area <- dd$AREA
     tmp_area[is.na(tmp_area)] <- Inf
-    dd$too_small <- dd$too_small | tmp_area < min_area
+    dd$too_small <- dd$too_small | tmp_area < minArea
     if(any(dd$too_small))
       dd$removed <- TRUE
     dd
@@ -699,35 +686,36 @@ reprocessPlateImages <- function(path, mf, meta=readMeta(path), verbose=FALSE,
   invisible(phenodata)
 }
 
-rotationSigma <- function(dat, center, dp, r, sigma=10, eps=1e-2) {
-  mu0 <- center - dp / 2 - ((r / 2) - 1) * dp
-  mu <- sapply(1:r, function(i) mu0 + (i - 1) * dp)
-  lambda <- rep(1/r, r)
+rotationSigma <- function(dat, center, boxWidthP, nBoxGrid, sigma=10, eps=1e-2) {
+  mu0 <- center - boxWidthP / 2 - ((nBoxGrid / 2) - 1) * boxWidthP
+  mu <- sapply(1:nBoxGrid, function(i) mu0 + (i - 1) * boxWidthP)
+  lambda <- rep(1 / nBoxGrid, nBoxGrid)
   n <- length(dat)
   change <- 1
   while(change > eps) {
     psigma <- sigma
-    sigmavec <- rep(sigma, r)
+    sigmavec <- rep(sigma, nBoxGrid)
     zc <- .Call("phenotyping_normalpostp", dat, mu, sigmavec, lambda,
                 PACKAGE=PKG)
     sigma <-
-        sqrt(sum(sapply(1:r,
-                        function(i) sum(zc$scaled_resp[,i] * (dat - mu[i])^2))) / n)
+        sqrt(sum(sapply(1:nBoxGrid,
+                        function(i) sum(zc$scaled_resp[,i] *
+                                          (dat - mu[i])^2))) / n)
     change <- (psigma - sigma)^2
   }
   sigma
 }
 
-rotationSigmaFun <- function(par, im, pxlsmm, d, r) {
-  dp <- pxlsmm * d
+rotationSigmaFun <- function(par, im, pxlsmm, boxWidth, nBoxGrid) {
+  boxWidthP <- pxlsmm * boxWidth
   rim <- rotate(im, par[[1]])
   rim <- roundImage(rim)
-  center_x <- floor(nrow(rim) / 2)
-  center_y <- floor(ncol(rim) / 2)
-  data_x <- row(rim)[rim > 0]
-  data_y <- col(rim)[rim > 0]
-  sigmax <- rotationSigma(data_x, center_x, dp, r)
-  sigmay <- rotationSigma(data_y, center_y, dp, r)
+  centerX <- floor(nrow(rim) / 2)
+  centerY <- floor(ncol(rim) / 2)
+  dataX <- row(rim)[rim > 0]
+  dataY <- col(rim)[rim > 0]
+  sigmax <- rotationSigma(dataX, centerX, boxWidthP, nBoxGrid)
+  sigmay <- rotationSigma(dataY, centerY, boxWidthP, nBoxGrid)
   sigmax + sigmay
 }
 
@@ -790,54 +778,6 @@ plotimage <- function(im, ...) {
         asp=1, ...)
 }
 
-#' Label wells on image
-#'
-#' Create an image with highlighted well perimeters and labels in the middle of
-#' each well indicating the well indices.
-#' @param im an image
-#' @param griddf a data frame detailing the grid
-#' @return an image with highlighted well perimeters and indices
-#' @export 
-#' @author Henning Redestig
-labelGridImage <- function(im, griddf, wellWidth) {
-  imageData(im) <- colorWellFrames(imageData(im), griddf, wellWidth)
-  font <- drawFont(size=15)
-  xy <- as.matrix(cbind(griddf$centerx - wellWidth * 0.3, griddf$centery))
-  drawText(im, xy=xy,
-           labels=paste(griddf$row, griddf$col, sep=":"),
-           font=font, col="white")
-}
-
-#' Create a font for drawing text on images
-#'
-#' Adopted from EBImage version 3.13.1 since it was removed in version 4
-#' @param family A character value indicating the font family to
-#' use. Valid examples on Linux/UNIX systems include \code{helvetica},
-#' \code{times}, \code{courier} and \code{symbol}. Valid examples on
-#' Windows machines include TrueType like \code{Arial} and
-#' \code{Verdana}.
-#' @param style A character value specifying the font style to use.
-#' Supported styles are: \code{normal} (default), \code{italic}, and
-#' \code{oblique}.
-#' @param size Font size in points.
-#' @param weight A numeric value indicating the font weight (bold
-#' font). Supported values range between 100 and 900.
-#' @param antialias A logical value indicating whether the font should
-#' be anti-aliased.
-#' @return An \code{Image} object or an array, containing the
-#' transformed version of \code{img}.
-#' @export
-#' @seealso \code{\link{drawText}}
-#' @author Oleg Sklyar and copied by Henning Redestig
-drawFont <- function(family=switch(.Platform$OS.type, windows="Arial",
-                       "helvetica"),
-                     style="n", size=14, weight=200, antialias=TRUE) {
-  ## drawFont
-  res <- list(family=family, style=style, size=size, weight=weight, antialias=antialias)
-  class(res) <- "DrawFont"
-  res
-}
-
 #' Draw text on images
 #'
 #' Copied from EBImage version 3.13.1 since it was removed in version 4
@@ -860,38 +800,14 @@ drawFont <- function(family=switch(.Platform$OS.type, windows="Arial",
 #' plate <- drawText(plate, xy=c(250, 450), labels="rosettR!", font=font, col="red")
 #' display(plate, method="raster")
 #' @author Oleg Sklyar and copied by Henning Redestig
-drawText <- function(img, xy, labels, font, col) {
-  ## drawText
-  if(is.numeric(xy)) {
-    xy <- list(as.numeric(xy))
-    labels <- list(labels)
-  }
-  if(missing(font)) font <- drawFont()
-  if(missing(col)) col <- "white"
-  
-  if (length(xy) != length(labels) || length(xy) != numberOfFrames(img, "render"))
-    stop("lists of coordinates 'xy' labels 'labels' must",
-         " be of the same length as the number of render frames")
-  xy <- lapply(xy, as.numeric)
-  for(i in seq_along(labels)) 
-    if(!is.character(labels[[i]]))
-      stop("all elements of 'labels' must be of class 'character'")
-  if(!is(font, "DrawFont") )
-    stop("to set the font use the 'drawFont' function which ",
-         "returns an S3 class 'DrawFont', modify the slots as needed")
-
-  font$style <- as.integer(switch(tolower(substr(font$style,1,1)), i=1, o=2, 0))
-  font$size <- as.numeric(font$size)
-  font$weight <- as.numeric(font$weight)
-  font$antialias <- as.logical(font$antialias)
-  return(.Call("lib_drawText", castImage(img), xy, labels, font, col,
-               PACKAGE=PKG))
-}
-
-castImage <- function(x) {
-  if (storage.mode(imageData(x)) != "double")
-    storage.mode(imageData(x)) <- "double"
-  x
+drawText <- function(img, x, y, labels, col="black", cex=1) {
+  tmpFile <- tempfile()
+  on.exit(unlink(tmpFile))
+  jpeg(filename=tmpFile, width=ncol(img), height=nrow(img))
+  display(img, method="raster")
+  text(x, y, labels=labels, col=col, cex=cex)
+  dev.off()
+  readImage(tmpFile, type="jpeg")
 }
 
 #' Frame a well

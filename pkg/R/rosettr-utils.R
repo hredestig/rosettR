@@ -110,11 +110,23 @@ dateTaken <- function(file) {
   as.POSIXct(strptime(exif_date,"%Y:%m:%d %H:%M:%S"))
 }
 
-readMeta <- function(path)
-  fromJSON(file.path(path, "meta"))
-
+#' Read and write the meta-data to a file
+#'
+#' rosettR saves meta data about an each experiment in a special file
+#' in the experiment directory. Use these function to read/write meta data
+#' to that file in json format.
+#' @param meta the meta data object
+#' @param path path to the experiment directory
+#' @return nothing, used for side effect
+#' @export
+#' @name rwMeta
 writeMeta <- function(meta, path)
   cat(toJSON(meta), file=file.path(path, "meta"))
+
+#' @name rwMeta
+#' @export
+readMeta <- function(path)
+  fromJSON(file.path(path, "meta"))
 
 #' Write manifest to an experiment
 #'
@@ -128,7 +140,8 @@ writeMeta <- function(meta, path)
 #' @return nothing
 #' @author Henning Redestig
 writeManifest <- function(manifest, path)
-  write.table(manifest, file=file.path(path, "manifest.txt"), row.names=FALSE, sep=",")
+  write.table(manifest, file=file.path(path, "manifest.txt"),
+              row.names=FALSE, sep=",")
 
 #' Read the manifest from an experiment
 #'
@@ -139,8 +152,11 @@ writeManifest <- function(manifest, path)
 #' @return the manifest \code{data.frame}
 #' @export
 #' @author Henning Redestig
-readManifest <- function(path)
-  read.table(file.path(path, "manifest.txt"), header=TRUE, sep=",")
+readManifest <- function(path) {
+  mf <- read.table(file.path(path, "manifest.txt"), header=TRUE, sep=",")
+  mf$image <- as.character(mf$image)
+  mf
+}
 
 #' Expand experiment design
 #'
@@ -324,7 +340,7 @@ processPlateExperiment <- function(path, meta=readMeta(path), rename=TRUE,
   if(file.exists(file.path(outDir, "sealed")) & rename) {
     message("not renaming files since the experiment has already been sealed")
   } else {
-    rnm_df <- ddply(mf, "timepoint", function(dd) {
+    rnmDf <- ddply(mf, "timepoint", function(dd) {
       daydir <- unique(dirname(as.character(dd$image)))
       dd <- dd[with(dd, order(BLOCK, position)),]
       first_region <- unique(dd$germplasm_region)[1]
@@ -334,8 +350,8 @@ processPlateExperiment <- function(path, meta=readMeta(path), rename=TRUE,
       renamingDf(cleanPath(file.path(path, daydir), mustWork=TRUE),
                   expected_pics)
     })
-    renameImages(path, rnm_df, dry=!rename, verbose=FALSE)
-    rdf <- with(rnm_df, data.frame(image=file.path(".", subdir, newname),
+    renameImages(path, rnmDf, dry=!rename, verbose=FALSE)
+    rdf <- with(rnmDf, data.frame(image=file.path(".", subdir, newname),
                                    oldname=image, date=date))
     mf <- merge(mf, rdf, by="image", all=TRUE)
     missing_images <- Filter(Negate(file.exists), unique(mf$image))
@@ -345,7 +361,7 @@ processPlateExperiment <- function(path, meta=readMeta(path), rename=TRUE,
       mf <- mf[file.exists(mf$image),]
     }
     file.create(file.path(path, "Output", "sealed"))
-    writeManifest(path, mf)
+    writeManifest(mf, path)
   }
   res <- NULL
   if(analyze) {
@@ -483,32 +499,3 @@ renameImages <- function(path, df, dry, verbose) {
   }
   df
 }
-
-#" Create a dummy plate experiment
-#"
-#" To be used for testing purposed in documentation and unit-tests. Creates an
-#" experiment with an entry in the database.
-#" @param number Either experiment 242 or 999 (two different examples that have
-#" historically been used for testing purposed)
-#" @param id optionally give the experiment an identifier
-#" @return the created experiment identifier
-#" @export 
-#" @author Henning Redestig
-## createDummyPlateExperiment <- function(number, id) {
-##   if(missing(id))
-##     dummyExperimentId <- basename(tempfile(pattern="bcsphenotypingUnitTest"))
-##   else
-##     dummyExperimentId <- id
-##   meta <- oni(env=readRDS(system.file(sprintf("examples/plate/exampleMeta%d.rda", number),
-##                 package="BCS.Phenotyping"))$env)
-##   meta$set_value("id", dummyExperimentId)
-##   currentConfig <- getVar("_name", .pkg)
-##   setVar('root_path', tempdir(), 'BCS.Phenotyping')
-##   setVar("meta_template", meta, "BCS.Phenotyping")
-##   createExperiment()
-##   loadConfig(currentConfig, .pkg)
-##   untar(system.file(sprintf('examples/plate/EXP%d.tar.gz', number), 
-##                     package='BCS.Phenotyping'), exdir=expdir(dummyExperimentId),
-##       extras='-o')
-##   dummyExperimentId
-## }

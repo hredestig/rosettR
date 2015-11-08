@@ -17,6 +17,7 @@
 #' @import reshape2
 #' @import EBImage
 #' @import methods
+#' @import jsonlite
 #' @importFrom Rcpp evalCpp
 #' @author Henning Redestig <henning.red at gmail.com>
 NULL

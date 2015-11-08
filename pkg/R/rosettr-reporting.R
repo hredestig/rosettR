@@ -31,7 +31,7 @@ makeReport <- function(path, report, browse=interactive()) {
     browseURL(file.path(reportDir, paste0(chosen, ".html")))
 }
 
-#' Make a thumbnailDir gallery of the input images 
+#' Make a thumbnail gallery of the input images 
 #'
 #' Creates a html thumbnailDir gallery of the input images where the
 #' images are arranged after how the will be interpreted by the
@@ -40,6 +40,8 @@ makeReport <- function(path, report, browse=interactive()) {
 #' @param path a resolvable path to the experiment.
 #' @param what either 'qc' or 'raw' for galleries of qc images or raw
 #' images respectively.
+#' @param parallel use registered parallel backend for faster
+#' generation of image thumbnails, see \code{\link{llply}}
 #' @return nothing, used for its side effect.
 #' @export
 #' @seealso reports
@@ -48,7 +50,7 @@ makeReport <- function(path, report, browse=interactive()) {
 #' plateGallery(pathToExperiment, "raw")
 #' }
 #' @author Henning Redestig
-plateGallery <- function(path, what=c("raw", "qc")) {
+plateGallery <- function(path, what=c("raw", "qc"), parallel=FALSE) {
   what <- match.arg(what)
   switch(what, qc={
     pda <- readPhenodata(path)
@@ -83,7 +85,7 @@ plateGallery <- function(path, what=c("raw", "qc")) {
           thumb <- resize(image, w=300)
           writeImage(thumb, file=file.path(thumbnailDir, imFile))
         }
-      })
+      }, .parallel=parallel)
     }
     df <- data.frame(orig=file.path("../..", rnmDf$subdir, rnmDf$image),
                      thumb=file.path("thumbs", rnmDf$subdir, rnmDf$image),
