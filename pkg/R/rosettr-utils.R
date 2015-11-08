@@ -15,14 +15,6 @@ updateMeta <- function(..., meta) {
   meta
 }
 
-readPhenodata <- function(path)
-  readRDS(file.path(path, "Output", "phenodata.rda"))
-
-writePhenodata <- function(path, df) {
-  saveRDS(df, file.path(path, "Output", "phenodata.rda"))
-  write.csv(df, file=file.path(path, "Output", "data.csv"))
-}
-
 cleanPath <- function (path, mustWork=NA) {
   path <- gsub("/+$", "", normalizePath(path, winslash="/", 
                                         mustWork=mustWork))
@@ -104,19 +96,23 @@ createPlateQcDf <- function(df, html=TRUE) {
 #' Uses Mayank Lahiri's exif parsing library \url{https://github.com/mayanklahiri/easyexif}
 #' @author Henning Redestig
 dateTaken <- function(file) {
-  exif_date <- .Call("phenotyping_date_original", file, PACKAGE=PKG)
-  if(is.null(exif_date))
+  exifDate <- .Call("phenotyping_date_original", file, PACKAGE=PKG)
+  if(is.null(exifDate))
     return(NA)
-  as.POSIXct(strptime(exif_date,"%Y:%m:%d %H:%M:%S"))
+  as.POSIXct(strptime(exifDate,"%Y:%m:%d %H:%M:%S"))
 }
 
-#' Read and write the meta-data to a file
+#' Read and write meta-data and analysis results
 #'
-#' rosettR saves meta data about an each experiment in a special file
-#' in the experiment directory. Use these function to read/write meta data
-#' to that file in json format.
+#' rosettR saves meta data and analysis results for each experiment in
+#' a special file in the corresponding experiment directory. Use these
+#' function to read/write data to those files in the format expected by
+#' rosettR.
 #' @param meta the meta data object
 #' @param path path to the experiment directory
+#' @param df a data frame containing analysis results for the given
+#' @param manifest a data frame containing the manifest (description
+#' of each plate and well for the whole experiment) experiment
 #' @return nothing, used for side effect
 #' @export
 #' @name rwMeta
@@ -128,30 +124,26 @@ writeMeta <- function(meta, path)
 readMeta <- function(path)
   fromJSON(file.path(path, "meta"))
 
-#' Write manifest to an experiment
-#'
-#' Not intended for common use. Write manifest to a given
-#' experiment. Sorts the manifest after block and position prior to
-#' writing it.
-#' @param meta the meta data object of class \code{Oni} or
-#' \code{lmetadata}
-#' @param manifest the manifest data.frame
-#' @param path path to the experiment
-#' @return nothing
-#' @author Henning Redestig
+#' @name rwMeta
+#' @export
+readPhenodata <- function(path)
+  readRDS(file.path(path, "Output", "phenodata.rda"))
+
+#' @name rwMeta
+#' @export
+writePhenodata <- function(path, df) {
+  saveRDS(df, file.path(path, "Output", "phenodata.rda"))
+  write.csv(df, file=file.path(path, "Output", "data.csv"))
+}
+
+#' @name rwMeta
+#' @export
 writeManifest <- function(manifest, path)
   write.table(manifest, file=file.path(path, "manifest.txt"),
               row.names=FALSE, sep=",")
 
-#' Read the manifest from an experiment
-#'
-#' Each image in an experiment is described in the manifest file. Use
-#' this function to retrieve the manifest as a data frame.
-#' @param path the path to the manifest file itself or to the
-#' experiment where a manifest can be found.
-#' @return the manifest \code{data.frame}
+#' @name rwMeta
 #' @export
-#' @author Henning Redestig
 readManifest <- function(path) {
   mf <- read.table(file.path(path, "manifest.txt"), header=TRUE, sep=",")
   mf$image <- as.character(mf$image)
@@ -165,11 +157,11 @@ readManifest <- function(path) {
 #' in each repeat of the experiment. 
 #' @param meta the meta data object that defines the experiment design; the
 #' number of repeats, timepoints, germplasms and treatments
-#' @param platename canonical file name of the plates to use with
+#' @param plateName canonical file name of the plates to use with
 #' \code{\link{sprintf}}.
-#' @param plateoffset the number that the plate numbering should be
+#' @param plateOffset the number that the plate numbering should be
 #' offset to. The number of the first plate is 1 + plateoffset.
-#' @param plate_order An pre-defined order of the plate after they
+#' @param plateOrder An pre-defined order of the plate after they
 #' have been randomized. The plate order \emph{must} sort to correct
 #' order when using \code{\link{rank}} but can be either numerical or
 #' character.
@@ -182,8 +174,8 @@ readManifest <- function(path) {
 #' expandManifest(exampleMetadata)
 #' @author Henning Redestig
 expandManifest <- function(meta,
-                           platename="plate%03d.jpg", plateoffset=0,
-                           plate_order, ...) {
+                           plateName="plate%03d.jpg", plateOffset=0,
+                           plateOrder, ...) {
   if(length(meta$germplasm) == 0)
     stop("no germplasms defined")
   if(length(meta$treatments) == 0)
@@ -202,8 +194,8 @@ expandManifest <- function(meta,
   chun <- (nger / nreg) * ntre
   
   df <-
-    data.frame(plate=rep(sprintf(platename,
-                   (plateoffset + 1):(plateoffset + (nger / nreg) * ntre * nrep)),
+    data.frame(plate=rep(sprintf(plateName,
+                   (plateOffset + 1):(plateOffset + (nger / nreg) * ntre * nrep)),
                    each=nreg),
                chunk=rep(1:((nger / nreg) * ntre), each=nrep * nreg),
                treatment=rep(meta$treatments, each=nger  * nrep),
@@ -217,10 +209,10 @@ expandManifest <- function(meta,
   df$position <-
     as.vector(replicate(nrep, rep(sample(chun), each=nreg)))
   df <- df[order(df$o),]
-  if(!missing(plate_order)) {
-    if(!(length(plate_order) * nreg) == nrow(df))
+  if(!missing(plateOrder)) {
+    if(!(length(plateOrder) * nreg) == nrow(df))
       stop("plate order does not match experiment dimensions")
-    repdf <- data.frame( plt      =rep(rank(plate_order) , each=nreg)
+    repdf <- data.frame( plt      =rep(rank(plateOrder) , each=nreg)
                         ,BLOCK    =rep(gl(nrep, chun)    , each=nreg)
                         ,position =rep(1:chun            , each=nreg)
                         )
@@ -354,10 +346,10 @@ processPlateExperiment <- function(path, meta=readMeta(path), rename=TRUE,
     rdf <- with(rnmDf, data.frame(image=file.path(".", subdir, newname),
                                    oldname=image, date=date))
     mf <- merge(mf, rdf, by="image", all=TRUE)
-    missing_images <- Filter(Negate(file.exists), unique(mf$image))
-    if(length(missing_images > 0)) {
+    missingImages <- Filter(Negate(file.exists), file.path(path, unique(mf$image)))
+    if(length(missingImages > 0)) {
       warning(sprintf("%d missing images for %s, dropping them from manifest",
-                      length(missing_images), path))
+                      length(missingImages), path))
       mf <- mf[file.exists(mf$image),]
     }
     file.create(file.path(path, "Output", "sealed"))
@@ -367,8 +359,6 @@ processPlateExperiment <- function(path, meta=readMeta(path), rename=TRUE,
   if(analyze) {
     message("processing images..")
     res <- processPlateImages(path, ...)
-    message("making plate gallery..")
-    plateGallery(path, "qc")
   }
   invisible(res)
 }

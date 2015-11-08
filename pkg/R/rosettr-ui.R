@@ -7,6 +7,7 @@
 #' @param path the desired path for the experiment
 #' @param meta a meta data object as created by \code{\link{metaTemplate}}
 #' @return nothing, used for the side effect of create a new experiment directory
+#' @export
 #' @examples
 #' meta <- metaTemplate(letters[1:4], c("control", "osmotic_stress"))
 #' newExperiment(file.path(tempdir(), "test"), meta)
@@ -36,7 +37,7 @@ makeTestExperiment <- function(exdir=".") {
   path <- file.path(exdir, "rosettrTest")
   unzip(system.file("examples/rosettrTest.zip", package=PKG))
   meta <- metaTemplate(letters[1:4], treatments=c("control", "osmotic"),
-                       timepoints=1:2, pixelsmm=5.6)
+                       timepoints=c(11, 14, 16, 18), pixelsmm=7.538, nrepeats=3)
   writeManifest(expandManifest(meta), path)
   writeMeta(meta, path)
 }

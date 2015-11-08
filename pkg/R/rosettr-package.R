@@ -8,16 +8,17 @@
 #' LazyLoad: \tab yes \cr
 #' }
 #'
-#'
 #' @name rosettr
 #' @docType package
-#' @title Easy phenotyping of plants grown in paltes
+#' @title Easy phenotyping of plants grown in plates
 #' @useDynLib rosettR
 #' @import plyr
 #' @import reshape2
 #' @import EBImage
 #' @import methods
 #' @import jsonlite
+#' @import knitr
+#' @import markdown
 #' @importFrom Rcpp evalCpp
 #' @author Henning Redestig <henning.red at gmail.com>
 NULL

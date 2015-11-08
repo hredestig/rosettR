@@ -1,50 +1,51 @@
 # -*- org -*-
-* DONE create a new experiment and get the sowing report
-#+BEGIN_SRC R
-  library(rosettR)
-  sapply(list.files("pkg/R", pattern=".*R$", full.names=TRUE), source)
-  meta <- metaTemplate(letters[1:4], treatments=c("control", "osmotic"),
-                       timepoints=1:2)
-  writeMeta(meta, "pkg/inst/examples/rosettrTest")
-  newExperiment("rosettrTest", meta)
-  file.copy("pkg/inst/reports/sowing.Rmd",
-            file.path(.libPaths()[1], "rosettR/reports"), overwrite=TRUE)
-
-  makeReport("bla", "sowing", browse=FALSE)
-#+END_SRC
-* DONE raw image gallery
-  - State "DONE"       from "TODO"       [2015-11-05 Thu 22:49]
-#+BEGIN_SRC R
-  file.copy(
-    sprintf("EXP001_Daniel/D11/plate%03d.jpg", 1:20),
-    "bla/D01/"
-    )
-
-  file.copy(
-    sprintf("EXP001_Daniel/D11/plate%03d.jpg", 1:20),
-    "bla/D02/"
-    )
-  file.copy("pkg/inst/reports/overview.Rmd",
-            file.path(.libPaths()[1], "rosettR/reports"), overwrite=TRUE)
-
-  rosettR:::makeReport("bla", "overview", browse=FALSE)
-#+END_SRC
 * DONE make test experiment
 #+BEGIN_SRC R 
   library(rosettR)
+
+  meta <- metaTemplate(letters[1:4], treatments=c("control", "osmotic"),
+                       timepoints=c(11, 14, 16, 18), nrepeats=3)
+  rosettR:::newExperiment("pkg/inst/examples/rosettrTest", meta)
+
+  for(i in meta$timepoints)
+      file.copy(
+          sprintf("EXP001_Daniel/D%d/plate%03d.jpg", i, 1:6),
+          sprintf("pkg/inst/examples/rosettrTest/D%d/", i)
+          )
+
   file.copy("pkg/inst/examples/rosettrTest.zip",
             file.path(.libPaths()[1], "rosettR/examples/rosettrTest.zip"),
             overwrite=TRUE)
   makeTestExperiment()
 #+END_SRC
+* DONE create a new experiment and get the sowing report
+#+BEGIN_SRC R
+  library(rosettR)
+  file.copy("pkg/inst/reports/sowing.Rmd",
+            file.path(.libPaths()[1], "rosettR/reports"), overwrite=TRUE)
+
+  makeReport("rosettrTest", "sowing")
+#+END_SRC
+* DONE raw image gallery
+  - State "DONE"       from "TODO"       [2015-11-05 Thu 22:49]
+#+BEGIN_SRC R
+  file.copy("pkg/inst/reports/overview.Rmd",
+            file.path(.libPaths()[1], "rosettR/reports"), overwrite=TRUE)
+  makeReport("rosettrTest", "overview")
+#+END_SRC
 * DONE analyze the images
   - State "DONE"       from "TODO"       [2015-11-08 Sun 12:59]
 #+BEGIN_SRC R
-  processPlateExperiment("rosettrTest", analyze=FALSE)
-  res <- processPlateImages("rosettrTest")
+  processPlateExperiment("rosettrTest")
 #+END_SRC
 
 * TODO qc report
+#+BEGIN_SRC R
+  file.copy("pkg/inst/reports/quality-check.Rmd",
+            file.path(.libPaths()[1], "rosettR/reports"), overwrite=TRUE)
+  makeReport("rosettrTest", "quality-check.Rmd")
+#+END_SRC
+
 * TODO basic statistics report
 * TODO prettify reports with css
 http://www.r-bloggers.com/fast-track-publishing-using-knitr-the-setup-using-rprofile-with-custom-css-some-html-goodies-part-ii/

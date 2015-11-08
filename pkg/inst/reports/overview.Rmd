@@ -2,9 +2,8 @@
 
 ```{r read-chunks, echo=FALSE, warning=FALSE}
 suppressMessages(library(rosettR))
-opts_chunk$set(fig.width=5, fig.height=5, tidy=TRUE, fig.align='center',
-               fig.show='hold', dev=c('png', 'pdf'), error=TRUE)
-options(width=68)
+opts_chunk$set(tidy=FALSE, fig.align='left', error=TRUE)
+options(width=150)
 ```
 
 An overview of the taken images are given below. Make sure that the

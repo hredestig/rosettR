@@ -749,35 +749,6 @@ threshImage <- function(im, thresh) {
   im
 }
 
-#' Plot an image using R-graphics device for easy annotation.
-#'
-#' Copied from the now defunct biOps package.
-#' @param im an Image object or a character path to an image file
-#' @param ... passed on to \code{image}
-#' @return Nothing, used for the side effect
-#' @export
-#' @seealso \code{display} which is much faster and
-#' better for just showing a picture but does not work well in vignettes etc
-#' @examples
-#' im <- system.file("examples/plate_merged.jpg", package="rosettR")
-#' plotimage(im)
-#' @author Henning Redestig
-plotimage <- function(im, ...) {
-  if(is.character(im))
-    im <- readImage(im)
-  colvec <- switch(ifelse(colorMode(im) == 0, "grey", "rgb"),
-                   grey=grey(imageData(im)),
-                   rgb=rgb(imageData(im)[,,1],
-                   imageData(im)[,,2],
-                   imageData(im)[,,3]))
-  colors <- unique(colvec)
-  colmat <- t(array(match(colvec, colors), dim = dim(im)[1:2]))
-  image(x=0:(dim(colmat)[2]), y=0:(dim(colmat)[1]),
-        z=t(colmat[nrow(colmat):1, ]),
-        col=colors, xlab="", ylab="", axes=FALSE,
-        asp=1, ...)
-}
-
 #' Draw text on images
 #'
 #' Copied from EBImage version 3.13.1 since it was removed in version 4
