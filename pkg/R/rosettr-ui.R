@@ -36,60 +36,70 @@ newExperiment <- function(path, meta) {
 makeTestExperiment <- function(exdir=".") {
   path <- file.path(exdir, "rosettrTest")
   unzip(system.file("examples/rosettrTest.zip", package=PKG))
-  meta <- metaTemplate(letters[1:4], treatments=c("control", "osmotic"),
-                       timepoints=c(11, 14, 16, 18), pixelsmm=7.538, nrepeats=3)
+  meta <- metaTemplate(letters[1:4],
+                       treatments=c("control", "osmotic"),
+                       timepoints=c(11, 14, 16, 18),
+                       pixelsmm=7.538, nrepeats=3,
+                       reference="a")
   writeManifest(expandManifest(meta), path)
   writeMeta(meta, path)
 }
 
 #' Create a meta data template
 #'
-#' Each experiment is annotated with a set of parameters stored in a 'meta' data
-#' object. Parameters to use may differ between experiment setup and design. In
-#' all cases, the basic experiment setup is to have plates with seedlings that
-#' are taken from the growth chamber for imaging on a pre-defined set of
-#' days-after-sowing. 
+#' Each experiment is annotated with a set of parameters stored in a
+#' 'meta' data object. Parameters to use may differ between experiment
+#' setup and design. In all cases, the basic experiment setup is to
+#' have plates with seedlings that are taken from the growth chamber
+#' for imaging on a pre-defined set of days-after-sowing.
 #' @details This package is delivered with three different experiment
 #' designs. These are:
 #'
-#' \itemize{
-#' \item{6x6.abcd}{Uses a 6x6 plate grid with germplasms (lines) allocated to
-#' regions a, b, c and d that are placed clockwise around the plate. Total
-#' number of germplasms must thus be divisible by four.}
+#' \itemize{ \item{6x6.abcd}{Uses a 6x6 plate grid with germplasms
+#' (lines) allocated to regions a, b, c and d that are placed
+#' clockwise around the plate. Total number of germplasms must thus be
+#' divisible by four.}
 #' 
-#' \item{6x6.ab}{Uses a 6x6 plate grid with germplasms (lines) allocated to
-#' regions a and b that positioned at the upper and lower half of the plate.}
+#' \item{6x6.ab}{Uses a 6x6 plate grid with germplasms (lines)
+#' allocated to regions a and b that positioned at the upper and lower
+#' half of the plate.}
 #'
-#' \item{6x6.one}{Uses a 6x6 plate grid with a single germplasm.}
-#' }
-#' @param name the name of the experiment type to use. See details.
+#' \item{6x6.one}{Uses a 6x6 plate grid with a single germplasm.}  }
 #' @param germplasms the names of the germplasms (genotypes) used in the
 #' experiment.
+#' @param treatments a character vector listing the applied treatments
 #' @param timepoints the timepoints (days) when pictures are taken.
 #' @param nrepeats the number of replicates
-#' @param pixelsmm the number of pixels per mm on a picture (must be the same
-#' for all pictures)
+#' @param pixelsmm the number of pixels per mm on a picture (must be
+#' the same for all pictures)
+#' @param name the name of the experiment type to use. See details.
 #' @param plateRadius the radius of the plate (max radius of the lid)
-#' @param r the number of wells in each row and column of a plate. Layout is
-#' assumed to be square but with the corner wells left-out.
-#' @param d the width of a well in millimeter
+#' @param nBoxGrid the number of wells in each row and column of a
+#' plate. Layout is assumed to be square but with the corner wells
+#' left-out.
+#' @param boxWidth the width of a well in millimeter
+#' @param reference the genotype that is meant to be used as the
+#' reference
 #' @return a list with meta data for the experiment
 #' @export
 #' @examples
 #' metaTemplate(letters[1:4], c("control", "osmotic_stress"))
-#' @author Henning Redestig
 metaTemplate <- function(germplasms,
                          treatments="control",
                          timepoints=c(11, 14, 16, 18),
                          nrepeats=10,
                          pixelsmm=16,
                          name=c("6x6.abcd", "6x6.ab", "6x6.one"),
-                         plateRadius=76, nBoxGrid=6, boxWidth=20) {
+                         plateRadius=76, nBoxGrid=6, boxWidth=20,
+                         reference=NULL) {
   name <- match.arg(name)
+  if(!is.null(reference))
+    stopifnot(reference %in% germplasms)
   template <- list(germplasms=germplasms, treatments=treatments,
                    nBoxGrid=nBoxGrid, boxWidth=boxWidth,
                    timepoints=timepoints, nrepeats=nrepeats,
-                   pixelsmm=pixelsmm, name=name, plateRadius=plateRadius)
+                   pixelsmm=pixelsmm, name=name, plateRadius=plateRadius,
+                   reference=reference)
   
   reps <- expand.grid(RANGE=1:6, ROW=1:6)
   griddf <- subset(data.frame(RANGE=reps$RANGE, ROW=reps$ROW), 

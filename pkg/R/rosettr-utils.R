@@ -489,3 +489,89 @@ renameImages <- function(path, df, dry, verbose) {
   }
   df
 }
+
+#' Create a simple contrast matrix for linear models
+#'
+#' Used in template reports in this package to perform ANOVA.
+#' @param comparisons a two column matrix indicating the left and
+#' right hand side of the comparison to make
+#' @return a matrix with 0, 1 an -1 indicating the comparison to be made
+#' @examples
+#' comparisons <- matrix(c(letters[1:4], LETTERS[1:4]), ncol=2)
+#' contrastMatrix(comparisons)
+contrastMatrix <- function(comparisons) {
+  levels <- sort(unique(as.vector(comparisons)))
+  contMat <- matrix(0, nrow=nrow(comparisons), ncol=length(levels),
+                    dimnames=list(apply(comparisons, 1, paste, collapse="_vs_"),
+                      levels))
+  for(iRow in 1:nrow(comparisons)) {
+    contMat[iRow, comparisons[iRow, 1]] <- 1
+    contMat[iRow, comparisons[iRow, 2]] <- -1
+  }
+  contMat
+}
+
+#' Perform ANOVA for the comparisons in a plate experiment
+#' @param data 
+#' @param contrasts contrast matrix indicating the comparisons to be
+#' made, with one column per level in the main factor, output of
+#' \code{\link{contrastMatrix}}
+#' @param fixed the column in the data indicating the fixed effects
+#' @param random the column in the data indicating the random effects
+#' @return 
+simpleAnovaTable <- function(data, contrasts, fixed, random, response) {
+  fixedFormula <- as.formula(paste(response, "~", fixed, "-1"))
+  randomFormula <- as.formula(paste("~", random))
+  
+  means <- tapply(data[[response]], data[[fixed]], mean, na.rm=TRUE)
+  sds <- tapply(data[[response]], data[[fixed]], sd, na.rm=TRUE)
+  leftContrasts <- contrasts
+  leftContrasts[leftContrasts < 0] <- 0
+  rightContrasts <- contrasts
+  rightContrasts[rightContrasts > 0] <- 0
+  rightContrasts[rightContrasts < 0] <- 1
+  meanTable <- data.frame(
+    Mean1=leftContrasts %*% means,
+    Mean2=rightContrasts %*% means,
+    Effect=contrasts %*% means
+    )
+
+  resultTable <- data.frame(
+    means=,
+    sds=as.vector(tapply(data[[response]], data[[fixed]], sd, na.rm=TRUE))
+    )
+  resultTable$comparison <- rownames(resultTable)
+}
+
+comparisonsTable <- function(factorA, factorB, reference) {
+  left <-
+    data.frame(germplasm=rep(factorB, length(factorA)),
+               treatment=rep(factorA, each=length(factorB)),
+               stringsAsFactors=FALSE)
+  right <- ldply(reference, function(r) {
+                   left$germplasm <- r
+                   left
+                 })
+  left <- ldply(reference, function(r) left)
+  skip <- (apply(left, 1, paste, collapse="") ==
+             apply(right, 1, paste, collapse=""))
+  left <- left[!skip,]
+  right <- right[!skip,]
+  laply(1:nrow(left), function(i) {
+          c(paste(left[i,], collapse="_"),
+            paste(right[i,], collapse="_"))
+      })
+}
+
+glhtTable <- function(fit) {
+  glhtSummary <- summary(fit)
+  glhtConfint <- as.data.frame(confint(fit)$confint)
+  glhtConfint$comparison <- rownames(glhtConfint)
+  pq <- glhtSummary$test
+  mtests <- data.frame(Estimate=pq$coefficients,
+                       StdError=pq$sigma,
+                       tvalue=pq$tstat,
+                       pvalue=pq$pvalues,
+                       comparison=names(pq$tstat))
+  merge(glhtConfint[, -1], mtests, by="comparison")
+}

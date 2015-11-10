@@ -47,5 +47,50 @@
 #+END_SRC
 
 * TODO basic statistics report
+#+BEGIN_SRC R :session *R*
+  library(rosettR)
+  library(plyr)
+  library(multcomp)
+
+  expdf <- createPlateTestDf(read.csv("data.csv"))
+
+  df <- expdf[, c("treatment", "GERMPLASM", "AREA_12", "BLOCK")]
+  df <- subset(df, !is.na(AREA_12))
+  df$TRT <- factor(paste(as.character(df$GERMPLASM),
+                         as.character(df$treatment), sep="_"))
+  comp <- comparisonsTable(levels(factor(as.character(df$treatment))),
+                           levels(factor(as.character(df$GERMPLASM))), "Ler_wt")
+  contrasts <- contrastMatrix(comp)
+
+  amod <- aov(AREA_12 ~ TRT + BLOCK, data=df)
+
+  multiComparison <- glht(amod, linfct=mcp(TRT=contrasts))
+  resultTable <- glhtTable(multiComparison)
+
+  means <- tapply(df[["AREA_12"]], df[["TRT"]], mean, na.rm=TRUE)
+  sds <- tapply(df[["AREA_12"]], df[["TRT"]], sd, na.rm=TRUE)
+
+  leftContrasts <- contrasts
+  leftContrasts[leftContrasts < 0] <- 0
+  rightContrasts <- contrasts
+  rightContrasts[rightContrasts > 0] <- 0
+  rightContrasts[rightContrasts < 0] <- 1
+
+  meanTable <- data.frame(
+      Mean1=leftContrasts %*% means,
+      Mean2=rightContrasts %*% means
+      )
+  meanTable$comparison <- rownames(meanTable)
+  new <- merge(resultTable, meanTable, by="comparison")
+
+  old <- subset(read.csv("anova-results.csv"), trait == "AREA_12")
+  old$comparison <- gsub(" ", "_", old$comparison)
+
+  ba <- merge(new, old, by="comparison")
+
+  with(ba, plot(Mean2.y, Mean2.x))
+#+END_SRC
+* TODO test removing some boxes and redo
+plus document this in qc report
 * TODO prettify reports with css
 http://www.r-bloggers.com/fast-track-publishing-using-knitr-the-setup-using-rprofile-with-custom-css-some-html-goodies-part-ii/
