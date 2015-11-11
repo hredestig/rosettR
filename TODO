@@ -47,48 +47,83 @@
 #+END_SRC
 
 * TODO basic statistics report
+Setting up the basic G - T comparison
 #+BEGIN_SRC R :session *R*
   library(rosettR)
   library(plyr)
   library(multcomp)
 
+  ## prep data
+  file.copy("/data/prod/Projects/Arabidopsis/BIO1-032/phenotyping/plate/EXP029_MERIT/Output/data.csv",
+            "data.csv", overwrite = TRUE)
+  file.copy("/data/prod/Projects/Arabidopsis/BIO1-032/phenotyping/plate/EXP029_MERIT/Output/reports/plate-compare_areas_germplasm_treatments-Ler_wt/anova-results.csv",
+            "anova-results.csv", overwrite = TRUE)
   expdf <- createPlateTestDf(read.csv("data.csv"))
 
-  df <- expdf[, c("treatment", "GERMPLASM", "AREA_12", "BLOCK")]
-  df <- subset(df, !is.na(AREA_12))
-  df$TRT <- factor(paste(as.character(df$GERMPLASM),
-                         as.character(df$treatment), sep="_"))
-  comp <- comparisonsTable(levels(factor(as.character(df$treatment))),
-                           levels(factor(as.character(df$GERMPLASM))), "Ler_wt")
-  contrasts <- contrastMatrix(comp)
+  ## new way
+  new <- simpleAnovaTableGT(expdf, "Ler_wt", "AREA_12")
 
-  amod <- aov(AREA_12 ~ TRT + BLOCK, data=df)
+  ## old way
+  traits <- colnames(expdf)[c(grep('^AREA', colnames(expdf)),
+                              grep('^RGR', colnames(expdf)))]
+  expdf$reference <- "Ler_wt"
+  vars <- 'treatment'
+  expdf$TRT <- apply(expdf[, c('GERMPLASM', vars)], 1, paste, collapse='_')
+  nmeta <-
+    (BCS.PhenoData::make.metadata(traits=traits,
+                                   treats=vars,
+                                   formats=rep("NUM.2", length(traits)),
+                                   short=traits,
+                                   units=c(rep("mm2",
+                                     sum(grepl('^AREA', colnames(expdf)))),
+                                     rep("", sum(grepl('^RGR', colnames(expdf)))))))
 
-  multiComparison <- glht(amod, linfct=mcp(TRT=contrasts))
-  resultTable <- glhtTable(multiComparison)
+  data <- data.frame(EXPT="ba", GERMPLASM=expdf$GERMPLASM, BLOCK=expdf$BLOCK, 
+                     SUBBLOCK=NA, SUBSUBBLOCK=NA, ROW=expdf$ROW, RANGE=expdf$RANGE, 
+                     expdf[, c(vars, traits)])
+  data$TRT <- apply(data[, c('GERMPLASM', vars)], 1, paste, collapse='_')
+  pheno <- BCS.PhenoData::make.phenodata(data, nmeta)
 
-  means <- tapply(df[["AREA_12"]], df[["TRT"]], mean, na.rm=TRUE)
-  sds <- tapply(df[["AREA_12"]], df[["TRT"]], sd, na.rm=TRUE)
 
-  leftContrasts <- contrasts
-  leftContrasts[leftContrasts < 0] <- 0
-  rightContrasts <- contrasts
-  rightContrasts[rightContrasts > 0] <- 0
-  rightContrasts[rightContrasts < 0] <- 1
+  left <- right <- data.frame(germplasm=character(), treatment=character())
+  for(g in as.character(unique(data$GERMPLASM))) {
+    for(t in as.character(unique(data$treatment))) {
+      for(r in "Ler_wt") {
+        if(g == r) next
+        left <- rbind(left, data.frame(germplasm=g, treatment=t, stringsAsFactors=FALSE))
+        right <- rbind(right, data.frame(germplasm=r, treatment=t, stringsAsFactors=FALSE))
+      }
+    }
+  }
 
-  meanTable <- data.frame(
-      Mean1=leftContrasts %*% means,
-      Mean2=rightContrasts %*% means
-      )
-  meanTable$comparison <- rownames(meanTable)
-  new <- merge(resultTable, meanTable, by="comparison")
+  skip <- apply(left, 1, paste, collapse='') == apply(right, 1, paste, collapse='')
+  left <- left[!skip,]
+  right <- right[!skip,]
+  mat <-
+    plyr::laply(1:nrow(left), function(i) c(paste(left[i,], collapse='_'),
+                                            paste(right[i,], collapse='_')))
 
-  old <- subset(read.csv("anova-results.csv"), trait == "AREA_12")
-  old$comparison <- gsub(" ", "_", old$comparison)
+  cm <- BCS.PhenoData::create.cm(contrasts=mat, levels=levels(factor(data$TRT)))
+  results <- BCS.PhenoData::anova.phenodata(pheno, factor="TRT",
+                                            random="~ BLOCK", cm=cm)
+  cvIndex <- match("CV", names(results))
+  results_df <- BCS.Phenotyping:::anova_phenodata_to_data_frame(results[-cvIndex],
+                                                                pheno, left)
 
-  ba <- merge(new, old, by="comparison")
+  ## check that it's ok
+  results_df$comparison <- gsub(" ", "_", results_df$comparison)
+  old <- subset(results_df, trait == "AREA_12")
+  ba <- merge(old, new, by="comparison")
+  head(ba[, c("comparison", "Mean1.x", "Mean1.y")])
+  with(ba, cor(Mean2.y, Mean2.x))
+  with(ba, MASS::eqscplot(Mean1, mean_left))
+  abline(c(0,1))
+  with(ba, MASS::eqscplot(Mean2, mean_right))
+  abline(c(0,1))
+  with(ba, plot(Pvalue, pvalue))
+  with(ba, MASS::eqscplot(Effect, Estimate))
+  abline(c(0,1))
 
-  with(ba, plot(Mean2.y, Mean2.x))
 #+END_SRC
 * TODO test removing some boxes and redo
 plus document this in qc report

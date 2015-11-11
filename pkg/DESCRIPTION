@@ -18,7 +18,8 @@ Imports:
     xtable,
     jsonlite,
     knitr,
-    markdown
+    markdown,
+	multcomp
 LinkingTo: Rcpp
 SystemRequirements: Rcpp
 RoxygenNote: 5.0.0

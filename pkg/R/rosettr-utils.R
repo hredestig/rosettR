@@ -490,77 +490,110 @@ renameImages <- function(path, df, dry, verbose) {
   df
 }
 
-#' Create a simple contrast matrix for linear models
+#' Comparison table
 #'
+#' In the plate experiments supported by rosettR we are concerned with comparing
+#' all genotypes against a reference genotypes across different treatments.
 #' Used in template reports in this package to perform ANOVA.
-#' @param comparisons a two column matrix indicating the left and
-#' right hand side of the comparison to make
-#' @return a matrix with 0, 1 an -1 indicating the comparison to be made
+#' @param levelsA the levels of the first factor, e.g. the treatments
+#' @param levelsB the levels of the second factor, e.g. the genotypes
+#' @param reference the reference in the second factor (e.g. wildtype if
+#' genotypes)
+#' @return a data frame detailing the comparisons to make
+#' @noRd
 #' @examples
-#' comparisons <- matrix(c(letters[1:4], LETTERS[1:4]), ncol=2)
-#' contrastMatrix(comparisons)
-contrastMatrix <- function(comparisons) {
-  levels <- sort(unique(as.vector(comparisons)))
-  contMat <- matrix(0, nrow=nrow(comparisons), ncol=length(levels),
-                    dimnames=list(apply(comparisons, 1, paste, collapse="_vs_"),
-                      levels))
-  for(iRow in 1:nrow(comparisons)) {
-    contMat[iRow, comparisons[iRow, 1]] <- 1
-    contMat[iRow, comparisons[iRow, 2]] <- -1
-  }
-  contMat
-}
-
-#' Perform ANOVA for the comparisons in a plate experiment
-#' @param data 
-#' @param contrasts contrast matrix indicating the comparisons to be
-#' made, with one column per level in the main factor, output of
-#' \code{\link{contrastMatrix}}
-#' @param fixed the column in the data indicating the fixed effects
-#' @param random the column in the data indicating the random effects
-#' @return 
-simpleAnovaTable <- function(data, contrasts, fixed, random, response) {
-  fixedFormula <- as.formula(paste(response, "~", fixed, "-1"))
-  randomFormula <- as.formula(paste("~", random))
-  
-  means <- tapply(data[[response]], data[[fixed]], mean, na.rm=TRUE)
-  sds <- tapply(data[[response]], data[[fixed]], sd, na.rm=TRUE)
-  leftContrasts <- contrasts
-  leftContrasts[leftContrasts < 0] <- 0
-  rightContrasts <- contrasts
-  rightContrasts[rightContrasts > 0] <- 0
-  rightContrasts[rightContrasts < 0] <- 1
-  meanTable <- data.frame(
-    Mean1=leftContrasts %*% means,
-    Mean2=rightContrasts %*% means,
-    Effect=contrasts %*% means
-    )
-
-  resultTable <- data.frame(
-    means=,
-    sds=as.vector(tapply(data[[response]], data[[fixed]], sd, na.rm=TRUE))
-    )
-  resultTable$comparison <- rownames(resultTable)
-}
-
-comparisonsTable <- function(factorA, factorB, reference) {
-  left <-
-    data.frame(germplasm=rep(factorB, length(factorA)),
-               treatment=rep(factorA, each=length(factorB)),
-               stringsAsFactors=FALSE)
+#' comparisonTable(c("control", "osmotic_stress"),
+#'                 c("ko1", "ox1", "col8"), reference="col8")
+comparisonTable <- function(levelsA, levelsB, reference) {
+  left <- expand.grid(Var1=levelsB, Var2=levelsA)
   right <- ldply(reference, function(r) {
-                   left$germplasm <- r
+                   left$Var1 <- r
                    left
                  })
   left <- ldply(reference, function(r) left)
   skip <- (apply(left, 1, paste, collapse="") ==
              apply(right, 1, paste, collapse=""))
-  left <- left[!skip,]
-  right <- right[!skip,]
-  laply(1:nrow(left), function(i) {
-          c(paste(left[i,], collapse="_"),
-            paste(right[i,], collapse="_"))
-      })
+  left <- as.matrix(left[!skip,])
+  right <- as.matrix(right[!skip,])
+  ldply(1:nrow(left), function(i) {
+    leftValue <- paste(left[i,], collapse="_")
+    rightValue <- paste(right[i,], collapse="_")
+    data.frame(
+      comparison=paste(leftValue, rightValue, sep="_vs_"),
+      left=leftValue, right=rightValue,
+      stringsAsFactors=FALSE
+    )
+  })
+}
+
+#' Create a simple contrast matrix for two-factor linear model
+#'
+#' In the plate experiments supported by rosettR we are concerned with comparing
+#' all genotypes against a reference genotypes across different treatments.
+#' Used in template reports in this package to perform ANOVA.
+#' @param comparisons data frame with the left hand and right hand level of the
+#' studied factor for each comparison, and a columnt 'comparison' naming the
+#' comparison to make
+#' @return a matrix with 0, 1 an -1 indicating the comparison to be made
+#' @noRd
+#' @examples
+#' comp <- comparisonTable(c("control", "osmotic_stress"),
+#'                         c("ko1", "ox1", "col8"), reference="col8")
+#' contrastMatrixForComparisons(comp)
+contrastMatrixForComparisons <- function(comparisons) {
+  levels <- sort(unique(c(comparisons$right, comparisons$left)))
+  contMat <- matrix(0, nrow=nrow(comparisons), ncol=length(levels),
+                    dimnames=list(comparisons$comparison,
+                      levels))
+  for(iRow in 1:nrow(comparisons)) {
+    contMat[iRow, comparisons[iRow, "left"]] <- 1
+    contMat[iRow, comparisons[iRow, "right"]] <- -1
+  }
+  contMat
+}
+
+statsTable <- function(data, comparisons, response) {
+  stats <- ddply(data, "germplasmTreatment", function(dd) {
+    data.frame(mean=mean(dd[[response]], na.rm=TRUE),
+               sd=sd(dd[[response]], na.rm=TRUE))
+  })
+  comparisonData <- melt(comparisons, id.vars="comparison",
+                         value.name="germplasmTreatment",
+                         variable.name="direction")
+  joinedData <- merge(stats, comparisonData, by="germplasmTreatment")
+  mjoinedData <- melt(joinedData,
+                      id.vars=c("direction", "germplasmTreatment", "comparison"))
+  dcast(mjoinedData, comparison ~ variable + direction, value.var="value")
+}
+
+#' Perform ANOVA for the comparisons in a plate experiment
+#' @param data a data frame with plate phenotyping results, such as output from
+#' \code{\link{createPlateTestDf}}
+#' @param reference the reference genotype
+#' @param responseVariables the response variable(s) to compute the contrasts
+#' statistics for. The pvalues are corrected for multiple comparisons.
+#' @export
+#' @examples
+#' # TODO
+#' @return a data frame with one contrast per row
+#' @seealso \code{\link{glht}} which is used to make the multiple comparisons
+simpleAnovaTableGT <- function(data, reference, responseVariables) {
+  data$germplasmTreatment <- factor(paste(as.character(data$GERMPLASM),
+                                          as.character(data$treatment), sep="_"))
+  ldply(responseVariables, function(response) {
+    subData <- data[!is.na(data[[response]]), ]
+    comparisons <- comparisonTable(
+      levels(factor(as.character(subData$treatment))),
+      levels(factor(as.character(subData$GERMPLASM))),
+      reference
+    )
+    formula <- as.formula(paste(response, "~ germplasmTreatment + BLOCK"))
+    aModel <- aov(formula, data=subData)
+    multiComparison <- glht(aModel, linfct=mcp(germplasmTreatment=contrasts))
+    resultTable <- glhtTable(multiComparison)
+    stats <- statsTable(data, comparisons, response)
+    merge(resultTable, stats, by="comparison")
+  })
 }
 
 glhtTable <- function(fit) {
