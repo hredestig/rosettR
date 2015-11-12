@@ -643,20 +643,19 @@ postProcessPlatePhenodata <- function(phenodata, minArea=1.5, ...) {
 
 #' Re-process a (sub)set of previously processed plate images
 #'
-#' Apply \code{\link{analyzeImage}} to a selected set of images in
-#' an experiment and combine the results with previously computed
+#' Apply \code{\link{analyzeImage}} to a selected set of images in an
+#' experiment and combine the results with previously computed
 #' results.
 #' @param path the path to the experiment to reprocess
 #' @param mf a manifest data frame for the selected images.
-#' @param meta a list with parameters to configure the image analysis (passed as
-#' arguments to \code{\link{analyzeImage}}
 #' @param verbose display progressbar or not. Disabled for parallel
 #' computation as it does not work reliably.
 #' @param save should the created phenodata object and csv-file with
 #' the complemented dataset be placed in the output directory of the
 #' experiment or not. Previous results for selected images are lost.
-#' @param ... passed on to \code{\link{analyzeImage}} (precedence over the
-#' parameters defined in \code{meta}) and \code{\link{doProcessPlateImages}}
+#' @param ... passed on to \code{\link{analyzeImage}} (precedence over
+#' the parameters defined in \code{meta}) and
+#' \code{\link{doProcessPlateImages}}
 #' @param cores number of cores to use.
 #' @seealso \code{\link{processPlateImages}} that has the same arguments and
 #' functionality but is used for all images in the experiment.
@@ -664,32 +663,28 @@ postProcessPlatePhenodata <- function(phenodata, minArea=1.5, ...) {
 #' were re-processed) \code{phenodata} object with the results.
 #' @examples
 #' \dontrun{
-#' untar(system.file('examples/plate/EXP242.tar.gz', package='BCS.Phenotyping'), exdir='.')
-#' load_config('plate-6x6.top_hh_bottom_HH')
-#' ## plate 1 is not in the centre so it fails at cell 3:3 and 3:4
-#' pda <- process_plate_experiment('EXP242_HR', checkrotation=FALSE, verbose=TRUE)
-#' qcpic <- subset(dataset(pda), timepoint == 18 & plate == 'plate001.jpg')$qc[1]
-#' display(readImage(qcpic), method='raster')
-#' mf <- read_manifest('EXP242_HR')
-#' mf <- subset(mf, timepoint == 18 & plate  == 'plate001.jpg')
-#' ## reprocess the plate applying a shift of 5 mm in the horizontal direction
-#' pda <- reprocess_plate_images('EXP242_HR', mf, deltax=5, checkrotation=FALSE)
-#' qcpic <- subset(dataset(pda), timepoint == 18 & plate == 'plate001.jpg')$qc[1]
-#' display(readImage(qcpic), method='raster')
+#' path <- makeTestExperiment(tempdir())
+#' pda <- processPlateExperiment(path, checklocation=FALSE, checkrotation=FALSE, verbose=TRUE)
+#' ## assume we were not happy with settings for first plate, day 18
+#' mf <- readManifest(path)
+#' mf <- subset(mf, timepoint == 18 & plate  == "plate001.jpg")
+#' ## reprocess the plate adding rotation check and correction
+#' pda <- reprocessPlateImages(path, mf, checkrotation=TRUE)
 #' }
 #' @export
 #' @author Henning Redestig
-reprocessPlateImages <- function(path, mf, meta=readMeta(path), verbose=FALSE,
+reprocessPlateImages <- function(path, mf, verbose=FALSE,
                                  save=TRUE, ...) {
-  meta <- updateMeta(..., meta)
-  df <- readPhenodata(path)
+  meta <- readMeta(path)
+  meta <- updateMeta(..., meta=meta)
+  phenodata <- readPhenodata(path)
   newphenodata <-
     doProcessPlateImages(path, mf, meta, ...)
-  df <- rbind(df[!(df$image %in% newphenodata$image), , drop=FALSE],
-              newphenodata)
+  updatedPheno <- rbind(phenodata[!(phenodata$image %in% phenodata$image), , drop=FALSE],
+                        newphenodata)
   if(save)
-    writePhenodata(path, df)
-  invisible(phenodata)
+    writePhenodata(path, updatedPheno)
+  invisible(updatedPheno)
 }
 
 rotationSigma <- function(dat, center, boxWidthP, nBoxGrid, sigma=10, eps=1e-2) {

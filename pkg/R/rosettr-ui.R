@@ -28,14 +28,15 @@ newExperiment <- function(path, meta) {
 #'
 #' To be used for testing purposed in documentation and unit-tests. 
 #' @param exdir where to create the test experiment
-#' @return nothing, used for side effect
+#' @return invisibly, the path to the created test experiment
 #' @export
 #' @examples
 #' makeTestExperiment(tempdir())
 #' @author Henning Redestig
 makeTestExperiment <- function(exdir=".") {
   path <- file.path(exdir, "rosettrTest")
-  unzip(system.file("examples/rosettrTest.zip", package=PKG))
+  unzip(system.file("examples/rosettrTest.zip", package=PKG),
+        exdir=exdir)
   meta <- metaTemplate(letters[1:4],
                        treatments=c("control", "osmotic"),
                        timepoints=c(11, 14, 16, 18),
@@ -43,6 +44,7 @@ makeTestExperiment <- function(exdir=".") {
                        reference="a")
   writeManifest(expandManifest(meta), path)
   writeMeta(meta, path)
+  invisible(path)
 }
 
 #' Create a meta data template

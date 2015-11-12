@@ -19,6 +19,7 @@
 #' @import jsonlite
 #' @import knitr
 #' @import markdown
+#' @import multcomp
 #' @importFrom Rcpp evalCpp
 #' @author Henning Redestig <henning.red at gmail.com>
 NULL

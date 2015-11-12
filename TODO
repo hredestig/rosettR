@@ -43,10 +43,11 @@
 #+BEGIN_SRC R
   file.copy("pkg/inst/reports/quality-check.Rmd",
             file.path(.libPaths()[1], "rosettR/reports"), overwrite=TRUE)
-  makeReport("rosettrTest", "quality-check")
+  makeReport("rosettrTest", "quality-check", "qc")
 #+END_SRC
 
-* TODO basic statistics report
+* DONE basic statistics report germplasm -- treatment
+  - State "DONE"       from "TODO"       [2015-11-11 Wed 18:19]
 Setting up the basic G - T comparison
 #+BEGIN_SRC R :session *R*
   library(rosettR)
@@ -125,7 +126,20 @@ Setting up the basic G - T comparison
   abline(c(0,1))
 
 #+END_SRC
+
+#+BEGIN_SRC R
+  file.copy("pkg/inst/reports/compare-areas.Rmd",
+            file.path(.libPaths()[1], "rosettR/reports"), overwrite=TRUE)
+  makeReport("rosettrTest", "compare-areas")
+#+END_SRC
+
 * TODO test removing some boxes and redo
+works now, see example reprocessPlateImages
+
 plus document this in qc report
+#+BEGIN_SRC R :session *R*
+
+#+END_SRC
 * TODO prettify reports with css
 http://www.r-bloggers.com/fast-track-publishing-using-knitr-the-setup-using-rprofile-with-custom-css-some-html-goodies-part-ii/
+* TODO test by re-analyzing some old experiment

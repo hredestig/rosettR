@@ -13,17 +13,21 @@
 #' newExperiment(file.path(tempdir(), "testExperiment"), meta)
 #' makeReport(file.path(tempdir(), "testExperiment"), "sowing")
 #' @author Henning Redestig
-makeReport <- function(path, report, browse=interactive()) {
+makeReport <- function(path, report, name=NULL, browse=interactive()) {
   allReports <- list.files(system.file("reports", package=PKG), full.names=TRUE)
   names(allReports) <- gsub(".Rmd", "", basename(allReports))
   chosen <- match.arg(report, names(allReports))
-  reportDir <- file.path(path, "Output", chosen)
+  reportDir <- file.path(path, "Output", ifelse(is.null(name), chosen, name))
   if(!file.exists(reportDir))
     dir.create(reportDir)
   file.copy(allReports[chosen], reportDir, overwrite=TRUE)
   cwd <- getwd()
   on.exit(setwd(cwd))
   setwd(reportDir)
+  cat("
+   This report was compiled on `r date()` by `r Sys.info()['effective_user']`
+   on `r Sys.info()['sysname']` using rosettR v`r packageVersion('rosettR')`
+  ", file=allReports[chosen], append=TRUE)
   out <- knit(basename(allReports[chosen]), envir=new.env())
   markdownToHTML(sub(".Rmd", ".md", basename(allReports[chosen])),
                  sub(".Rmd", ".html", basename(allReports[chosen])))

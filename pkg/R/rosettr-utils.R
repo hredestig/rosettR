@@ -88,13 +88,15 @@ createPlateQcDf <- function(df, html=TRUE) {
 
 #' The date an image was taken
 #'
-#' Read create date from the exif tags using 
+#' Read create date from the exif tags using.
 #' @param file an image file (jpg)
 #' @return the date
 #' @export
 #' @references
 #' Uses Mayank Lahiri's exif parsing library \url{https://github.com/mayanklahiri/easyexif}
 #' @author Henning Redestig
+#' @examples
+#' dateTaken(system.file("examples/plate001.jpg", package="rosettR"))
 dateTaken <- function(file) {
   exifDate <- .Call("phenotyping_date_original", file, PACKAGE=PKG)
   if(is.null(exifDate))
@@ -126,8 +128,16 @@ readMeta <- function(path)
 
 #' @name rwMeta
 #' @export
-readPhenodata <- function(path)
-  readRDS(file.path(path, "Output", "phenodata.rda"))
+readPhenodata <- function(path) {
+  rdaFile <- file.path(path, "Output", "phenodata.rda")
+  csvFile <- file.path(path, "Output", "data.csv")
+  if(file.exists(rdaFile))
+    readRDS(rdaFile)
+  else if(file.exists(csvFile))
+    read.csv(csvFile)
+  else
+    stop("no phenodata, not yet processed?")
+}
 
 #' @name rwMeta
 #' @export
@@ -171,6 +181,7 @@ readManifest <- function(path) {
 #' @export
 #' @examples
 #' data(exampleMetadata)
+#' exampleMetadata
 #' expandManifest(exampleMetadata)
 #' @author Henning Redestig
 expandManifest <- function(meta,
@@ -252,15 +263,13 @@ expandManifest <- function(meta,
 #' @export
 #' @author Henning Redestig
 #' @examples
-#' \dontrun{
-#' ## remove the plant in 3:3 on plate120 from all days
-#' removeBoxes('.*/plate120/3:3', '..path..')
+#' makeTestExperiment(tempdir())
+#' ## remove the plant in 3:3 on plate002 from day 18
+#' removeBoxes(path, ".*/plate002/3:3")
 #' ## list the removed plants
-#' load('..path../Output/phenodata.rda')
-#' subset(dataset(phenodata), removed)
-#' }
+#' subset(readPhenodata(path), removed)
 removeBoxes <- function(path, pattern, platere="plate\\s*\\d+", remove=TRUE) {
-  if(any(!grepl(paste(".+/", platere, "/.+:.+", sep=""), pattern)))
+  if(!any(grepl(paste0(".+/", platere, "/.+:.+"), pattern)))
     stop(paste("malformatted plate indication. should be [day]/[plateXXX]/[row]:[col],",
                "for example 18/plate120/2:3"))
   df <- readPhenodata(path)
@@ -273,10 +282,10 @@ removeBoxes <- function(path, pattern, platere="plate\\s*\\d+", remove=TRUE) {
   colregex <- strsplit(strsplit(pattern,"/")[[1]][3], ":")[[1]][2]
 
   selection_to_remove <-
-      grepl(dayregex, as.character(df$timepoint)) &
-        grepl(pltregex, as.character(df$plate)) &
-          grepl(rowregex, as.character(df$ROW)) &
-            grepl(colregex, as.character(df$RANGE))
+    grepl(dayregex, as.character(df$timepoint)) &
+      grepl(pltregex, as.character(df$plate)) &
+      grepl(rowregex, as.character(df$ROW)) &
+      grepl(colregex, as.character(df$RANGE))
 
   df$removed[selection_to_remove] <- remove
   writePhenodata(path, df)
@@ -310,15 +319,12 @@ removeBoxes <- function(path, pattern, platere="plate\\s*\\d+", remove=TRUE) {
 #' otherwise \code{NULL}, both invisibly.
 #' ## unpack an example experiment to working directory.
 #' @examples
+#' path <- makeTestExperiment(tempdir())
+#' processPlateExperiment(path, analyze=FALSE)
+#' readManifest(path)
 #' \dontrun{
-#' dummyPath <- createDummyPlateExperiment(242)
-#' ## You may want to inspect the folder structure
-#' dir(dummyPath)
-#' processPlateExperiment(dummyPath, analyze=FALSE)
-#' readManifest(dummyExperimentId)
 #' ## optionally analyze the pictures as well
-#' processPlateExperiment(dummyExperimentId)
-#' trashExperiment(as(dummyExperimentId, "Oni"))
+#' processPlateExperiment(path)
 #' }
 #' @export
 #' @author Henning Redestig
@@ -393,24 +399,22 @@ processPlateExperiment <- function(path, meta=readMeta(path), rename=TRUE,
 #' good to save this data frame to be able to revert file renaming
 #' @export
 #' @examples
-#' \dontrun{
-#' dummyExperimentId <- createDummyPlateExperiment(242)
-#' newnames <- c('plate003.jpg', 'plate002.jpg', 'plate004.jpg', 'plate001.jpg')
+#' path <- makeTestExperiment(tempdir())
+#' newnames <- c("plate003.jpg", "plate002.jpg", "plate004.jpg", "plate001.jpg",
+#'               "plate005.jpg", "plate006.jpg")
 #' ## simulate renaming all files
-#' renamePlateImages(dummyExperimentId, newnames)
+#' renamePlateImages(path, newnames)
 #' ## simulate for a single directory
-#' renamePlateImages(dummyExperimentId, newnames, subdirs="D11")
+#' renamePlateImages(path, newnames, subdirs="D11")
 #' ## to actually make changes
-#' renaming <- renamePlateImages(dummyExperimentId, newnames, dry=FALSE)
-#' list.files(file.path(expdir(dummyExperimentId), 'D11'))
+#' renaming <- renamePlateImages(path, newnames, dry=FALSE)
+#' list.files(file.path(path, "D11"))
 #' ## undo the renaming
-#' with(renaming, mapply(file.rename, file.path(expdir(dummyExperimentId), subdir, newname),
-#' file.path(expdir(dummyExperimentId), subdir, intermediate)))
-#' with(renaming, mapply(file.rename, file.path(expdir(dummyExperimentId), subdir, intermediate),
-#' file.path(expdir(dummyExperimentId), subdir, image)))
-#' list.files(file.path(expdir(dummyExperimentId), 'D11'))
-#' trashExperiment(as(dummyExperimentId, "Oni"))
-#' }
+#' with(renaming, mapply(file.rename, file.path(path, subdir, newname),
+#' file.path(path, subdir, intermediate)))
+#' with(renaming, mapply(file.rename, file.path(path, subdir, intermediate),
+#' file.path(path, subdir, image)))
+#' list.files(file.path(path, 'D11'))
 #' @author Henning Redestig
 renamePlateImages <- function(path, newnames, dry=TRUE, verbose=TRUE,
                                 subdirs=NULL) {
@@ -580,18 +584,21 @@ statsTable <- function(data, comparisons, response) {
 simpleAnovaTableGT <- function(data, reference, responseVariables) {
   data$germplasmTreatment <- factor(paste(as.character(data$GERMPLASM),
                                           as.character(data$treatment), sep="_"))
+  stopifnot(all(reference %in% data$GERMPLASM))
   ldply(responseVariables, function(response) {
     subData <- data[!is.na(data[[response]]), ]
     comparisons <- comparisonTable(
-      levels(factor(as.character(subData$treatment))),
-      levels(factor(as.character(subData$GERMPLASM))),
-      reference
-    )
+        levels(factor(as.character(subData$treatment))),
+        levels(factor(as.character(subData$GERMPLASM))),
+        reference
+        )
+    contrasts <- contrastMatrixForComparisons(comparisons)
     formula <- as.formula(paste(response, "~ germplasmTreatment + BLOCK"))
     aModel <- aov(formula, data=subData)
     multiComparison <- glht(aModel, linfct=mcp(germplasmTreatment=contrasts))
     resultTable <- glhtTable(multiComparison)
     stats <- statsTable(data, comparisons, response)
+    stats$response <- response
     merge(resultTable, stats, by="comparison")
   })
 }
