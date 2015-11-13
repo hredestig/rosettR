@@ -21,6 +21,8 @@
 * DONE create a new experiment and get the sowing report
 #+BEGIN_SRC R
   library(rosettR)
+  file.copy("pkg/inst/templates/template.html",
+            file.path(.libPaths()[1], "rosettR/templates"), overwrite=TRUE)
   file.copy("pkg/inst/reports/sowing.Rmd",
             file.path(.libPaths()[1], "rosettR/reports"), overwrite=TRUE)
 
@@ -31,6 +33,8 @@
 #+BEGIN_SRC R
   file.copy("pkg/inst/reports/overview.Rmd",
             file.path(.libPaths()[1], "rosettR/reports"), overwrite=TRUE)
+  file.copy("pkg/inst/templates/overview.html",
+            file.path(.libPaths()[1], "rosettR/templates"), overwrite=TRUE)
   makeReport("rosettrTest", "overview")
 #+END_SRC
 * DONE analyze the images
@@ -43,9 +47,15 @@
 #+BEGIN_SRC R
   file.copy("pkg/inst/reports/quality-check.Rmd",
             file.path(.libPaths()[1], "rosettR/reports"), overwrite=TRUE)
-  makeReport("rosettrTest", "quality-check", "qc")
+
+  makeReport("rosettrTest", "quality-check", "qc-report2")
 #+END_SRC
 
+* DONE test removing some boxes and redo
+  - State "DONE"       from "TODO"       [2015-11-11 Wed 21:30]
+works now, see example reprocessPlateImages
+
+plus document this in qc report
 * DONE basic statistics report germplasm -- treatment
   - State "DONE"       from "TODO"       [2015-11-11 Wed 18:19]
 Setting up the basic G - T comparison
@@ -132,14 +142,21 @@ Setting up the basic G - T comparison
             file.path(.libPaths()[1], "rosettR/reports"), overwrite=TRUE)
   makeReport("rosettrTest", "compare-areas")
 #+END_SRC
-
-* TODO test removing some boxes and redo
-works now, see example reprocessPlateImages
-
-plus document this in qc report
-#+BEGIN_SRC R :session *R*
-
-#+END_SRC
-* TODO prettify reports with css
+* DONE prettify reports with css and stuff
+  - State "DONE"       from "TODO"       [2015-11-12 Thu 14:22]
 http://www.r-bloggers.com/fast-track-publishing-using-knitr-the-setup-using-rprofile-with-custom-css-some-html-goodies-part-ii/
+
+easy, use templates
+#+BEGIN_SRC R :session *R*
+  file.copy("pkg/inst/templates/template.html",
+            file.path(.libPaths()[1], "rosettR/templates"), overwrite=TRUE)
+
+  makeReport("rosettrTest", "quality-check", "qc")
+#+END_SRC
+* DONE make fancy image gallery
+  - State "DONE"       from "TODO"       [2015-11-12 Thu 20:50]
+* TODO use DT where needed
+- the anova table output 
 * TODO test by re-analyzing some old experiment
+* TODO add zygosity stat report
+* TODO copy run.R file?

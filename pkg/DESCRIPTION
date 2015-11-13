@@ -19,7 +19,7 @@ Imports:
     jsonlite,
     knitr,
     markdown,
-	multcomp
+    multcomp
 LinkingTo: Rcpp
 SystemRequirements: Rcpp
 RoxygenNote: 5.0.0

@@ -25,13 +25,24 @@ mf <- subset(mf, timepoint == meta$timepoints[1] & plate == mf[1,"plate"])
 fi <- merge(mf, meta$griddf)
 fi$rn <- paste(fi$zygosity, fi$germplasm_region, fi$Sample_ID,
                fi$GERMPLASM, sep=",")
-
-print(xtable::xtable(dcast(fi, ROW~RANGE, value.var="rn")), "html")
+fi <- dcast(fi, ROW~RANGE, value.var="rn")
+colnames(fi)[1] <- ""
+print(xtable::xtable(fi), "html",
+      html.table.attributes="class='table table-hover'",
+      include.rownames=FALSE)
 ```
 
 ## Image analysis
 
-An overview of the analyzed images are given below. Make sure that the black outline of the plate is directly around the plate. If not, consider re-calibrating the zoom factor using `calibrateScale()`. Also check that each plant is colored with its own color, and not merged with plants in neighboring boxes. If they are, you may consider a...
+An overview of the analyzed images are given below. Make sure that the black outline of the plate is directly around the plate. If not, consider re-calibrating the zoom factor using `calibrateScale()`. Also check that each plant is colored with its own color, and not merged with plants in neighboring boxes.
+
+If any plate look like it is not correctly corrected in terms of
+
+* rotation
+* horizontal or vertical displacement
+* threshold (separating background from the plant)
+
+you may want to re-process those images (see package vignettes for how to do that). If a plate has contamination or in any other way bad data you may want to mark those as 'removed' by using the `removeBoxes()` function.
 
 ```{r qc-image-overview, results="asis", echo=FALSE}
 plateGallery("../..", "qc")
@@ -55,14 +66,16 @@ the maximum number of features found in a single box. A large number (e.g., >8) 
 
 ```{r qc, results="asis", echo=FALSE}
 qcdf <- createPlateQcDf(phenodata, html=TRUE)
-print(xtable::xtable(qcdf), "html", sanitize.text.function=function(x) x)
+print(xtable::xtable(qcdf), "html", sanitize.text.function=function(x) x,
+      html.table.attributes="class='table table-hover'",
+        include.rownames=FALSE)
 ```
 
 We use boxplots to detect outliers.
 
-We cannot control for plate effects efficiently in the statistical model so any individual plates that have excessively large or small seedlings should be considered for removal.
-
-```{r areas_per_plate, echo=FALSE, fig.width=8, fig.height=18, warning=FALSE}
+Individual plates that have excessively large or small seedlings should be considered for removal.
+	
+```{r areas_per_plate, echo=FALSE, fig.width=6, fig.height=9, warning=FALSE}
 expdf <- createPlateTestDf(subset(phenodata, !removed))
 mdf <- melt(expdf,
             id.vars=intersect(c("treatment", "GERMPLASM", "BLOCK",
@@ -85,26 +98,27 @@ removed_df <- ddply(phenodata, vars, function(dd) {
   data.frame("number removed"=sum(de$removed),
              "removed (%)"=(sum(de$removed) / nrow(de)) * 100, check.names=FALSE)
 })
-removed_df$">10% removed" <- ifelse(removed_df$"removed (%)" > 10,
-                                    "<font color='red'>Yes</font",
-                                    "<font color='black'>No</font")
-print(xtable::xtable(removed_df), "html", sanitize.text.function=function(x){x})
+print(xtable::xtable(removed_df), "html", sanitize.text.function=function(x){x},
+      html.table.attributes="class='table table-hover'",
+      include.rownames=FALSE)
 for(v in vars) {
-  removed_df <- ddply(phenodata, v, function(dd) {
-    de <- dd[,c(vars, "removed", "too_small")]
-    data.frame("number removed"=sum(de$removed),
-               "removed (%)"=(sum(de$removed) / nrow(de)) * 100, check.names=FALSE)
-  })
-  removed_df$">10% removed" <- ifelse(removed_df$"removed (%)" > 10,
-                                      "<font color='red'>Yes</font",
-                                      "<font color='black'>No</font")
-  print(xtable::xtable(removed_df), "html", sanitize.text.function=function(x){x})
+  removed_df <-
+    ddply(phenodata, v, function(dd) {
+            de <- dd[,c(vars, "removed", "too_small")]
+            data.frame("number removed"=sum(de$removed),
+                       "removed (%)"=(sum(de$removed) /
+                                        nrow(de)) * 100, check.names=FALSE)
+          })
+  cat("<br><br><h3>", v, "</h3>\n")
+  print(xtable::xtable(removed_df), "html", sanitize.text.function=function(x){x},
+        html.table.attributes="class='table table-hover'",
+        include.rownames=FALSE)
 }
 ```
 
-Outliers within each set of biological replicates are by default removed and indicated below by  black dots.
+The table below lists the number of outliers per plate. Plates with very large number of outliers should be inspected and considered for removal.
 
-```{r detect_outliers_1, echo=FALSE, fig.width=8, fig.height=12, warning=FALSE}
+```{r outliers_per_plate, results="asis", echo=FALSE}
 vars <- intersect(c("treatment", "GERMPLASM", "zygosity"), colnames(df))
 mdf$trt <- factor(apply(mdf[,vars], 1, paste, collapse="_"))
 area_mdf <- subset(mdf, grepl("^AREA", variable))
@@ -116,32 +130,8 @@ area_vars <- as.character(mdf$variable)[grep("AREA", unique(as.character(mdf$var
 rgr_vars <- as.character(mdf$variable)[grep("RGR", unique(as.character(mdf$variable)))]
 
 s_area_mdf <- subset(mdf, variable %in% area_vars)
-if(nrow(s_area_mdf) > 0) {
-  if("zygosity" %in% names(mdf)) {
-    g <- ggplot(s_area_mdf, aes(trt, value, color=zygosity))
-  } else{
-    g <-
-      ggplot(s_area_mdf, aes(trt, value))
-  }
-  g + geom_boxplot() + facet_wrap(~variable, nrow=1) +  xlab(NULL) + coord_flip()
-}
-```
 
-```{r detect_outliers_2, echo=FALSE, fig.width=7, fig.height=12, warning=FALSE}
-s_rgr_mdf <- subset(mdf, variable %in% rgr_vars)
-if(nrow(s_rgr_mdf) > 0) {
-  if("zygosity" %in% names(mdf)) {
-    g <- ggplot(s_rgr_mdf, aes(trt, value, color=zygosity))
-  } else {
-    g <- ggplot(s_rgr_mdf, aes(trt, value))
-  }
-  g + geom_boxplot() + facet_wrap(~variable, nrow=1) +  xlab(NULL) + coord_flip()
-}
-```
 
-The table below lists the number of outliers per plate. Plates with very large number of outliers should be inspected and considered for removal.
-
-```{r outliers_per_plate, results="asis", echo=FALSE}
 emptiness <-
   ddply(phenodata, c("plate", "timepoint"), function(dd) {
   data.frame(empty=all(is.na(dd$AREA)))
@@ -165,5 +155,8 @@ outliers <- with(outliers, outliers[order(outlier, decreasing=TRUE),])
 outliers$empty_plates <-
   ifelse(outliers$plate %in% any_empty$plate[any_empty$empty], "yes", "no")
 
-print(xtable::xtable(outliers), "html", sanitize.text.function=function(x){x})
+print(xtable::xtable(outliers), "html", sanitize.text.function=function(x){x},
+      html.table.attributes="class='table table-hover'",
+      include.rownames=FALSE)
 ```
+

@@ -20,20 +20,27 @@ makeReport <- function(path, report, name=NULL, browse=interactive()) {
   reportDir <- file.path(path, "Output", ifelse(is.null(name), chosen, name))
   if(!file.exists(reportDir))
     dir.create(reportDir)
-  file.copy(allReports[chosen], reportDir, overwrite=TRUE)
+  templateDir <- system.file("templates", package="rosettR")
+  extraFiles <- list.files(templateDir, pattern=".*(css|js)$")
+  extraFiles <- file.path(templateDir, extraFiles)
+  file.copy(c(extraFiles, allReports[chosen]), reportDir, overwrite=TRUE)
   cwd <- getwd()
   on.exit(setwd(cwd))
   setwd(reportDir)
   cat("
    This report was compiled on `r date()` by `r Sys.info()['effective_user']`
    on `r Sys.info()['sysname']` using rosettR v`r packageVersion('rosettR')`
-  ", file=allReports[chosen], append=TRUE)
-  out <- knit(basename(allReports[chosen]), envir=new.env())
-  markdownToHTML(sub(".Rmd", ".md", basename(allReports[chosen])),
-                 sub(".Rmd", ".html", basename(allReports[chosen])))
+  ", file=basename(allReports[chosen]), append=TRUE)
+  template <- system.file(sprintf("templates/template.html", chosen), package=PKG)
+  altTemplate <- system.file(sprintf("templates/%s.html", chosen), package=PKG)
+  if(altTemplate != "")
+    template <- system.file(sprintf("templates/%s.html", chosen), package=PKG)
+  out <- knit2html(basename(allReports[chosen]), template=template,
+                   title=chosen, envir=new.env())
   if(browse)
-    browseURL(paste0(chosen, ".html"))
+    browseURL(out)
 }
+
 
 #' Make a thumbnail gallery of the input images 
 #'
@@ -102,6 +109,24 @@ plateGallery <- function(path, what=c("raw", "qc"), parallel=FALSE) {
 
 plateMakeTng <- function(df) {
   df <- with(df, df[order(plate, orig),])
+  cat('<center><div id="links">\n')
+  for(i in 1:nrow(df)) {
+    cat(sprintf('<a href="%s" title="%s" data-gallery>
+                  <img src="%s" height="150">
+                 </a>\n',
+                file.path("..", df$thumb[i]),                #df$orig[i],
+                paste(df$plate[i], "day", df$timepoint[i]),
+                file.path("..", df$thumb[i])
+                ))
+    if(i < nrow(df) && df$plate[i + 1] != df$plate[i])
+      cat("<br>\n")
+  }
+  cat("</center></div>\n")
+}
+
+
+plateMakeTng2 <- function(df) {
+  df <- with(df, df[order(plate, orig),])
   df$link <- paste('<a href="', file.path(df$orig), '">',
                    '<img src="', "../",
                    file.path(df$thumb), '", rel="lightbox"></a>',
@@ -110,7 +135,8 @@ plateMakeTng <- function(df) {
   rownames(df) <- NULL
   if(nrow(df) == 0)
     return(NULL)
-  print(xtable::xtable(cdf), "html", sanitize.text.function=identity)
+  print(xtable(cdf), "html", sanitize.text.function=identity,
+        html.table.attributes="class='table table-hover'")
 }
 
 #' Data frame for analysis of plant areas from a plate experiment

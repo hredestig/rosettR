@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>#!title#</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
+    
+    <!-- Optional theme -->
+    <!-- <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-theme.min.css"> -->
+    <link rel="stylesheet" href="http://blueimp.github.io/Gallery/css/blueimp-gallery.min.css">
+    <link rel="stylesheet" href="bootstrap-image-gallery.min.css">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
+    <script src="http://yandex.st/highlightjs/7.3/highlight.min.js"></script>
+    <script src="http://yandex.st/highlightjs/7.3/languages/r.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <link rel="stylesheet" href="http://yandex.st/highlightjs/7.3/styles/default.min.css">
+    #!mathjax#
+    #!header#
+  </head>
+
+  <body>
+
+    <div class="container">
+      <div class="row">
+	#!html_output#
+      </div>
+    </div>
+
+    <!-- The Bootstrap Image Gallery lightbox, should be a child element of the document body -->
+    <div id="blueimp-gallery" class="blueimp-gallery">
+      <!-- The container for the modal slides -->
+      <div class="slides"></div>
+      <!-- Controls for the borderless lightbox -->
+      <h3 class="title"></h3>
+      <a class="prev">‹</a>
+      <a class="next">›</a>
+      <a class="close">×</a>
+      <a class="play-pause"></a>
+      <ol class="indicator"></ol>
+      <!-- The modal dialog, which will be used to wrap the lightbox content -->
+      <div class="modal fade">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" aria-hidden="true">&times;</button>
+              <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body next"></div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default pull-left prev">
+                <i class="glyphicon glyphicon-chevron-left"></i>
+                Previous
+              </button>
+              <button type="button" class="btn btn-primary next">
+                Next
+                <i class="glyphicon glyphicon-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="http://blueimp.github.io/Gallery/js/jquery.blueimp-gallery.min.js"></script>
+    <script src="bootstrap-image-gallery.min.js"></script>
+
+  </body>
+</html>
+<!-- mostly from http://watson.nci.nih.gov/~sdavis/blog/a_simple_bootstrap-based_knitr_template/ -->

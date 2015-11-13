@@ -38,7 +38,7 @@ We create effect plots for all comparsions where the mean is indicated by the do
 
 ```{r effectplots-area, echo=FALSE, warning=FALSE, fig.width=10, fig.height=7}
 
-subData <- subset(anovaResults, grepl("^RGR", response))
+subData <- subset(anovaResults, grepl("^AREA", response))
 ggplot(subData, aes(Estimate, comparison)) +
   geom_vline(xintercept=0, lty=2, col="red") +
   geom_segment(aes(x=lwr, xend=upr, yend=comparison), lwd=1.5) +

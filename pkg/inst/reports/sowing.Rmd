@@ -36,7 +36,9 @@ mark[ceiling(length(mark) / 2)] <- '<- Mark'
 ds <- cbind(dd, mark)
 rownames(ds) <- 1:nrow(ds)
 colnames(ds) <- c(1:(ncol(ds) - 1), '')
-print(xtable::xtable(ds), 'html')
+print(xtable::xtable(ds), 'html',
+      html.table.attributes="class='table table-hover'",
+        include.rownames=FALSE)
 ```
 
 and the plates should be sown like this using the same example
@@ -47,7 +49,9 @@ mark[ceiling(length(mark) / 2)] <- 'Mark ->'
 dd <- cbind(mark, dd[nrow(dd):1, ncol(dd):1])
 rownames(dd) <- 1:nrow(dd)
 colnames(dd) <- c('', 1:(ncol(dd) - 1))
-print(xtable::xtable(dd), 'html')
+print(xtable::xtable(dd), 'html',
+      html.table.attributes="class='table table-hover'",
+      include.rownames=FALSE)
 ```
 
 ## Plate sowing
@@ -72,7 +76,9 @@ sowingdf <- plyr::ddply(mfs, 'plate', function(dd) {
 })
 sowingdf <- sowingdf[with(sowingdf, order(block, position)),]
 rownames(sowingdf) <- NULL
-print(xtable::xtable(sowingdf), 'html')
+print(xtable::xtable(sowingdf), 'html',
+      html.table.attributes="class='table table-hover'",
+        include.rownames=FALSE)
 write.csv(sowingdf, file='sowing-order.csv', row.names=FALSE)
 
 cols <- c('plate', 'label', 'BLOCK', 'position', 'treatment', 'GERMPLASM',
@@ -85,6 +91,8 @@ sowingdfLong <- sowingdfLong[with(sowingdfLong, order(block, position)),]
 rownames(sowingdfLong) <- NULL
 write.csv(sowingdfLong, file='sowing-order-long.csv', row.names=FALSE)
 ```
+
+A compact listing over which plates are to subjected to which treatment:
 
 ```{r sowing-summary, results="asis", echo=FALSE}
 manifest <- readManifest('../..')
@@ -121,6 +129,8 @@ for (i in treatments){
 }
 
 summary <- summary[order(summary[,treatments[1]], summary[,'germplasm_region']),]
-print(xtable::xtable(summary), 'html')
+print(xtable::xtable(summary), 'html',
+      html.table.attributes="class='table table-hover'",
+      include.rownames=FALSE)
 write.csv(summary, row.names=FALSE, file='sowing-summary.csv')
 ```
