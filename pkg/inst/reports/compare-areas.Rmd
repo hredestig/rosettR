@@ -24,15 +24,19 @@ where \(x\) is factor encoding each examined combination (\(i\)) of genotype and
 
 \(H_{0_{j,k}}: \beta_{1,i} = \beta_{1,j}\) for \(j\) and \(k\) corresponding to samples of the genotype to be tested, versus the designated reference genotype within the same treatment.
 
-```{r anova, echo=FALSE}
+Multiple comparisons were performed using the [multcomp](https://cran.r-project.org/web/packages/multcomp/index.html) package. P-values are adjusted for multiple testing.
 
-traits <- colnames(expdf)[c(grep("^AREA", colnames(expdf)), grep("^RGR", colnames(expdf)))]
+```{r anova, results="asis", echo=FALSE}
+
+traits <- colnames(expdf)[c(grep("^AREA", colnames(expdf)),
+                            grep("^RGR", colnames(expdf)))]
 anovaResults <- simpleAnovaTableGT(expdf, meta$reference, traits)
 write.csv(anovaResults, "anova-results.csv")
-
+kable(format(anovaResults, digits=2), "html",
+      table.attr='id="anova_results" class="table table-hover"')
 ```
 
-The test results are given as [anova-results.csv](anova-results.csv)
+The test results are also given as [anova-results.csv](anova-results.csv)
 
 We create effect plots for all comparsions where the mean is indicated by the dot, and the 95% confidence interval indicated by a horizontal line. Red-dots indicate estimates associated with a p-value lower than 0.05.
 

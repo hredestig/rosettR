@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>#!title#</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="text/javascript" charset="utf8" src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
+    
+    <!-- Optional theme -->
+    <!-- <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-theme.min.css"> -->
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
+    <script src="http://yandex.st/highlightjs/7.3/highlight.min.js"></script>
+    <script src="http://yandex.st/highlightjs/7.3/languages/r.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <link rel="stylesheet" href="http://yandex.st/highlightjs/7.3/styles/default.min.css">
+    <link rel="stylesheet" type="text/css" href="http://cdn.datatables.net/1.10.3/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="http://cdn.datatables.net/1.10.3/js/jquery.dataTables.js"></script>
+    <style type="text/css">
+      p{clear:both;}
+    </style>
+
+
+    #!mathjax#
+    #!header#
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="row">
+	#!html_output#
+      </div>
+    </div>
+    <script type="text/javascript">
+      $(document).ready(function() {
+      $('#anova_results').DataTable();
+      } );
+    </script>
+  </body>
+</html>
+<!-- from http://watson.nci.nih.gov/~sdavis/blog/a_simple_bootstrap-based_knitr_template/ -->

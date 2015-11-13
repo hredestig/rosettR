@@ -140,6 +140,8 @@ Setting up the basic G - T comparison
 #+BEGIN_SRC R
   file.copy("pkg/inst/reports/compare-areas.Rmd",
             file.path(.libPaths()[1], "rosettR/reports"), overwrite=TRUE)
+  file.copy("pkg/inst/templates/compare-areas.html",
+            file.path(.libPaths()[1], "rosettR/templates"), overwrite=TRUE)
   makeReport("rosettrTest", "compare-areas")
 #+END_SRC
 * DONE prettify reports with css and stuff
@@ -155,8 +157,10 @@ easy, use templates
 #+END_SRC
 * DONE make fancy image gallery
   - State "DONE"       from "TODO"       [2015-11-12 Thu 20:50]
-* TODO use DT where needed
+* DONE use DT where needed
+  - State "DONE"       from "TODO"       [2015-11-12 Thu 23:24]
 - the anova table output 
+* TODO R cmd check...
 * TODO test by re-analyzing some old experiment
 * TODO add zygosity stat report
 * TODO copy run.R file?

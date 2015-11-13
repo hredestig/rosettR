@@ -71,8 +71,8 @@ plateGallery <- function(path, what=c("raw", "qc"), parallel=FALSE) {
       return(NULL)
     }
     df <- unique(pda[,cols])
-    df$orig <- file.path("../..", df$image)
-    df$thumb <- file.path("..", df$qc_picture)
+    df$thumb <- file.path("..", "..", df$qc_picture)
+    df$orig <- file.path("..", "..", df$qc_picture)
     plateMakeTng(df)
   }, raw={
     mf <- readManifest(path)
@@ -99,7 +99,7 @@ plateGallery <- function(path, what=c("raw", "qc"), parallel=FALSE) {
       }, .parallel=parallel)
     }
     df <- data.frame(orig=file.path("../..", rnmDf$subdir, rnmDf$image),
-                     thumb=file.path("thumbs", rnmDf$subdir, rnmDf$image),
+                     thumb=file.path("../thumbs", rnmDf$subdir, rnmDf$image),
                      plate=rnmDf$newname,
                      timepoint=as.numeric(gsub(".*_*D(\\d+)", "\\1",
                        rnmDf$subdir)))
@@ -114,9 +114,9 @@ plateMakeTng <- function(df) {
     cat(sprintf('<a href="%s" title="%s" data-gallery>
                   <img src="%s" height="150">
                  </a>\n',
-                file.path("..", df$thumb[i]),                #df$orig[i],
+                df$orig[i],
                 paste(df$plate[i], "day", df$timepoint[i]),
-                file.path("..", df$thumb[i])
+                df$thumb[i]
                 ))
     if(i < nrow(df) && df$plate[i + 1] != df$plate[i])
       cat("<br>\n")
