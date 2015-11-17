@@ -10,20 +10,6 @@ markPlate <- function(mat, radius, pixelsmm) {
   mat
 }
 
-colorWellFrames <- function(mat, df, boxWidthP) {
-  for(i in which(!df$ambig_box)) {
-    bi <- box_index(df, i, boxWidthP)
-    mat[bi$rows, bi$cols] <-
-        frame_box(mat[bi$rows, bi$cols], 1)
-  }
-  for(i in which(df$ambig_box)) {
-    bi <- box_index(df, i, boxWidthP)
-    mat[bi$rows, bi$cols] <-
-        frame_box(mat[bi$rows, bi$cols], 2)
-  }
-  mat
-}
-
 wellOccupance <- function(largeLabeled, df, feats, boxWidthP) {
   nfeat <- max(largeLabeled)
   res <- matrix(0, nrow=nfeat, ncol=nrow(df))
@@ -41,7 +27,7 @@ wellOccupance <- function(largeLabeled, df, feats, boxWidthP) {
   res
 }
 
-addWellCenters <- function(griddf, im, pxlsmm, boxWidth, nBoxGrid, plot=FALSE) {
+addWellCenters <- function(griddf, im, pxlsmm, boxWidth, nBoxGrid) {
   if(nBoxGrid %% 2 > 0) stop("grid must be symmetric")
   boxWidthP <- pxlsmm * boxWidth
   centerX <- nrow(im) / 2
@@ -54,13 +40,6 @@ addWellCenters <- function(griddf, im, pxlsmm, boxWidth, nBoxGrid, plot=FALSE) {
       stop("lost coordinates, perhaps wrong pixels / mm")
   if(any(is.na(c(vertical, horizontal))))
       stop("got negative coordinates, perhaps wrong pixels / mm")
-  if(plot) {
-    plotimage(im)
-    abline(v=vertical, col="red")
-    abline(h=horizontal, col="blue")
-    abline(v=centerX, col="green")
-    abline(h=centerY, col="green")
-  }
   ddply(griddf, c("ROW", "RANGE"), function(dd) {
     j <- as.integer(dd$ROW)
     i <- dd$RANGE
@@ -85,6 +64,7 @@ addWellCenters <- function(griddf, im, pxlsmm, boxWidth, nBoxGrid, plot=FALSE) {
 #' @param angles min and max values for rotation correction
 #' @param ... not used
 #' @return the suggested rotation correction in degrees
+#' @export
 #' @author Henning Redestig
 optimAngle <- function(im, pxlsmm, boxWidth, nBoxGrid, angles=c(-3,3), ...) {
   par <- list(0)
@@ -184,6 +164,7 @@ plateDiffFun <- function(par, mat, radius, threshold) {
 #' @param threshold the threshold pixel value
 #' @return a list with optimal deltax and deltay parameters
 #' (deviations from origo)
+#' @export
 #' @author Henning Redestig
 findPlate <- function(im, radius, threshold) {
   opar <-
@@ -536,7 +517,7 @@ calibrateScale <- function(path) {
   im <- readImage(file.path(path, mf$image[1]))
   done <- FALSE
   while(!done) {
-    plotimage(im)
+    display(im, method="raster")
     answer <- readline("choose the distance to indicate [default=80mm]: ")
     selectedDistance <- ifelse(answer == "", 80, as.integer(answer))
     message("left-click on two points separated ", selectedDistance, "mm")
@@ -565,6 +546,7 @@ calibrateScale <- function(path) {
 #' have a column named 'image' that specifies the path to each image
 #' as well as 'timepoint' that specifies the timepoint at which the
 #' image was taken.
+#' @param meta the meta data associated with the experiment
 #' @param verbose display progressbar or not. Disabled for parallel
 #' computation as it does not work reliably.
 #' @param save should the created phenodata object and a csv file
@@ -589,7 +571,7 @@ processPlateImages <- function(path, mf=readManifest(path), meta=readMeta(path),
 #' The function that actually process the plate images
 #'
 #' Not intended for user-level usage. 
-#' @param path 
+#' @param path the path to the plate experiment to process
 #' @param mf the manifest - a data frame describing all images to be processed
 #' @param meta a list with parameters to use for \code{\link{analyzeImage}}, see
 #' \code{\link{metaTemplate}}
@@ -599,7 +581,7 @@ processPlateImages <- function(path, mf=readManifest(path), meta=readMeta(path),
 #' @param ... passed on to \code{analyzeImage}. Named arguments have precedence
 #' over arguments in the \code{meta} list.
 #' @return the resulting data frame
-#' @export
+#' @noRd
 #' @author Henning Redestig
 doProcessPlateImages <- function(path, mf=readManifest(path),
                                  meta=readMeta(path), verbose=FALSE, 
@@ -656,7 +638,6 @@ postProcessPlatePhenodata <- function(phenodata, minArea=1.5, ...) {
 #' @param ... passed on to \code{\link{analyzeImage}} (precedence over
 #' the parameters defined in \code{meta}) and
 #' \code{\link{doProcessPlateImages}}
-#' @param cores number of cores to use.
 #' @seealso \code{\link{processPlateImages}} that has the same arguments and
 #' functionality but is used for all images in the experiment.
 #' @return invisibly, the complete (all images, not only those that
@@ -680,7 +661,8 @@ reprocessPlateImages <- function(path, mf, verbose=FALSE,
   phenodata <- readPhenodata(path)
   newphenodata <-
     doProcessPlateImages(path, mf, meta, ...)
-  updatedPheno <- rbind(phenodata[!(phenodata$image %in% phenodata$image), , drop=FALSE],
+  updatedPheno <- rbind(phenodata[!(phenodata$image %in% phenodata$image),
+                                , drop=FALSE],
                         newphenodata)
   if(save)
     writePhenodata(path, updatedPheno)
@@ -723,6 +705,7 @@ rotationSigmaFun <- function(par, im, pxlsmm, boxWidth, nBoxGrid) {
 #' Round the values in a binary single-frame image to 0 or 1.
 #' @param im an Image object
 #' @return the rounded Image
+#' @noRd
 #' @author Henning Redestig
 roundImage <- function(im) {
   if(length(dim(imageData(im))) != 2)
@@ -739,7 +722,7 @@ roundImage <- function(im) {
 #' @param im an image
 #' @param thresh a threshold
 #' @return the binary image
-#' @export 
+#' @noRd
 #' @author Henning Redestig
 #' library(EBImage)
 #' lena <- readImage(system.file("images", "lena-color.png", package="EBImage"))
@@ -754,22 +737,22 @@ threshImage <- function(im, thresh) {
 #'
 #' Copied from EBImage version 3.13.1 since it was removed in version 4
 #' @param img An \code{Image} object or an array.
-#' @param xy Matrix (or a list of matrices if \code{img} contains
-#' multiple frames) of coordinates of labels.
+#' @param x x-coordinate
+#' @param y y-coordinate
 #' @param labels A character vector (or a list of vectors if
 #' \code{img} contains multiple frames) containing the labels to be
 #' output.
-#' @param font A font object, returned by \code{\link{drawFont}}. If
-#' missing, a default OS-dependent font will be chosen.
 #' @param col A character vector of font colors.
+#' @param cex character expansion factor
 #' @return An \code{Image} object or an array, containing the
 #' transformed version of \code{img}.
-#' @export
+#' @noRd
 #' @examples
 #' library(EBImage)
-#' plate <- readImage(system.file("examples", "plate_merged.jpg", package="rosettR"))
-#' font <- drawFont(weight=600, size=28)
-#' plate <- drawText(plate, xy=c(250, 450), labels="rosettR!", font=font, col="red")
+#' plate <- readImage(system.file("examples", "plate_merged.jpg",
+#'                    package="rosettR"))
+#' plate <- drawText(plate, x=250, y=450,
+#'                   labels="rosettR!", font=font, col="red")
 #' display(plate, method="raster")
 #' @author Oleg Sklyar and copied by Henning Redestig
 drawText <- function(img, x, y, labels, col="black", cex=1) {
@@ -788,7 +771,7 @@ drawText <- function(img, x, y, labels, col="black", cex=1) {
 #' @param well a matrix (or similar object) that represents the well
 #' @param value the value to set the pixels to
 #' @return the framed well
-#' @export 
+#' @noRd
 #' @author Henning Redestig
 frameWell <- function(well, value) {
   well[1:2,] <- value
@@ -805,7 +788,7 @@ frameWell <- function(well, value) {
 #' @param i the index of the well to return (row in the grid data frame )
 #' @param wellWidth the width (in pixels) of the well
 #' @return a list of row and column indices
-#' @export 
+#' @noRd
 #' @author Henning Redestig
 wellIndex <- function(griddf, i, wellWidth) {
   dd <- griddf[i, ]
@@ -817,14 +800,13 @@ wellIndex <- function(griddf, i, wellWidth) {
 
 #' Color the frame of all wells
 #'
-#' Set the permiters of all wells to 1 or 2 depending on whether they are
+#' Set the perimiters of all wells to 1 or 2 depending on whether they are
 #' indicated as being ambiguous 
 #' @param mat a matrix representing the image
 #' @param griddf a data frame that defines the grid 
-#' @param wellWidth 
+#' @param wellWidth the width of well in pixels
 #' @return the image with frames indicated
-#' @export
-#' @author Henning Redestig
+#' @noRd
 colorWellFrames <- function(mat, griddf, wellWidth) {
   for(i in which(!griddf$ambig_box)) {
     bi <- wellIndex(griddf, i, wellWidth)
@@ -838,3 +820,4 @@ colorWellFrames <- function(mat, griddf, wellWidth) {
   }
   mat
 }
+

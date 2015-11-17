@@ -5,6 +5,8 @@
 #' function allows to conveniently compile reports for created experiments.
 #' @param path path on the file system to where the experiment directory is located
 #' @param report the report to compile, see \code{\link{plate-reports}}
+#' @param name the name of the directory in which to place the report. Takes the
+#' name of the report if left as \code{NULL}.
 #' @param browse if true, open the compiled report in a web-browser
 #' @return nothing, used for its side effect
 #' @export
@@ -94,7 +96,7 @@ plateGallery <- function(path, what=c("raw", "qc"), parallel=FALSE) {
         if(!file.exists(file.path(thumbnailDir, imFile))) {
           image <- readImage(file.path(path, dayDir, imFile))
           thumb <- resize(image, w=300)
-          writeImage(thumb, file=file.path(thumbnailDir, imFile))
+          writeImage(thumb, files=file.path(thumbnailDir, imFile))
         }
       }, .parallel=parallel)
     }
