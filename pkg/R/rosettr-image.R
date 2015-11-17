@@ -148,11 +148,11 @@ makeBinary <- function(im, pixelsmm, thresh=NULL, radius=85,
 }
 
 plateDiffFun <- function(par, mat, radius, threshold) {
-  .Call("phenotyping_count_outside", mat,
-        as.double(radius),
-        as.double(par[[1]]),
-        as.double(par[[2]]),
-        as.double(threshold), PACKAGE=PKG)
+  count_outside(mat,
+                as.double(radius),
+                as.double(par[[1]]),
+                as.double(par[[2]]),
+                as.double(threshold))
 }
 
 #' Find a plate in an image
@@ -415,8 +415,7 @@ analyzeImage <- function(file, griddf, pixelsmm, boxWidth, nBoxGrid, plateRadius
     })
     mat <- imageData(largeLabeled)
     points <- as.matrix(df[,c("centerx", "centery")])
-    closestCenters <-
-      .Call("phenotyping_closest_point", mat, points, nrow(feats), PACKAGE=PKG)
+    closestCenters <- closest_point(mat, points, nrow(feats))
     far_away <- apply(closestCenters, 1, min) > (boxWidthP / 2) * 0.9
     overlapping[far_away] <- NA
     if(any(na.omit(overlapping))) {
@@ -581,7 +580,7 @@ processPlateImages <- function(path, mf=readManifest(path), meta=readMeta(path),
 #' @param ... passed on to \code{analyzeImage}. Named arguments have precedence
 #' over arguments in the \code{meta} list.
 #' @return the resulting data frame
-#' @noRd
+#' @export
 #' @author Henning Redestig
 doProcessPlateImages <- function(path, mf=readManifest(path),
                                  meta=readMeta(path), verbose=FALSE, 
@@ -678,8 +677,7 @@ rotationSigma <- function(dat, center, boxWidthP, nBoxGrid, sigma=10, eps=1e-2) 
   while(change > eps) {
     psigma <- sigma
     sigmavec <- rep(sigma, nBoxGrid)
-    zc <- .Call("phenotyping_normalpostp", dat, mu, sigmavec, lambda,
-                PACKAGE=PKG)
+    zc <- normalpostp(dat, mu, sigmavec, lambda)
     sigma <-
         sqrt(sum(sapply(1:nBoxGrid,
                         function(i) sum(zc$scaled_resp[,i] *

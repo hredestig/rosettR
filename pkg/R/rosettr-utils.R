@@ -98,7 +98,7 @@ createPlateQcDf <- function(df, html=TRUE) {
 #' @examples
 #' dateTaken(system.file("examples/plate001.jpg", package="rosettR"))
 dateTaken <- function(file) {
-  exifDate <- .Call("phenotyping_date_original", file, PACKAGE=PKG)
+  exifDate <- date_original(file)
   if(is.null(exifDate))
     return(NA)
   as.POSIXct(strptime(exifDate,"%Y:%m:%d %H:%M:%S"))
@@ -264,13 +264,15 @@ expandManifest <- function(meta,
 #' @author Henning Redestig
 #' @examples
 #' makeTestExperiment(tempdir())
+#' path <- file.path(tempdir(), "rosettRtest")
 #' ## remove the plant in 3:3 on plate002 from day 18
 #' removeBoxes(path, ".*/plate002/3:3")
 #' ## list the removed plants
 #' subset(readPhenodata(path), removed)
 removeBoxes <- function(path, pattern, platere="plate\\s*\\d+", remove=TRUE) {
   if(!any(grepl(paste0(".+/", platere, "/.+:.+"), pattern)))
-    stop(paste("malformatted plate indication. should be [day]/[plateXXX]/[row]:[col],",
+    stop(paste("malformatted plate indication. ",
+               "should be [day]/[plateXXX]/[row]:[col],",
                "for example 18/plate120/2:3"))
   df <- readPhenodata(path)
   day_plate <-

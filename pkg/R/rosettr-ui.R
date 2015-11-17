@@ -11,7 +11,7 @@
 #' @examples
 #' meta <- metaTemplate(letters[1:4], c("control", "osmotic_stress"))
 #' newExperiment(file.path(tempdir(), "test"), meta)
-#' list.dir(tempdir())
+#' list.files(tempdir())
 newExperiment <- function(path, meta) {
   if(!file.exists(path))
     dir.create(path, recursive=TRUE)
