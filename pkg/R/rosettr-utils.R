@@ -264,7 +264,7 @@ expandManifest <- function(meta,
 #' @author Henning Redestig
 #' @examples
 #' makeTestExperiment(tempdir())
-#' path <- file.path(tempdir(), "rosettRtest")
+#' path <- file.path(tempdir(), "rosettrTest")
 #' ## remove the plant in 3:3 on plate002 from day 18
 #' removeBoxes(path, ".*/plate002/3:3")
 #' ## list the removed plants

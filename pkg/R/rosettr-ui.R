@@ -104,8 +104,9 @@ metaTemplate <- function(germplasms,
                    reference=reference)
   
   reps <- expand.grid(RANGE=1:6, ROW=1:6)
-  griddf <- subset(data.frame(RANGE=reps$RANGE, ROW=reps$ROW), 
-                   !(ROW %in% c(1, 6) & RANGE %in% c(1, 6)))
+  preGriddf <- data.frame(RANGE=reps$RANGE, ROW=reps$ROW)
+  griddf <- preGriddf[!(preGriddf$ROW %in% c(1, 6) &
+                          preGriddf$RANGE %in% c(1, 6)),]
   rownames(griddf) <- 1:32
   griddf$box_num <- 1:nrow(griddf)
   griddf$removed <- FALSE
