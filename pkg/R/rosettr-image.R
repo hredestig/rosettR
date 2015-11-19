@@ -45,8 +45,6 @@ addWellCenters <- function(griddf, im, pxlsmm, boxWidth, nBoxGrid) {
     i <- dd$RANGE
     dd$centerx <- vertical[i] + (vertical[i + 1] - vertical[i]) / 2
     dd$centery <- horizontal[j] + (horizontal[j + 1] - horizontal[j]) / 2
-    if(plot)
-        points(dd$centerx, dd$centery, col="red", cex=2, pch=4)
     dd
   })
 }
@@ -316,6 +314,10 @@ emptyResult <- function(df, qcpath="", doqc=TRUE) {
 #' which case cropping is skipped.
 #' @param minNonEmpty the minimum fraction of pixels above the threshold for a
 #' plate to be considered empty
+#' @param makeRelativePath should the path to the qc image be made
+#' relative to the current working directory (setting to false has
+#' expected effect but true is only meaningful when using the built-in
+#' template report system in rosettR).
 #' @param ... passed on to \code{\link{findPlate}} and
 #' \code{\link{optimAngle}}.
 #' @return a data frame with information about plant areas, locations
@@ -342,7 +344,7 @@ analyzeImage <- function(file, griddf, pixelsmm, boxWidth, nBoxGrid, plateRadius
                          channels=3, rimThreshold=0.9, minArea=1.5, rotation=0,
                          checkrotation=TRUE, checklocation=TRUE, doqc=TRUE,
                          verbose=FALSE, overwriteQc=FALSE, squareWidth=NULL,
-                         minNonEmpty=1e-3, ...) {
+                         minNonEmpty=1e-3, makeRelativePath=TRUE, ...) {
   qcpath <- file.path(savedir, paste("qc_", basename(file), sep=""))
   if(file.exists(qcpath) && !overwriteQc)
     qcpath <-
@@ -492,11 +494,15 @@ analyzeImage <- function(file, griddf, pixelsmm, boxWidth, nBoxGrid, plateRadius
     if(!file.exists(savedir))
       dir.create(savedir, recursive=TRUE)
     writeImage(qcpic, qcpath)
-    splitPath <- strsplit(qcpath, .Platform$file.sep)[[1]]
-    df$qc_picture <-
-      paste(c(".", splitPath[(length(splitPath) - 3):length(splitPath)]),
-            collapse=.Platform$file.sep)
-    
+    if(makeRelativePath) {
+      splitPath <- strsplit(sub("\\", .Platform$file.sep, qcpath, fixed=TRUE),
+                            .Platform$file.sep)[[1]]
+      df$qc_picture <-
+        paste(c(".", splitPath[(length(splitPath) - 3):length(splitPath)]),
+              collapse=.Platform$file.sep)
+    } else {
+      df$qc_picture <- qcpath
+    }      
   }
   rownames(df) <- paste(df$ROW, df$RANGE, sep='')
   df
@@ -709,7 +715,7 @@ roundImage <- function(im) {
   if(length(dim(imageData(im))) != 2)
       stop("can only round single frame / channel images")
   mat <- imageData(im)
-  imageData(im) <- .Call("phenotyping_round_binary", mat, PACKAGE=PKG)
+  imageData(im) <- round_binary(mat)
   im
 }
 

@@ -160,7 +160,9 @@ easy, use templates
 * DONE use DT where needed
   - State "DONE"       from "TODO"       [2015-11-12 Thu 23:24]
 - the anova table output 
-* TODO R cmd check...
+* DONE R cmd check...
+  - State "DONE"       from "TODO"       [2015-11-16 Mon 22:04]
+* TODO write first vignette and then send to publication approval
 * TODO test by re-analyzing some old experiment
 * TODO add zygosity stat report
 * TODO copy run.R file?
