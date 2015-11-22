@@ -9,7 +9,7 @@ options(width=150)
 Plate experiment
 
 ```{r desc, results="asis"}
-meta$description
+cat(meta$description)
 ```
 
 An overview of the taken images are given below. Make sure that the

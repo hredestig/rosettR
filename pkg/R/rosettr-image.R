@@ -663,11 +663,16 @@ reprocessPlateImages <- function(path, mf, verbose=FALSE,
   meta <- readMeta(path)
   meta <- updateMeta(..., meta=meta)
   phenodata <- readPhenodata(path)
-  newphenodata <-
+  newPheno <-
     doProcessPlateImages(path, mf, meta, ...)
-  updatedPheno <- rbind(phenodata[!(phenodata$image %in% newphenodata$image),
-                                , drop=FALSE],
-                        newphenodata)
+  keptPheno <-
+    phenodata[!(phenodata$image %in% newPheno$image), ,drop=FALSE]
+  missingCols <- setdiff(colnames(keptPheno), colnames(newPheno))
+  if(length(missingCols) > 0 ) {
+    missing <- unique(phenodata[, unique(c("image", missingCols))])
+    newPheno <- merge(newPheno, missing, by="image")
+  }
+  updatedPheno <- rbind(keptPheno, newPheno)
   if(save)
     writePhenodata(path, updatedPheno)
   invisible(updatedPheno)

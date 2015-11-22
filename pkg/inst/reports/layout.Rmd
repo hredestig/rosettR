@@ -14,7 +14,7 @@ manifest <- readManifest('../..')
 Plate phenotyping experiment:
 
 ```{r desc, results="asis"}
-meta$description
+cat(meta$description)
 ```
 
 - **report compiled with working directory**: `r getwd()`

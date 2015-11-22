@@ -19,7 +19,7 @@ expdf <- createPlateTestDf(subset(phenodata, !removed))
 Plate experiment:
 
 ```{r desc, results="asis"}
-meta$description
+cat(meta$description)
 ```
 
 We perform ANOVA suitable for multiple comparisons of the area or relative growth rate a each day, \(y\) as 

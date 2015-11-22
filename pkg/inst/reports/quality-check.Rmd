@@ -19,7 +19,7 @@ mf <- readManifest("../..")
 Plate experiment:
 
 ```{r desc, results="asis"}
-meta$description
+cat(meta$description)
 ```
 
 ## Plate layout
@@ -89,8 +89,8 @@ mdf <- melt(expdf,
               names(expdf)))
 areavars <- substr(mdf$variable, 1, 4) == "AREA"
 
-ggplot(mdf[areavars,], aes(image, value)) + geom_boxplot() +
-  coord_flip()
+suppressWarnings(ggplot(mdf[areavars,], aes(image, value)) + geom_boxplot() +
+                   coord_flip())
 ```
 
 If a plant is too small at any one day, it will be marked as "removed" over the whole time-series. We make a table of the number of removed plants per genotype. Individual plants (or plate-boxes more accurately) may also be removed manually. We create table to monitor how many observations for each replicate set have been removed.

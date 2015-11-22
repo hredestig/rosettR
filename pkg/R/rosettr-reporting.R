@@ -8,6 +8,7 @@
 #' @param name the name of the directory in which to place the report. Takes the
 #' name of the report if left as \code{NULL}.
 #' @param browse if true, open the compiled report in a web-browser
+#' @param quiet pass to \code{\link{knit2html}}
 #' @return nothing, used for its side effect
 #' @export
 #' @examples
@@ -15,7 +16,8 @@
 #' newExperiment(file.path(tempdir(), "testExperiment"), meta)
 #' makeReport(file.path(tempdir(), "testExperiment"), "layout")
 #' @author Henning Redestig
-makeReport <- function(path, report, name=NULL, browse=interactive()) {
+makeReport <- function(path, report, name=NULL, browse=interactive(),
+                       quiet=FALSE) {
   allReports <- list.files(system.file("reports", package=PKG), full.names=TRUE)
   names(allReports) <- gsub(".Rmd", "", basename(allReports))
   chosen <- match.arg(report, names(allReports))
@@ -38,7 +40,7 @@ makeReport <- function(path, report, name=NULL, browse=interactive()) {
   if(altTemplate != "")
     template <- system.file(sprintf("templates/%s.html", chosen), package=PKG)
   out <- knit2html(basename(allReports[chosen]), template=template,
-                   title=chosen, envir=new.env())
+                   title=chosen, envir=new.env(), quiet=quiet)
   if(browse)
     browseURL(out)
 }
