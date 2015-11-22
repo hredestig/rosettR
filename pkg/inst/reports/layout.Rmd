@@ -11,7 +11,11 @@ meta <- readMeta('../..')
 manifest <- readManifest('../..')
 ```
 
-Plate phenotyping experiment with
+Plate phenotyping experiment:
+
+```{r desc, results="asis"}
+meta$description
+```
 
 - **report compiled with working directory**: `r getwd()`
 - **genotypes:** `r paste(meta$genotypes, collapse=", ")`

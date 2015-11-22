@@ -16,6 +16,12 @@ phenodata <- readPhenodata("../..")
 mf <- readManifest("../..")
 ```
 
+Plate experiment:
+
+```{r desc, results="asis"}
+meta$description
+```
+
 ## Plate layout
 
 The images were interpreted like this, using `r mf[1,"plate"]` as an example

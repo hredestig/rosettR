@@ -13,7 +13,7 @@
 #' @examples
 #' meta <- metaTemplate(letters[1:4], treatments=c("control", "osmotic"))
 #' newExperiment(file.path(tempdir(), "testExperiment"), meta)
-#' makeReport(file.path(tempdir(), "testExperiment"), "sowing")
+#' makeReport(file.path(tempdir(), "testExperiment"), "layout")
 #' @author Henning Redestig
 makeReport <- function(path, report, name=NULL, browse=interactive()) {
   allReports <- list.files(system.file("reports", package=PKG), full.names=TRUE)
@@ -42,7 +42,6 @@ makeReport <- function(path, report, name=NULL, browse=interactive()) {
   if(browse)
     browseURL(out)
 }
-
 
 #' Make a thumbnail gallery of the input images 
 #'
@@ -124,21 +123,6 @@ plateMakeTng <- function(df) {
       cat("<br>\n")
   }
   cat("</center></div>\n")
-}
-
-
-plateMakeTng2 <- function(df) {
-  df <- with(df, df[order(plate, orig),])
-  df$link <- paste('<a href="', file.path(df$orig), '">',
-                   '<img src="', "../",
-                   file.path(df$thumb), '", rel="lightbox"></a>',
-                   sep="")
-  cdf <- reshape2::dcast(df, plate ~ timepoint, value.var="link")
-  rownames(df) <- NULL
-  if(nrow(df) == 0)
-    return(NULL)
-  print(xtable(cdf), "html", sanitize.text.function=identity,
-        html.table.attributes="class='table table-hover'")
 }
 
 #' Data frame for analysis of plant areas from a plate experiment

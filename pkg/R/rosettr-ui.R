@@ -41,7 +41,7 @@ makeTestExperiment <- function(exdir=".") {
                        treatments=c("control", "osmotic"),
                        timepoints=c(11, 14, 16, 18),
                        pixelsmm=7.538, nblocks=3,
-                       reference="a")
+                       reference="foo")
   writeManifest(expandManifest(meta), path)
   writeMeta(meta, path)
   invisible(path)
@@ -70,6 +70,8 @@ makeTestExperiment <- function(exdir=".") {
 #' @param treatments a character vector listing the applied treatments
 #' @param timepoints the timepoints (days) when pictures are taken.
 #' @param nblocks the number of replicates
+#' @param description a short description of the experiment to
+#' annotate template reports
 #' @param pixelsmm the number of pixels per mm on a picture (must be
 #' the same for all pictures)
 #' @param name the name of the experiment type to use. See details.

@@ -6,6 +6,12 @@ opts_chunk$set(tidy=FALSE, fig.align='left', error=TRUE)
 options(width=150)
 ```
 
+Plate experiment
+
+```{r desc, results="asis"}
+meta$description
+```
+
 An overview of the taken images are given below. Make sure that the
 image ordering is correct and that all images are of sufficient
 quality.
