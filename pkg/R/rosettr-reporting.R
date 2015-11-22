@@ -81,9 +81,9 @@ plateGallery <- function(path, what=c("raw", "qc"), parallel=FALSE) {
     rnmDf <- ddply(mf, "timepoint", function(dd) {
       daydir <- unique(dirname(as.character(dd$image)))
       dd <- dd[with(dd, order(BLOCK, position)),]
-      first_region <- unique(dd$germplasm_region)[1]
+      first_region <- unique(dd$genotype_region)[1]
       expectedPics <-
-        basename(as.character(subset(dd, dd$germplasm_region ==
+        basename(as.character(subset(dd, dd$genotype_region ==
                                        first_region)$image)) 
       renamingDf(cleanPath(file.path(path, daydir), mustWork=TRUE),
                   expectedPics)
@@ -154,7 +154,7 @@ plateMakeTng2 <- function(df) {
 createPlateTestDf <- function(df) {
   df$image <- basename(as.character(df$image))
   df$variable <- "AREA"
-  dd <- dcast(df, treatment + GERMPLASM + BLOCK + image + ROW + RANGE
+  dd <- dcast(df, treatment + GENOTYPE + BLOCK + image + ROW + RANGE
               + Sample_ID ~ variable + timepoint, value.var="AREA")
   dataCols <- grep("^AREA_", colnames(dd))
   tpts <- as.numeric(gsub("AREA_", "", colnames(dd)[dataCols]))

@@ -16,9 +16,8 @@ wellOccupance <- function(largeLabeled, df, feats, boxWidthP) {
   rownames(res) <- as.character(1:nfeat)
   for(i in 1:nrow(df)) {
     dd <- df[i,]
-    rows <- floor(dd$centerx - (boxWidthP / 2)):floor(dd$centerx + (boxWidthP / 2))
-    cols <- floor(dd$centery - (boxWidthP / 2)):floor(dd$centery + (boxWidthP / 2))
-    box <- as.vector(imageData(largeLabeled[rows, cols]))
+    loc <- wellIndex(df, i, boxWidthP)
+    box <- as.vector(imageData(largeLabeled[loc$rows, loc$cols]))
     if(any(box != 0)) {
       tab <- table(box[box > 0])
       res[names(tab),i] <- res[names(tab),i] + tab
@@ -666,7 +665,7 @@ reprocessPlateImages <- function(path, mf, verbose=FALSE,
   phenodata <- readPhenodata(path)
   newphenodata <-
     doProcessPlateImages(path, mf, meta, ...)
-  updatedPheno <- rbind(phenodata[!(phenodata$image %in% phenodata$image),
+  updatedPheno <- rbind(phenodata[!(phenodata$image %in% newphenodata$image),
                                 , drop=FALSE],
                         newphenodata)
   if(save)
@@ -796,10 +795,13 @@ frameWell <- function(well, value) {
 #' @author Henning Redestig
 wellIndex <- function(griddf, i, wellWidth) {
   dd <- griddf[i, ]
-  list(rows=floor(dd$centerx - (wellWidth / 2)) :
-         floor(dd$centerx + (wellWidth / 2)),
-       cols=floor(dd$centery - (wellWidth / 2)) :
-         floor(dd$centery + (wellWidth / 2)))
+  rows <- (floor(dd$centerx - (wellWidth / 2)) :
+             floor(dd$centerx + (wellWidth / 2)))
+  cols <- (floor(dd$centery - (wellWidth / 2)) :
+             floor(dd$centery + (wellWidth / 2)))
+  if(any(rows < 0) | any(cols < 0))
+    warning("box outside image, scale might be wrong")
+  list(rows=rows[rows > 0], cols=cols[cols > 0])
 }
 
 #' Color the frame of all wells
