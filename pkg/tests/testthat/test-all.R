@@ -14,12 +14,13 @@ test_that("a plate rotation can be compensated", {
     im <- resize(rosettR:::makeGrey(readImage(file), channels=3), 500)
     binary <- rosettR:::makeBinary(im, pixelsmm / 2)
     binaryRotated <- rotate(binary, 4)
+    origAngle <- rosettR:::optimAngle(binary, pixelsmm / 2, 20, 6)
     estAngle <- rosettR:::optimAngle(binaryRotated, pixelsmm / 2, 20, 6,
                                      c(-5,5))
     binaryCorrected <- rotate(binaryRotated, estAngle)
-    ## display(binaryCorrected, method="raster")
-    ## abline(v=240, col="red")
-    abs(estAngle + (4 + 1)) < 1
+    display(binaryCorrected, method="raster")
+    abline(v=260, col="red")
+    abs(estAngle + 4 + origAngle) < 1
   }, is_true())
 })
 
