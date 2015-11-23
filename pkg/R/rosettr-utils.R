@@ -187,21 +187,21 @@ readManifest <- function(path) {
 expandManifest <- function(meta,
                            plateName="plate%03d.jpg", plateOffset=0,
                            plateOrder, ...) {
-  if(length(meta$germplasm) == 0)
-    stop("no germplasms defined")
+  if(length(meta$genotype) == 0)
+    stop("no genotypes defined")
   if(length(meta$treatments) == 0)
     stop("no treatments defined")
   if(length(meta$timepoints) == 0)
     stop("no timepoints defined")
-  if(meta$nrepeats == 0) {
-    warning("number of repeats not defined, assuming 1 repeat")
-    meta$nrepeats <- 1
+  if(meta$nblocks == 0) {
+    warning("number of blocks not defined, assuming 1 block")
+    meta$nblocks <- 1
   }
   ntre <- length(meta$treatments)
-  nger <- length(meta$germplasm)
-  nrep <- meta$nrepeats
-  germplasm_region <- unique(meta$griddf$germplasm_region)
-  nreg <- length(germplasm_region)
+  nger <- length(meta$genotype)
+  nrep <- meta$nblocks
+  genotype_region <- unique(meta$griddf$genotype_region)
+  nreg <- length(genotype_region)
   chun <- (nger / nreg) * ntre
   
   df <-
@@ -210,9 +210,9 @@ expandManifest <- function(meta,
                    each=nreg),
                chunk=rep(1:((nger / nreg) * ntre), each=nrep * nreg),
                treatment=rep(meta$treatments, each=nger  * nrep),
-               GERMPLASM=as.vector(apply(matrix(meta$germplasm, nrow=nreg),
+               GENOTYPE=as.vector(apply(matrix(meta$genotype, nrow=nreg),
                  2, rep, nrep)),
-               germplasm_region=germplasm_region,
+               genotype_region=genotype_region,
                BLOCK=as.vector(replicate(chun, rep(sample(nrep), each=nreg))),
                stringsAsFactors=FALSE)
   df$o <- rep(1:(chun * nrep), each=nreg)
@@ -235,7 +235,7 @@ expandManifest <- function(meta,
   if(nrep < length(LETTERS))
     df$label <- with(df, paste(LETTERS[BLOCK], position, sep=""))
   else {
-    warning("cannot create labels for more than 26 repeats")
+    warning("cannot create labels for more than 26 blocks")
     df$label <- "no_label"
   }
   df$image <-
@@ -343,9 +343,9 @@ processPlateExperiment <- function(path, meta=readMeta(path), rename=TRUE,
     rnmDf <- ddply(mf, "timepoint", function(dd) {
       daydir <- unique(dirname(as.character(dd$image)))
       dd <- dd[with(dd, order(BLOCK, position)),]
-      first_region <- unique(dd$germplasm_region)[1]
+      first_region <- unique(dd$genotype_region)[1]
       expected_pics <-
-        basename(as.character(subset(dd, dd$germplasm_region ==
+        basename(as.character(subset(dd, dd$genotype_region ==
                                        first_region)$image))
       renamingDf(cleanPath(file.path(path, daydir), mustWork=TRUE),
                   expected_pics)
@@ -559,16 +559,16 @@ contrastMatrixForComparisons <- function(comparisons) {
 }
 
 statsTable <- function(data, comparisons, response) {
-  stats <- ddply(data, "germplasmTreatment", function(dd) {
+  stats <- ddply(data, "genotypeTreatment", function(dd) {
     data.frame(mean=mean(dd[[response]], na.rm=TRUE),
                sd=sd(dd[[response]], na.rm=TRUE))
   })
   comparisonData <- melt(comparisons, id.vars="comparison",
-                         value.name="germplasmTreatment",
+                         value.name="genotypeTreatment",
                          variable.name="direction")
-  joinedData <- merge(stats, comparisonData, by="germplasmTreatment")
+  joinedData <- merge(stats, comparisonData, by="genotypeTreatment")
   mjoinedData <- melt(joinedData,
-                      id.vars=c("direction", "germplasmTreatment", "comparison"))
+                      id.vars=c("direction", "genotypeTreatment", "comparison"))
   dcast(mjoinedData, comparison ~ variable + direction, value.var="value")
 }
 
@@ -584,20 +584,20 @@ statsTable <- function(data, comparisons, response) {
 #' @return a data frame with one contrast per row
 #' @seealso \code{\link{glht}} which is used to make the multiple comparisons
 simpleAnovaTableGT <- function(data, reference, responseVariables) {
-  data$germplasmTreatment <- factor(paste(as.character(data$GERMPLASM),
+  data$genotypeTreatment <- factor(paste(as.character(data$GENOTYPE),
                                           as.character(data$treatment), sep="_"))
-  stopifnot(all(reference %in% data$GERMPLASM))
+  stopifnot(all(reference %in% data$GENOTYPE))
   ldply(responseVariables, function(response) {
     subData <- data[!is.na(data[[response]]), ]
     comparisons <- comparisonTable(
         levels(factor(as.character(subData$treatment))),
-        levels(factor(as.character(subData$GERMPLASM))),
+        levels(factor(as.character(subData$GENOTYPE))),
         reference
         )
     contrasts <- contrastMatrixForComparisons(comparisons)
-    formula <- as.formula(paste(response, "~ germplasmTreatment + BLOCK"))
+    formula <- as.formula(paste(response, "~ genotypeTreatment + BLOCK"))
     aModel <- aov(formula, data=subData)
-    multiComparison <- glht(aModel, linfct=mcp(germplasmTreatment=contrasts))
+    multiComparison <- glht(aModel, linfct=mcp(genotypeTreatment=contrasts))
     resultTable <- glhtTable(multiComparison)
     stats <- statsTable(data, comparisons, response)
     stats$response <- response

@@ -11,13 +11,17 @@ meta <- readMeta('../..')
 manifest <- readManifest('../..')
 ```
 
-Plate phenotyping experiment with
+Plate phenotyping experiment:
+
+```{r desc, results="asis"}
+meta$description
+```
 
 - **report compiled with working directory**: `r getwd()`
-- **germplasms:** `r paste(meta$germplasms, collapse=", ")`
+- **genotypes:** `r paste(meta$genotypes, collapse=", ")`
 - **timepoints:** `r paste(meta$timepoints, collapse=", ")`
 - **treatments:** `r paste(meta$treatments, collapse=", ")`
-- **number of replicates:** `r paste(meta$nrepeats, collapse=", ")`
+- **number of replicates:** `r paste(meta$nblocks, collapse=", ")`
 - **number of used plates:** `r length(unique(manifest$plate))`
 - **configuration:** `r paste(meta$name, collapse=", ")`
 
@@ -29,7 +33,7 @@ as an example
 ```{r image-layout, results="asis", echo=FALSE}
 manifest <- subset(manifest, timepoint == meta$timepoints[1] & plate == manifest[1, 'plate'])
 fi <- merge(manifest, meta$griddf)
-fi$rn <- paste(fi$germplasm_region, fi$Sample_ID, fi$GERMPLASM, sep=",")
+fi$rn <- paste(fi$genotype_region, fi$Sample_ID, fi$GENOTYPE, sep=",")
 dd <- reshape2::dcast(fi, ROW~RANGE, value.var='rn')[, -1]
 mark <- rep('', nrow(dd))
 mark[ceiling(length(mark) / 2)] <- '<- Mark'
@@ -58,7 +62,7 @@ print(xtable::xtable(dd), 'html',
 
 Sowing order is indicated below and also given as
 [sowing-order.csv](sowing-order.csv) and in long format with one row
-per germplasm in [sowing-order-long.csv](sowing-order-long.csv), and
+per genotype in [sowing-order-long.csv](sowing-order-long.csv), and
 as short printable summary in
 [sowing-summary.csv](sowing-summary.csv)
 
@@ -71,8 +75,8 @@ sowingdf <- plyr::ddply(mfs, 'plate', function(dd) {
              block=unique(dd$BLOCK),
              position=unique(dd$position),
              treatment=unique(dd$treatment),
-             germplasms=paste(dd$GERMPLASM, collapse=','),
-             regions=paste(dd$germplasm_region, collapse=','))
+             genotypes=paste(dd$GENOTYPE, collapse=','),
+             regions=paste(dd$genotype_region, collapse=','))
 })
 sowingdf <- sowingdf[with(sowingdf, order(block, position)),]
 rownames(sowingdf) <- NULL
@@ -81,12 +85,12 @@ print(xtable::xtable(sowingdf), 'html',
         include.rownames=FALSE)
 write.csv(sowingdf, file='sowing-order.csv', row.names=FALSE)
 
-cols <- c('plate', 'label', 'BLOCK', 'position', 'treatment', 'GERMPLASM',
-          'germplasm_region')
+cols <- c('plate', 'label', 'BLOCK', 'position', 'treatment', 'GENOTYPE',
+          'genotype_region')
 sowingdfLong <- mfs[,cols]
 sowingdfLong <- transform(sowingdfLong, plate=gsub('\\..*$', '', plate))
 colnames(sowingdfLong) <-
-  c('plate', 'label', 'block', 'position', 'treatment', 'germplasm', 'region')
+  c('plate', 'label', 'block', 'position', 'treatment', 'genotype', 'region')
 sowingdfLong <- sowingdfLong[with(sowingdfLong, order(block, position)),]
 rownames(sowingdfLong) <- NULL
 write.csv(sowingdfLong, file='sowing-order-long.csv', row.names=FALSE)
@@ -96,13 +100,13 @@ A compact listing over which plates are to subjected to which treatment:
 
 ```{r sowing-summary, results="asis", echo=FALSE}
 manifest <- readManifest('../..')
-summary <- manifest[,c("plate","germplasm_region","treatment","GERMPLASM")]
+summary <- manifest[,c("plate","genotype_region","treatment","GENOTYPE")]
 fun <- function(x) paste(unique(x),collapse=",")
 
 summary <- reshape2::melt(summary,
-                          id.vars=c("plate", "germplasm_region", "treatment", "GERMPLASM"))
+                          id.vars=c("plate", "genotype_region", "treatment", "GENOTYPE"))
 summary <- as.data.frame(reshape2::dcast(summary,
-                                         GERMPLASM + germplasm_region ~ treatment,
+                                         GENOTYPE + genotype_region ~ treatment,
                                          fun,
                                          value.var=as.character('plate')))
 treatments <- unique(manifest$treatment)
@@ -128,7 +132,7 @@ for (i in treatments){
   summary[,i] <- plates
 }
 
-summary <- summary[order(summary[,treatments[1]], summary[,'germplasm_region']),]
+summary <- summary[order(summary[,treatments[1]], summary[,'genotype_region']),]
 print(xtable::xtable(summary), 'html',
       html.table.attributes="class='table table-hover'",
       include.rownames=FALSE)

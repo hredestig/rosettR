@@ -37,11 +37,11 @@ makeTestExperiment <- function(exdir=".") {
   path <- file.path(exdir, "rosettrTest")
   unzip(system.file("examples/rosettrTest.zip", package=PKG),
         exdir=exdir)
-  meta <- metaTemplate(letters[1:4],
+  meta <- metaTemplate(c("foo", "bar", "baz", "qux"),
                        treatments=c("control", "osmotic"),
                        timepoints=c(11, 14, 16, 18),
-                       pixelsmm=7.538, nrepeats=3,
-                       reference="a")
+                       pixelsmm=7.538, nblocks=3,
+                       reference="foo")
   writeManifest(expandManifest(meta), path)
   writeMeta(meta, path)
   invisible(path)
@@ -57,21 +57,21 @@ makeTestExperiment <- function(exdir=".") {
 #' @details This package is delivered with three different experiment
 #' designs. These are:
 #'
-#' \itemize{ \item{6x6.abcd}{Uses a 6x6 plate grid with germplasms
+#' \itemize{ \item{6x6.abcd}{Uses a 6x6 plate grid with genotypes
 #' (lines) allocated to regions a, b, c and d that are placed
-#' clockwise around the plate. Total number of germplasms must thus be
+#' clockwise around the plate. Total number of genotypes must thus be
 #' divisible by four.}
 #' 
-#' \item{6x6.ab}{Uses a 6x6 plate grid with germplasms (lines)
+#' \item{6x6.ab}{Uses a 6x6 plate grid with genotypes (lines)
 #' allocated to regions a and b that positioned at the upper and lower
 #' half of the plate.}
-#'
-#' \item{6x6.one}{Uses a 6x6 plate grid with a single germplasm.}  }
-#' @param germplasms the names of the germplasms (genotypes) used in the
-#' experiment.
+#' }
+#' @param genotypes the names of the genotypes used in the experiment.
 #' @param treatments a character vector listing the applied treatments
 #' @param timepoints the timepoints (days) when pictures are taken.
-#' @param nrepeats the number of replicates
+#' @param nblocks the number of replicates
+#' @param description a short description of the experiment to
+#' annotate template reports
 #' @param pixelsmm the number of pixels per mm on a picture (must be
 #' the same for all pictures)
 #' @param name the name of the experiment type to use. See details.
@@ -85,21 +85,23 @@ makeTestExperiment <- function(exdir=".") {
 #' @return a list with meta data for the experiment
 #' @export
 #' @examples
-#' metaTemplate(letters[1:4], c("control", "osmotic_stress"))
-metaTemplate <- function(germplasms,
+#' metaTemplate(c("foo", "bar", "baz", "qux"),
+#'              c("control", "osmotic_stress"))
+metaTemplate <- function(genotypes,
                          treatments="control",
                          timepoints=c(11, 14, 16, 18),
-                         nrepeats=10,
+                         nblocks=10,
+                         description="",
                          pixelsmm=16,
-                         name=c("6x6.abcd", "6x6.ab", "6x6.one"),
+                         name=c("6x6.abcd", "6x6.ab"),
                          plateRadius=76, nBoxGrid=6, boxWidth=20,
                          reference=NULL) {
   name <- match.arg(name)
   if(!is.null(reference))
-    stopifnot(reference %in% germplasms)
-  template <- list(germplasms=germplasms, treatments=treatments,
+    stopifnot(reference %in% genotypes)
+  template <- list(genotypes=genotypes, treatments=treatments,
                    nBoxGrid=nBoxGrid, boxWidth=boxWidth,
-                   timepoints=timepoints, nrepeats=nrepeats,
+                   timepoints=timepoints, nblocks=nblocks,
                    pixelsmm=pixelsmm, name=name, plateRadius=plateRadius,
                    reference=reference)
   
@@ -113,7 +115,7 @@ metaTemplate <- function(germplasms,
   griddf$too_small <- FALSE
 
   if(name == "6x6.abcd") {
-    griddf$germplasm_region <-
+    griddf$genotype_region <-
         c(     "c", "c", "d", "d", 
           "c", "c", "c", "d", "d", "d", 
           "c", "c", "c", "d", "d", "d", 
@@ -130,7 +132,7 @@ metaTemplate <- function(germplasms,
   }
   
   if(name == "6x6.ab") {
-    griddf$germplasm_region <-
+    griddf$genotype_region <-
       c(     "b", "b", "a", "a", 
         "b", "b", "b", "a", "a", "a", 
         "b", "b", "b", "a", "a", "a", 
@@ -140,10 +142,10 @@ metaTemplate <- function(germplasms,
     griddf$Sample_ID <- c(1:16, 1:16)
   }
 
-  if(name == "6x6.one") {
-    griddf$Sample_ID <- 32:1
-    griddf$germplasm_region <- "a"
-  }
+  ## if(name == "6x6.one") {
+  ##   griddf$Sample_ID <- 32:1
+  ##   griddf$genotype_region <- "a"
+  ## }
   template$griddf <- griddf
   template
 }

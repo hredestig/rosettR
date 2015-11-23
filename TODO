@@ -162,7 +162,19 @@ easy, use templates
 - the anova table output 
 * DONE R cmd check...
   - State "DONE"       from "TODO"       [2015-11-16 Mon 22:04]
-* TODO write first vignette and then send to publication approval
+* DONE write first vignette and then send to publication approval
+  - State "DONE"       from "TODO"       [2015-11-22 Sun 10:27]
+* DONE fix main vignette
+  - State "DONE"       from "TODO"       [2015-11-22 Sun 15:54]
 * TODO test by re-analyzing some old experiment
+- with / without multi-core
 * TODO add zygosity stat report
-* TODO copy run.R file?
+* TODO add unit tests
+* DONE harmonize words
+  - State "DONE"       from "TODO"       [2015-11-22 Sun 13:35]
+- genotype not germplasm
+- box not well
+- blocks not repeats
+* CANCELED copy run.R file?
+  - State "CANCELED"   from "TODO"       [2015-11-22 Sun 10:28] \\
+    never worked well in practice anyway

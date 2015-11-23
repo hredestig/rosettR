@@ -13,7 +13,7 @@
 #' @examples
 #' meta <- metaTemplate(letters[1:4], treatments=c("control", "osmotic"))
 #' newExperiment(file.path(tempdir(), "testExperiment"), meta)
-#' makeReport(file.path(tempdir(), "testExperiment"), "sowing")
+#' makeReport(file.path(tempdir(), "testExperiment"), "layout")
 #' @author Henning Redestig
 makeReport <- function(path, report, name=NULL, browse=interactive()) {
   allReports <- list.files(system.file("reports", package=PKG), full.names=TRUE)
@@ -42,7 +42,6 @@ makeReport <- function(path, report, name=NULL, browse=interactive()) {
   if(browse)
     browseURL(out)
 }
-
 
 #' Make a thumbnail gallery of the input images 
 #'
@@ -81,9 +80,9 @@ plateGallery <- function(path, what=c("raw", "qc"), parallel=FALSE) {
     rnmDf <- ddply(mf, "timepoint", function(dd) {
       daydir <- unique(dirname(as.character(dd$image)))
       dd <- dd[with(dd, order(BLOCK, position)),]
-      first_region <- unique(dd$germplasm_region)[1]
+      first_region <- unique(dd$genotype_region)[1]
       expectedPics <-
-        basename(as.character(subset(dd, dd$germplasm_region ==
+        basename(as.character(subset(dd, dd$genotype_region ==
                                        first_region)$image)) 
       renamingDf(cleanPath(file.path(path, daydir), mustWork=TRUE),
                   expectedPics)
@@ -126,21 +125,6 @@ plateMakeTng <- function(df) {
   cat("</center></div>\n")
 }
 
-
-plateMakeTng2 <- function(df) {
-  df <- with(df, df[order(plate, orig),])
-  df$link <- paste('<a href="', file.path(df$orig), '">',
-                   '<img src="', "../",
-                   file.path(df$thumb), '", rel="lightbox"></a>',
-                   sep="")
-  cdf <- reshape2::dcast(df, plate ~ timepoint, value.var="link")
-  rownames(df) <- NULL
-  if(nrow(df) == 0)
-    return(NULL)
-  print(xtable(cdf), "html", sanitize.text.function=identity,
-        html.table.attributes="class='table table-hover'")
-}
-
 #' Data frame for analysis of plant areas from a plate experiment
 #'
 #' Create a data frame suitable for performing hypothesis testing
@@ -154,7 +138,7 @@ plateMakeTng2 <- function(df) {
 createPlateTestDf <- function(df) {
   df$image <- basename(as.character(df$image))
   df$variable <- "AREA"
-  dd <- dcast(df, treatment + GERMPLASM + BLOCK + image + ROW + RANGE
+  dd <- dcast(df, treatment + GENOTYPE + BLOCK + image + ROW + RANGE
               + Sample_ID ~ variable + timepoint, value.var="AREA")
   dataCols <- grep("^AREA_", colnames(dd))
   tpts <- as.numeric(gsub("AREA_", "", colnames(dd)[dataCols]))
