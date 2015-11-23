@@ -176,6 +176,7 @@ easy, use templates
     never worked well in practice anyway
 * DONE confirm multi-core working
   - State "DONE"       from "TODO"       [2015-11-22 Sun 18:58]
+* DONE add unit tests
+  - State "DONE"       from "TODO"       [2015-11-22 Sun 21:12]
 * TODO test by re-analyzing some old experiment
 * TODO add zygosity stat report
-* TODO add unit tests

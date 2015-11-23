@@ -347,18 +347,11 @@ emptyResult <- function(df, qcpath="", doqc=TRUE) {
 #' @return a data frame with information about plant areas, locations
 #' @export
 #' @examples
-#' \dontrun{
-#' file <- system.file('examples/plate', 'plate.jpg', package='BCS.Phenotyping')
-#' reps <- cbind(as.vector(sapply(1:6, rep, 6)), 1:6)
-#' griddf <- subset(data.frame(RANGE=reps[,2], ROW=LETTERS[reps[,1]]),
-#' !(ROW %in% c('A','F') & RANGE %in% c(1,6)))
-#' griddf$box_num <- 1:32
-#' griddf$too_small <- FALSE
-#' df <- analyzeImage(file, griddf, 3.7454, 20, 6, 75, savedir=tempdir(),
-#' verbose=TRUE)
+#' file <- system.file("examples", "plate.jpg", package="rosettR")
+#' meta <- metaTemplate(letters[1:4], LETTERS[1:2])
+#' df <- analyzeImage(file, meta$griddf, 3.7454, 20, 6, 75, verbose=TRUE)
 #' library(EBImage)
-#' display(readImage(df$qc_picture[1]), method='raster')
-#' }
+#' display(readImage(df$qc_picture[1]), method="raster")
 #' @author Henning Redestig
 analyzeImage <- function(file, griddf, pixelsmm, boxWidth, nBoxGrid, plateRadius,
                          thresh=NULL,
@@ -521,9 +514,10 @@ analyzeImage <- function(file, griddf, pixelsmm, boxWidth, nBoxGrid, plateRadius
     if(makeRelativePath) {
       splitPath <- strsplit(sub("\\", .Platform$file.sep, qcpath, fixed=TRUE),
                             .Platform$file.sep)[[1]]
+      if(length(splitPath) > 2)
+        splitPath <- splitPath[(length(splitPath) - 3):length(splitPath)]
       df$qc_picture <-
-        paste(c(".", splitPath[(length(splitPath) - 3):length(splitPath)]),
-              collapse=.Platform$file.sep)
+        paste(c(".", splitPath), collapse=.Platform$file.sep)
     } else {
       df$qc_picture <- qcpath
     }      
@@ -844,6 +838,8 @@ wellIndex <- function(griddf, i, wellWidth) {
 #' @param griddf a data frame that specified the grid (see
 #'   \code{\link{metaTemplate}})
 #' @param wellWidth the width of a well
+#' @param color the color of the letters
+#' @param cex the character expansion factor
 #' @return the labeled image
 #' @export
 #' @author Henning Redestig
