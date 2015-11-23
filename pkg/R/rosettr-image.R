@@ -1,12 +1,28 @@
-markPlate <- function(mat, radius, pixelsmm) {
-  oarea <-
-      ((row(mat) - (nrow(mat) / 2))^2 +
-       (col(mat) - (ncol(mat) / 2))^2 < (radius * pixelsmm + 1)^2)
-  iarea <-
-      ((row(mat) - (nrow(mat) / 2))^2 +
-       (col(mat) - (ncol(mat) / 2))^2 < (radius * pixelsmm - 1)^2)
-  rim <- oarea & !iarea
-  mat[rim] <- 1
+#' Mark a circle in a matrix
+#'
+#' Set edge and fill of a circle in a matrix to defined values.
+#' @param mat a numeric matrix
+#' @param x the x-coordinate of the centre of the circle
+#' @param y the y-coordinate of the centre of the circle
+#' @param radius the radius of the circle
+#' @param width the width of the edge
+#' @param edgeValue the value to set the edge to
+#' @param fillValue the value to set the content of the circle to
+#' @return the modified data matrix
+#' @export 
+#' @author Henning Redestig
+#' mat <- matrix(runif(100 * 200, 0, 1), 200, 100)
+#' marked <- markCircle(mat, 20, 50, 10)
+#' EBImage::display(Image(marked), method="raster")
+markCircle <- function(mat, x, y, radius, width=2, edgeValue=1,
+                       fillValue=NULL) {
+  circle <- (row(mat) - x)^2 + (col(mat) - y)^2
+  outer <- circle < (radius + width)^2
+  inner <- circle < radius^2
+  if(!is.null(edgeValue))
+    mat[outer & !inner] <- edgeValue
+  if(!is.null(fillValue))
+    mat[inner] <- fillValue
   mat
 }
 
@@ -167,7 +183,7 @@ findPlate <- function(im, radius, threshold) {
   opar <-
       optim(list(0, 0), plateDiffFun, mat=im, radius=radius,
             threshold=threshold, method="Nelder-Mead")
-  list(deltax=-2*opar$par[[1]], deltay=-2*opar$par[[2]])
+  list(deltax=-2 * opar$par[[1]], deltay=-2 * opar$par[[2]])
 }
 
 repositionImage <- function(im, deltax, deltay) {
@@ -204,6 +220,15 @@ repositionImage <- function(im, deltax, deltay) {
   im
 }
 
+#' Make grey scale
+#'
+#' Suitable for finding leafs e.g. only use the blue channel in which green
+#' tissue is maximally absorbing
+#' @param im an image
+#' @param channels the channels to sum
+#' @return the grey scale iamge
+#' @export
+#' @author Henning Redestig
 makeGrey <- function(im, channels=3) {
   x <- imageData(im)[,,1] * 0
   for(i in channels)
@@ -467,7 +492,7 @@ analyzeImage <- function(file, griddf, pixelsmm, boxWidth, nBoxGrid, plateRadius
     mat <- mat - nfeats
     mat[mat < 0] <- 0
     mat <- colorWellFrames(mat, df, boxWidthP)
-    mat <- markPlate(mat, plateRadius, pixelsmm)
+    mat <- markCircle(mat, nrow(mat) / 2, ncol(mat) / 2, plateRadius * pixelsmm)
     cols <- c("black", "black", "red", sample(rainbow(nrow(df))))
     qcpic <- Image(matrix(cols[1 + imageData(mat)], nrow=nrow(mat),
                           ncol=ncol(mat)),
@@ -770,7 +795,10 @@ drawText <- function(img, x, y, labels, col="black", cex=1) {
   display(img, method="raster")
   text(x, y, labels=labels, col=col, cex=cex)
   dev.off()
-  readImage(tmpFile, type="jpeg")
+  newImg <- readImage(tmpFile, type="jpeg")
+  if(colorMode(img) == 0)
+    newImg <- makeGrey(newImg, channels=1:3)
+  newImg
 }
 
 #' Frame a well
@@ -796,7 +824,7 @@ frameWell <- function(well, value) {
 #' @param i the index of the well to return (row in the grid data frame )
 #' @param wellWidth the width (in pixels) of the well
 #' @return a list of row and column indices
-#' @noRd
+#' @export
 #' @author Henning Redestig
 wellIndex <- function(griddf, i, wellWidth) {
   dd <- griddf[i, ]
@@ -809,6 +837,22 @@ wellIndex <- function(griddf, i, wellWidth) {
   list(rows=rows[rows > 0], cols=cols[cols > 0])
 }
 
+#' Label the wells in a grid
+#'
+#' Add row and column index labels to all wells on a plate
+#' @param im an image
+#' @param griddf a data frame that specified the grid (see
+#'   \code{\link{metaTemplate}})
+#' @param wellWidth the width of a well
+#' @return the labeled image
+#' @export
+#' @author Henning Redestig
+labelGrid <- function(im, griddf, wellWidth, color="black", cex=1)
+  drawText(im, x=griddf$centerx - (wellWidth / 3),
+           y=griddf$centery - (wellWidth / 2.5),
+           labels=paste0(griddf$row, ":", griddf$col),
+           col=color, cex=cex)
+
 #' Color the frame of all wells
 #'
 #' Set the perimiters of all wells to 1 or 2 depending on whether they are
@@ -817,7 +861,7 @@ wellIndex <- function(griddf, i, wellWidth) {
 #' @param griddf a data frame that defines the grid 
 #' @param wellWidth the width of well in pixels
 #' @return the image with frames indicated
-#' @noRd
+#' @export
 colorWellFrames <- function(mat, griddf, wellWidth) {
   for(i in which(!griddf$ambig_box)) {
     bi <- wellIndex(griddf, i, wellWidth)
@@ -831,4 +875,3 @@ colorWellFrames <- function(mat, griddf, wellWidth) {
   }
   mat
 }
-

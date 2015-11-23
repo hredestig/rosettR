@@ -8,11 +8,19 @@ using namespace Rcpp;
 
 static double msqrtpi = 1 / sqrt(2 * 3.141592653589793);
 
+// // [[Rcpp::export]]
+// NumericVector inside_circle(SEXP s_im, SEXP s_rad,
+// 							SEXP s_x, SEXP sy,
+// 							SEXP s_thresh) {
+//   try{
+// 	Rcpp::
+
 // [[Rcpp::export]]
 NumericVector count_outside(SEXP s_im, SEXP s_rad, SEXP s_dx, SEXP s_dy,
 							  SEXP s_thresh) {
-  // count pixels that are outside a circle with radius rad, shifted
-  // dx and dy from center of image and intensity below thresh
+  // count pixels that are _below_ a threshold and outside a circle
+  // with radius rad, shifted dx and dy from center of image and
+  // intensity below thresh
   try{
 	Rcpp::NumericMatrix im(s_im);
 	Rcpp::NumericVector rad(s_rad);
@@ -33,7 +41,7 @@ NumericVector count_outside(SEXP s_im, SEXP s_rad, SEXP s_dx, SEXP s_dy,
 	for(int i = 0; i < nr; i++) {
 	  for(int j = 0; j < nc; j++) {
 		r = (((double)i + 1) - dx(0)) - hnr;
-		c = (((double)j + 1)- dy(0)) - hnc;
+		c = (((double)j + 1) - dy(0)) - hnc;
 		if((r * r + c * c) > r2) {
 		  if(im(i,j) < thresh(0)) {
 			outside++;
