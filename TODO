@@ -166,10 +166,6 @@ easy, use templates
   - State "DONE"       from "TODO"       [2015-11-22 Sun 10:27]
 * DONE fix main vignette
   - State "DONE"       from "TODO"       [2015-11-22 Sun 15:54]
-* TODO test by re-analyzing some old experiment
-- with / without multi-core
-* TODO add zygosity stat report
-* TODO add unit tests
 * DONE harmonize words
   - State "DONE"       from "TODO"       [2015-11-22 Sun 13:35]
 - genotype not germplasm
@@ -178,3 +174,8 @@ easy, use templates
 * CANCELED copy run.R file?
   - State "CANCELED"   from "TODO"       [2015-11-22 Sun 10:28] \\
     never worked well in practice anyway
+* DONE confirm multi-core working
+  - State "DONE"       from "TODO"       [2015-11-22 Sun 18:58]
+* TODO test by re-analyzing some old experiment
+* TODO add zygosity stat report
+* TODO add unit tests
