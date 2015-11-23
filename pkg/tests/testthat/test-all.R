@@ -20,7 +20,7 @@ test_that("a plate rotation can be compensated", {
     binaryCorrected <- rotate(binaryRotated, estAngle)
     display(binaryCorrected, method="raster")
     abline(v=260, col="red")
-    abs(estAngle + 4 + origAngle) < 1
+    abs(estAngle + -origAngle + 4) < 2
   }, is_true())
 })
 
