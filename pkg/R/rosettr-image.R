@@ -791,7 +791,10 @@ drawText <- function(img, x, y, labels, col="black", cex=1) {
   display(img, method="raster")
   text(x, y, labels=labels, col=col, cex=cex)
   dev.off()
-  readImage(tmpFile, type="jpeg")
+  newImg <- readImage(tmpFile, type="jpeg")
+  if(colorMode(img) == 0)
+    newImg <- makeGrey(newImg, channels=1:3)
+  newImg
 }
 
 #' Frame a well
