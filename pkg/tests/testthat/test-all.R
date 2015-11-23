@@ -17,7 +17,7 @@ test_that("a plate rotation can be compensated", {
     estAngle <- rosettR:::optimAngle(binaryRotated, pixelsmm / 2, 20, 6)
     binaryCorrected <- rotate(binaryRotated, estAngle)
     ## display(binaryCorrected, method="raster")
-    abline(v=250, col="red")
+    ## abline(v=250, col="red")
     abs(estAngle + 2) < 0.5
   }, is_true())
 })
