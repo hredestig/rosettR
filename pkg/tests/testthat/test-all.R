@@ -1,3 +1,4 @@
+library(EBImage)
 test_that("experiment can be created and sowing report compiled", {
   expect_that({
     path <- makeTestExperiment()
@@ -14,8 +15,8 @@ test_that("a plate rotation can be compensated", {
     binary <- rosettR:::makeBinary(im, pixelsmm / 2)
     binaryRotated<- rotate(binary, 2)
     estAngle <- rosettR:::optimAngle(binaryRotated, pixelsmm / 2, 20, 6)
-    binaryCorrected <- rotate(binaryCorrected, estAngle)
-    display(binaryCorrected, method="raster")
+    binaryCorrected <- rotate(binaryRotated, estAngle)
+    ## display(binaryCorrected, method="raster")
     abline(v=250, col="red")
     abs(estAngle + 2) < 0.5
   }, is_true())

@@ -349,7 +349,8 @@ emptyResult <- function(df, qcpath="", doqc=TRUE) {
 #' @examples
 #' file <- system.file("examples", "plate.jpg", package="rosettR")
 #' meta <- metaTemplate(letters[1:4], LETTERS[1:2])
-#' df <- analyzeImage(file, meta$griddf, 3.7454, 20, 6, 75, verbose=TRUE)
+#' df <- analyzeImage(file, meta$griddf, 3.7454, 20, 6, 75, verbose=TRUE,
+#'                    checkrotation=FALSE)
 #' library(EBImage)
 #' display(readImage(df$qc_picture[1]), method="raster")
 #' @author Henning Redestig

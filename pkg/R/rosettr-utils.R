@@ -92,8 +92,8 @@ createPlateQcDf <- function(df, html=TRUE) {
 #' @param file an image file (jpg)
 #' @return the date
 #' @export
-#' @references
-#' Uses Mayank Lahiri's exif parsing library \url{https://github.com/mayanklahiri/easyexif}
+#' @references Uses Mayank Lahiri's exif parsing library
+#' \url{https://github.com/mayanklahiri/easyexif}
 #' @author Henning Redestig
 #' @examples
 #' dateTaken(system.file("examples/plate001.jpg", package="rosettR"))
