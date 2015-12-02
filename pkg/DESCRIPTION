@@ -4,7 +4,8 @@ Title: Easy image based phenotyping of plants grown in plates
 Version: 0.0.2
 Author: Henning Redestig
 Maintainer: Henning Redestig <henning.red@gmail.com>
-Description: Implements data management and image analysis for a plate based plant growth assay
+Description: Implement data management, image and statistical analysis
+   for a plate based in vitro growth assay of Arabidopsis seedlings.
 License: GPL-3
 Suggests:
     testthat
@@ -12,8 +13,14 @@ Imports:
     methods,
     EBImage,
     Rcpp,
-    reshape2,    
+    reshape2,
     plyr,
-	xtable
+    xtable,
+    jsonlite,
+    knitr,
+    markdown,
+    multcomp
 LinkingTo: Rcpp
 SystemRequirements: Rcpp
+RoxygenNote: 5.0.0
+VignetteBuilder: knitr

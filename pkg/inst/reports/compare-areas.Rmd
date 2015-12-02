@@ -1,0 +1,75 @@
+# Compare plant areas across all treatments and genotypes against the reference genotypes
+
+```{r read-chunk, echo=FALSE, warning=FALSE}
+
+suppressMessages(library(reshape2))
+suppressMessages(library(plyr))
+suppressMessages(library(ggplot2))
+opts_chunk$set(fig.width=5, fig.height=5, tidy=TRUE, fig.align='center', 
+               fig.show='hold', dev=c('png', 'pdf'), error=TRUE)
+options(width=68)
+options(markdown.HTML.options="mathjax")
+
+meta <- readMeta("../..")
+phenodata <- readPhenodata("../..")
+expdf <- createPlateTestDf(subset(phenodata, !removed))
+
+```
+
+Plate experiment:
+
+```{r desc, results="asis"}
+cat(meta$description)
+```
+
+We perform ANOVA suitable for multiple comparisons of the area or relative growth rate a each day, \(y\) as 
+
+\(y = \beta_{1,i}x + \beta_{2}b + \epsilon\)
+
+where \(x\) is factor encoding each examined combination (\(i\)) of genotype and treatment and \(b\) is a factor encoding the repeats (blocks) in the experiment. We then get statistics assessing the null hypothesis
+
+\(H_{0_{j,k}}: \beta_{1,i} = \beta_{1,j}\) for \(j\) and \(k\) corresponding to samples of the genotype to be tested, versus the designated reference genotype within the same treatment.
+
+Multiple comparisons were performed using the [multcomp](https://cran.r-project.org/web/packages/multcomp/index.html) package. P-values are adjusted for multiple testing.
+
+```{r anova, results="asis", echo=FALSE}
+
+traits <- colnames(expdf)[c(grep("^AREA", colnames(expdf)),
+                            grep("^RGR", colnames(expdf)))]
+anovaResults <- simpleAnovaTableGT(expdf, meta$reference, traits)
+write.csv(anovaResults, "anova-results.csv")
+kable(format(anovaResults, digits=2), "html",
+      table.attr='id="anova_results" class="table table-hover"')
+```
+
+The test results are also given as [anova-results.csv](anova-results.csv)
+
+We create effect plots for all comparsions where the mean is indicated by the dot, and the 95% confidence interval indicated by a horizontal line. Red-dots indicate estimates associated with a p-value lower than 0.05.
+
+```{r effectplots-area, echo=FALSE, warning=FALSE, fig.width=10, fig.height=7}
+
+subData <- subset(anovaResults, grepl("^AREA", response))
+ggplot(subData, aes(Estimate, comparison)) +
+  geom_vline(xintercept=0, lty=2, col="red") +
+  geom_segment(aes(x=lwr, xend=upr, yend=comparison), lwd=1.5) +
+  geom_point(colour="blue", size=4) +
+  geom_point(colour="red", size=2, data=subset(subData, pvalue < 0.05)) +
+  facet_wrap(~response) +
+  ylab(NULL) +
+  xlab("Estimated effect difference")
+
+```
+
+```{r effectplots-rgr, echo=FALSE, warning=FALSE, fig.width=10, fig.height=7}
+
+subData <- subset(anovaResults, grepl("^RGR", response))
+ggplot(subData, aes(Estimate, comparison)) +
+  geom_vline(xintercept=0, lty=2, col="red") +
+  geom_segment(aes(x=lwr, xend=upr, yend=comparison), lwd=1.5) +
+  geom_point(colour="blue", size=4) +
+  geom_point(colour="red", size=2, data=subset(subData, pvalue < 0.05)) +
+  facet_wrap(~response) +
+  ylab(NULL) +
+  xlab("Estimated effect difference")
+
+```

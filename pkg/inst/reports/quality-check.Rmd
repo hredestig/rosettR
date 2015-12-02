@@ -1,0 +1,168 @@
+# Basic quality control for a plate experiment
+
+```{r read-chunks, echo=FALSE, warning=FALSE}
+suppressMessages(library(reshape2))
+suppressMessages(library(plyr))
+suppressMessages(library(ggplot2))
+suppressMessages(library(knitr))
+opts_chunk$set(fig.width=5, fig.height=5, tidy=TRUE, fig.align="center", 
+               fig.show="hold", dev=c("png", "pdf"), error=TRUE)
+options(width=68)
+```
+
+```{r expinfo, echo=FALSE}
+meta <- readMeta("../..")
+phenodata <- readPhenodata("../..")
+mf <- readManifest("../..")
+```
+
+Plate experiment:
+
+```{r desc, results="asis"}
+cat(meta$description)
+```
+
+## Plate layout
+
+The images were interpreted like this, using `r mf[1,"plate"]` as an example
+
+```{r plate-layout, results="asis", echo=FALSE}
+mf <- subset(mf, timepoint == meta$timepoints[1] & plate == mf[1,"plate"])
+fi <- merge(mf, meta$griddf)
+fi$rn <- paste(fi$zygosity, fi$genotype_region, fi$Sample_ID,
+               fi$GENOTYPE, sep=",")
+fi <- dcast(fi, ROW~RANGE, value.var="rn")
+colnames(fi)[1] <- ""
+print(xtable::xtable(fi), "html",
+      html.table.attributes="class='table table-hover'",
+      include.rownames=FALSE)
+```
+
+## Image analysis
+
+An overview of the analyzed images are given below. Make sure that the black outline of the plate is directly around the plate. If not, consider re-calibrating the zoom factor using `calibrateScale()`. Also check that each plant is colored with its own color, and not merged with plants in neighboring boxes.
+
+If any plate look like it is not correctly corrected in terms of
+
+* rotation
+* horizontal or vertical displacement
+* threshold (separating background from the plant)
+
+you may want to re-process those images (see package vignettes for how to do that). If a plate has contamination or in any other way bad data you may want to mark those as 'removed' by using the `removeBoxes()` function.
+
+```{r qc-image-overview, results="asis", echo=FALSE}
+plateGallery("../..", "qc")
+```
+
+## Quality control results
+
+Table showing different quality control statistics for the plates. Check that the included plates are of acceptable quality and remove failed plates using the `removeBoxes()` function before recompiling this report.
+
+__rotation__
+the clockwise rotation correction in degrees that was applied to the plate. Missing value indicates that no rotation was done. An absolute value close to the maximum tested rotation may indicate poor quality.
+
+__eccentricity__
+an estimate for how far away the plate deviates from the center in millimeter. A large value may indicate poor quality but the plate detection algorithm is unstable an often over-estimates this value.
+
+__ambiguous boxes__
+the number of boxes on the plate that had features that could not be resolved to a specific boxes and hence treated by hard-splitting of the box and summing features. A number greater than 0 indicates poor quality.
+
+__max_features__
+the maximum number of features found in a single box. A large number (e.g., >8) indicates that at least one box contains an object that is not a single plant since these typically do not generate more than 5-6 features.
+
+```{r qc, results="asis", echo=FALSE}
+qcdf <- createPlateQcDf(phenodata, html=TRUE)
+print(xtable::xtable(qcdf), "html", sanitize.text.function=function(x) x,
+      html.table.attributes="class='table table-hover'",
+        include.rownames=FALSE)
+```
+
+We use boxplots to detect outliers.
+
+Individual plates that have excessively large or small seedlings should be considered for removal.
+	
+```{r areas_per_plate, echo=FALSE, fig.width=6, fig.height=9, warning=FALSE}
+expdf <- createPlateTestDf(subset(phenodata, !removed))
+mdf <- melt(expdf,
+            id.vars=intersect(c("treatment", "GENOTYPE", "BLOCK",
+              "zygosity", "image", "ROW", "RANGE"),
+              names(expdf)))
+areavars <- substr(mdf$variable, 1, 4) == "AREA"
+
+suppressWarnings(ggplot(mdf[areavars,], aes(image, value)) + geom_boxplot() +
+                   coord_flip())
+```
+
+If a plant is too small at any one day, it will be marked as "removed" over the whole time-series. We make a table of the number of removed plants per genotype. Individual plants (or plate-boxes more accurately) may also be removed manually. We create table to monitor how many observations for each replicate set have been removed.
+
+```{r removed_boxes, results="asis", echo=FALSE}
+stopifnot(all(c("removed") %in% names(phenodata)))
+vars <- c("timepoint", "GENOTYPE", "treatment", "zygosity")
+vars <- intersect(vars, names(phenodata))
+removed_df <- ddply(phenodata, vars, function(dd) {
+  de <- dd[,c(vars, "removed", "too_small")]
+  data.frame("number removed"=sum(de$removed),
+             "removed (%)"=(sum(de$removed) / nrow(de)) * 100, check.names=FALSE)
+})
+print(xtable::xtable(removed_df), "html", sanitize.text.function=function(x){x},
+      html.table.attributes="class='table table-hover'",
+      include.rownames=FALSE)
+for(v in vars) {
+  removed_df <-
+    ddply(phenodata, v, function(dd) {
+            de <- dd[,c(vars, "removed", "too_small")]
+            data.frame("number removed"=sum(de$removed),
+                       "removed (%)"=(sum(de$removed) /
+                                        nrow(de)) * 100, check.names=FALSE)
+          })
+  cat("<br><br><h3>", v, "</h3>\n")
+  print(xtable::xtable(removed_df), "html", sanitize.text.function=function(x){x},
+        html.table.attributes="class='table table-hover'",
+        include.rownames=FALSE)
+}
+```
+
+The table below lists the number of outliers per plate. Plates with very large number of outliers should be inspected and considered for removal.
+
+```{r outliers_per_plate, results="asis", echo=FALSE}
+vars <- intersect(c("treatment", "GENOTYPE", "zygosity"), colnames(df))
+mdf$trt <- factor(apply(mdf[,vars], 1, paste, collapse="_"))
+area_mdf <- subset(mdf, grepl("^AREA", variable))
+out_mdf <- ddply(area_mdf, .(trt, variable), function(dd) {
+  dd$outlier <- simpleOutlierTest(dd$value)
+  dd
+})
+area_vars <- as.character(mdf$variable)[grep("AREA", unique(as.character(mdf$variable)))]
+rgr_vars <- as.character(mdf$variable)[grep("RGR", unique(as.character(mdf$variable)))]
+
+s_area_mdf <- subset(mdf, variable %in% area_vars)
+
+
+emptiness <-
+  ddply(phenodata, c("plate", "timepoint"), function(dd) {
+  data.frame(empty=all(is.na(dd$AREA)))
+})
+any_empty <- ddply(emptiness, "plate", function(dd) {
+  data.frame(empty=any(dd$empty))
+})
+mf <- unique(phenodata[,c("plate", "qc_picture")])
+mf$qc_picture <- file.path("../..", mf$qc_picture)
+pretty_im_name <-
+  file.path(gsub("../../qc/", "", basename(dirname(mf$qc_picture))), basename(mf$qc_picture))
+mf$qc_picture <-
+  with(mf, paste('<a href="', qc_picture, '">', pretty_im_name, "</a>"))
+mf <- aggregate(qc_picture ~ plate, mf, paste, collapse=", ")
+out_mdf$outlier_ <- ifelse(is.na(out_mdf$outlier) | !out_mdf$outlier,
+                           "not_outlier", "outlier")
+outliers_per_plate <- dcast(out_mdf, image~outlier_, fun.aggregate=length)
+colnames(outliers_per_plate) <- c("plate", "not_outlier", "outlier")
+outliers <- merge(outliers_per_plate, mf, by="plate")
+outliers <- with(outliers, outliers[order(outlier, decreasing=TRUE),])
+outliers$empty_plates <-
+  ifelse(outliers$plate %in% any_empty$plate[any_empty$empty], "yes", "no")
+
+print(xtable::xtable(outliers), "html", sanitize.text.function=function(x){x},
+      html.table.attributes="class='table table-hover'",
+      include.rownames=FALSE)
+```
+

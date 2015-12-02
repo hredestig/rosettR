@@ -1,89 +1,3 @@
-#' Make a thumbnail gallery of the input images 
-#'
-#' Creates a html thumbnail gallery of the input images where the
-#' images are arranged after how the will be interpreted by the
-#' renaming facilities and which day they were taken. The images are
-#' clickable and links to the original input images.
-#' @param path a resolvable path to the experiment.
-#' @param what either 'qc' or 'raw' for galleries of qc images or raw
-#' images respectively.
-#' @return nothing, used for its side effect.
-#' @export
-#' @examples
-#' \dontrun{
-#' dummyExperimentId <- createDummyPlateExperiment(242)
-#' plate_gallery(dummyExperimentId, "raw")
-#' trashExperiment(as(dummyExperimentId, "Oni"))
-#' }
-#' @author Henning Redestig
-plateGallery <- function(path, what=c("raw", "qc")) {
-  what <- match.arg(what)
-  switch(what, qc={
-    pda <- readPhenodata(path)
-    cols <- c("plate", "timepoint", "image", "qc_picture")
-    if(!all(cols %in% names(pda))) {
-      message("missing qc pictures or images in phenodata, skipping thumbnails")
-      return(NULL)
-    }
-    df <- unique(pda[,cols])
-    df$orig <- file.path('..', df$image)
-    df$thumb <- file.path('..', df$qc_picture)
-    plateMakeTng(df, 'qc-thumbnails.html', path)
-  }, raw={
-    version <- system("convert --version", intern=TRUE)
-    if(!any(grepl("ImageMagick", version)))
-      stop("ImageMagick's 'convert' utility not available")
-    mf <- readManifest(path)
-    rnm_df <- ddply(mf, "timepoint", function(dd) {
-      daydir <- unique(dirname(as.character(dd$image)))
-      dd <- dd[with(dd, order(BLOCK, position)),]
-      first_region <- unique(dd$germplasm_region)[1]
-      expected_pics <-
-        basename(as.character(subset(dd, dd$germplasm_region ==
-                                       first_region)$image)) 
-      renaming_df(cleanPath(file.path(path, daydir), mustWork=TRUE),
-                  expected_pics)
-    })
-    for(s in unique(rnm_df$subdir)) {
-      pi <- file.path(path, s)
-      pt <- file.path(path, "Output", "thumbs", s)
-      if(!file.exists(pt)) dir.create(pt, recursive=TRUE)
-      system.time(res <- llply(rnm_df$image[rnm_df$subdir == s], function(im) {
-        system2("convert", c("-define jpeg:size=1000x500 -thumbnail 400x200",
-                             sprintf('"%s/%s"', pi, im),
-                             sprintf('"%s/%s"', pt, im)))
-      }, .progress=ifelse(interactive(), "text", "none")))
-    }
-    df <- data.frame(orig=file.path("..", rnm_df$subdir, rnm_df$image),
-                     thumb=file.path("thumbs", rnm_df$subdir, rnm_df$image),
-                     plate=rnm_df$newname,
-                     timepoint=as.numeric(gsub(".*_*D(\\d+)", "\\1",
-                       rnm_df$subdir)))
-    plateMakeTng(df, "raw-thumbnails.html", path)
-  })
-}
-
-plateMakeTng <- function(df, output, path) {
-  df <- with(df, df[order(plate, orig),])
-  df$link <- paste('<a href="', file.path(df$orig), '">',
-                   '<img src="', file.path(df$thumb), '", rel="lightbox"></a>',
-                   sep="")
-  cdf <- reshape2::dcast(df, plate ~ timepoint, value.var="link")
-  rownames(df) <- NULL
-  if(nrow(df) == 0)
-    return(NULL)
-  html_out <- file.path(path, "Output", output)
-  cat( "<!DOCTYPE html>"
-      ,"<html> <head>"
-      ,'<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>'
-      ,"<title>Plates for experiment", basename(path), "</title></head>"
-      ,"<body>"
-      ,"<h1>Plates for experiment", basename(path), "</h1>", file=html_out)
-  tab <- print(xtable::xtable(cdf), "html", sanitize.text.function=identity,
-               file=html_out, append=TRUE)
-  cat("</body></html>", file=html_out, append=TRUE)
-}
-
 #' Update the meta object
 #'
 #' Meta object is a list of parameters to use as defaults for a given
@@ -99,14 +13,6 @@ updateMeta <- function(..., meta) {
   for(item in names(newArgs))
     meta[[item]] <- newArgs[[item]]
   meta
-}
-
-readPhenodata <- function(path)
-  readRDS(file.path(path, "Output", "phenodata.rda"))
-
-writePhenodata <- function(path, df) {
-  saveRDS(df, file.path(path, "Output", "phenodata.rda"))
-  write.csv(df, file=file.path(path, "Output", "data.csv"))
 }
 
 cleanPath <- function (path, mustWork=NA) {
@@ -182,52 +88,77 @@ createPlateQcDf <- function(df, html=TRUE) {
 
 #' The date an image was taken
 #'
-#' Read create date from the exif tags using 
+#' Read create date from the exif tags using.
 #' @param file an image file (jpg)
 #' @return the date
 #' @export
-#' @references
-#' Uses Mayank Lahiri's exif parsing library \url{https://github.com/mayanklahiri/easyexif}
+#' @references Uses Mayank Lahiri's exif parsing library
+#' \url{https://github.com/mayanklahiri/easyexif}
 #' @author Henning Redestig
+#' @examples
+#' dateTaken(system.file("examples/plate001.jpg", package="rosettR"))
 dateTaken <- function(file) {
-  exif_date <- .Call("phenotyping_date_original", file, PACKAGE=PKG)
-  if(is.null(exif_date))
+  exifDate <- date_original(file)
+  if(is.null(exifDate))
     return(NA)
-  as.POSIXct(strptime(exif_date,"%Y:%m:%d %H:%M:%S"))
+  as.POSIXct(strptime(exifDate,"%Y:%m:%d %H:%M:%S"))
 }
 
+#' Read and write meta-data and analysis results
+#'
+#' rosettR saves meta data and analysis results for each experiment in
+#' a special file in the corresponding experiment directory. Use these
+#' function to read/write data to those files in the format expected by
+#' rosettR.
+#' @param meta the meta data object
+#' @param path path to the experiment directory
+#' @param df a data frame containing analysis results for the given
+#' @param manifest a data frame containing the manifest (description
+#' of each plate and well for the whole experiment) experiment
+#' @return nothing, used for side effect
+#' @export
+#' @name rwMeta
+writeMeta <- function(meta, path)
+  cat(toJSON(meta), file=file.path(path, "meta"))
+
+#' @name rwMeta
+#' @export
 readMeta <- function(path)
-  readRDS(file.path(path, "meta.rda"))
+  fromJSON(file.path(path, "meta"))
 
-writeMeta <- function(path, meta)
-  writeRDS(meta, file.path(path, "meta.rda"))
-
-#' Write manifest to an experiment
-#'
-#' Not intended for common use. Write manifest to a given
-#' experiment. Sorts the manifest after block and position prior to
-#' writing it.
-#' @param meta the meta data object of class \code{Oni} or
-#' \code{lmetadata}
-#' @param mf the manifest data.frame
-#' @param path path to the experiment
-#' @return nothing
+#' @name rwMeta
 #' @export
-#' @author Henning Redestig
-writeManifest <- function(path, mf)
-  write.table(mf, file=file.path(path, "manifest.txt"), row.names=FALSE, sep=",")
+readPhenodata <- function(path) {
+  rdaFile <- file.path(path, "Output", "phenodata.rda")
+  csvFile <- file.path(path, "Output", "data.csv")
+  if(file.exists(rdaFile))
+    readRDS(rdaFile)
+  else if(file.exists(csvFile))
+    read.csv(csvFile)
+  else
+    stop("no phenodata, not yet processed?")
+}
 
-#' Read the manifest from an experiment
-#'
-#' Each image in an experiment is described in the manifest file. Use
-#' this function to retrieve the manifest as a data frame.
-#' @param path the path to the manifest file itself or to the
-#' experiment where a manifest can be found.
-#' @return the manifest \code{data.frame}
+#' @name rwMeta
 #' @export
-#' @author Henning Redestig
-readManifest <- function(path)
-  read.table(file.path(path, "manifest.txt"), row.names=FALSE, sep=",")
+writePhenodata <- function(path, df) {
+  saveRDS(df, file.path(path, "Output", "phenodata.rda"))
+  write.csv(df, file=file.path(path, "Output", "data.csv"))
+}
+
+#' @name rwMeta
+#' @export
+writeManifest <- function(manifest, path)
+  write.table(manifest, file=file.path(path, "manifest.txt"),
+              row.names=FALSE, sep=",")
+
+#' @name rwMeta
+#' @export
+readManifest <- function(path) {
+  mf <- read.table(file.path(path, "manifest.txt"), header=TRUE, sep=",")
+  mf$image <- as.character(mf$image)
+  mf
+}
 
 #' Expand experiment design
 #'
@@ -236,11 +167,11 @@ readManifest <- function(path)
 #' in each repeat of the experiment. 
 #' @param meta the meta data object that defines the experiment design; the
 #' number of repeats, timepoints, germplasms and treatments
-#' @param platename canonical file name of the plates to use with
+#' @param plateName canonical file name of the plates to use with
 #' \code{\link{sprintf}}.
-#' @param plateoffset the number that the plate numbering should be
+#' @param plateOffset the number that the plate numbering should be
 #' offset to. The number of the first plate is 1 + plateoffset.
-#' @param plate_order An pre-defined order of the plate after they
+#' @param plateOrder An pre-defined order of the plate after they
 #' have been randomized. The plate order \emph{must} sort to correct
 #' order when using \code{\link{rank}} but can be either numerical or
 #' character.
@@ -250,37 +181,38 @@ readManifest <- function(path)
 #' @export
 #' @examples
 #' data(exampleMetadata)
+#' exampleMetadata
 #' expandManifest(exampleMetadata)
 #' @author Henning Redestig
 expandManifest <- function(meta,
-                           platename="plate%03d.jpg", plateoffset=0,
-                           plate_order, ...) {
-  if(length(meta$germplasm) == 0)
-    stop("no germplasms defined")
+                           plateName="plate%03d.jpg", plateOffset=0,
+                           plateOrder, ...) {
+  if(length(meta$genotype) == 0)
+    stop("no genotypes defined")
   if(length(meta$treatments) == 0)
     stop("no treatments defined")
   if(length(meta$timepoints) == 0)
     stop("no timepoints defined")
-  if(meta$nrepeats == 0) {
-    warning("number of repeats not defined, assuming 1 repeat")
-    meta$nrepeats <- 1
+  if(meta$nblocks == 0) {
+    warning("number of blocks not defined, assuming 1 block")
+    meta$nblocks <- 1
   }
   ntre <- length(meta$treatments)
-  nger <- length(meta$germplasm)
-  nrep <- meta$nrepeats
-  germplasm_region <- unique(meta$griddf$germplasm_region)
-  nreg <- length(germplasm_region)
+  nger <- length(meta$genotype)
+  nrep <- meta$nblocks
+  genotype_region <- unique(meta$griddf$genotype_region)
+  nreg <- length(genotype_region)
   chun <- (nger / nreg) * ntre
   
   df <-
-    data.frame(plate=rep(sprintf(platename,
-                 (plateoffset + 1):(plateoffset + (nger / nreg) * ntre * nrep)),
-                 each=nreg),
+    data.frame(plate=rep(sprintf(plateName,
+                   (plateOffset + 1):(plateOffset + (nger / nreg) * ntre * nrep)),
+                   each=nreg),
                chunk=rep(1:((nger / nreg) * ntre), each=nrep * nreg),
                treatment=rep(meta$treatments, each=nger  * nrep),
-               GERMPLASM=as.vector(apply(matrix(meta$germplasm, nrow=nreg),
+               GENOTYPE=as.vector(apply(matrix(meta$genotype, nrow=nreg),
                  2, rep, nrep)),
-               germplasm_region=germplasm_region,
+               genotype_region=genotype_region,
                BLOCK=as.vector(replicate(chun, rep(sample(nrep), each=nreg))),
                stringsAsFactors=FALSE)
   df$o <- rep(1:(chun * nrep), each=nreg)
@@ -288,10 +220,10 @@ expandManifest <- function(meta,
   df$position <-
     as.vector(replicate(nrep, rep(sample(chun), each=nreg)))
   df <- df[order(df$o),]
-  if(!missing(plate_order)) {
-    if(!(length(plate_order) * nreg) == nrow(df))
+  if(!missing(plateOrder)) {
+    if(!(length(plateOrder) * nreg) == nrow(df))
       stop("plate order does not match experiment dimensions")
-    repdf <- data.frame( plt      =rep(rank(plate_order) , each=nreg)
+    repdf <- data.frame( plt      =rep(rank(plateOrder) , each=nreg)
                         ,BLOCK    =rep(gl(nrep, chun)    , each=nreg)
                         ,position =rep(1:chun            , each=nreg)
                         )
@@ -303,7 +235,7 @@ expandManifest <- function(meta,
   if(nrep < length(LETTERS))
     df$label <- with(df, paste(LETTERS[BLOCK], position, sep=""))
   else {
-    warning("cannot create labels for more than 26 repeats")
+    warning("cannot create labels for more than 26 blocks")
     df$label <- "no_label"
   }
   df$image <-
@@ -331,16 +263,16 @@ expandManifest <- function(meta,
 #' @export
 #' @author Henning Redestig
 #' @examples
-#' \dontrun{
-#' ## remove the plant in 3:3 on plate120 from all days
-#' removeBoxes('.*/plate120/3:3', '..path..')
+#' makeTestExperiment(tempdir())
+#' path <- file.path(tempdir(), "rosettrTest")
+#' ## remove the plant in 3:3 on plate002 from day 18
+#' removeBoxes(path, ".*/plate002/3:3")
 #' ## list the removed plants
-#' load('..path../Output/phenodata.rda')
-#' subset(dataset(phenodata), removed)
-#' }
+#' subset(readPhenodata(path), removed)
 removeBoxes <- function(path, pattern, platere="plate\\s*\\d+", remove=TRUE) {
-  if(any(!grepl(paste(".+/", platere, "/.+:.+", sep=""), pattern)))
-    stop(paste("malformatted plate indication. should be [day]/[plateXXX]/[row]:[col],",
+  if(!any(grepl(paste0(".+/", platere, "/.+:.+"), pattern)))
+    stop(paste("malformatted plate indication. ",
+               "should be [day]/[plateXXX]/[row]:[col],",
                "for example 18/plate120/2:3"))
   df <- readPhenodata(path)
   day_plate <-
@@ -352,10 +284,10 @@ removeBoxes <- function(path, pattern, platere="plate\\s*\\d+", remove=TRUE) {
   colregex <- strsplit(strsplit(pattern,"/")[[1]][3], ":")[[1]][2]
 
   selection_to_remove <-
-      grepl(dayregex, as.character(df$timepoint)) &
-        grepl(pltregex, as.character(df$plate)) &
-          grepl(rowregex, as.character(df$ROW)) &
-            grepl(colregex, as.character(df$RANGE))
+    grepl(dayregex, as.character(df$timepoint)) &
+      grepl(pltregex, as.character(df$plate)) &
+      grepl(rowregex, as.character(df$ROW)) &
+      grepl(colregex, as.character(df$RANGE))
 
   df$removed[selection_to_remove] <- remove
   writePhenodata(path, df)
@@ -389,15 +321,12 @@ removeBoxes <- function(path, pattern, platere="plate\\s*\\d+", remove=TRUE) {
 #' otherwise \code{NULL}, both invisibly.
 #' ## unpack an example experiment to working directory.
 #' @examples
+#' path <- makeTestExperiment(tempdir())
+#' processPlateExperiment(path, analyze=FALSE)
+#' readManifest(path)
 #' \dontrun{
-#' dummyPath <- createDummyPlateExperiment(242)
-#' ## You may want to inspect the folder structure
-#' dir(dummyPath)
-#' processPlateExperiment(dummyPath, analyze=FALSE)
-#' readManifest(dummyExperimentId)
 #' ## optionally analyze the pictures as well
-#' processPlateExperiment(dummyExperimentId)
-#' trashExperiment(as(dummyExperimentId, "Oni"))
+#' processPlateExperiment(path)
 #' }
 #' @export
 #' @author Henning Redestig
@@ -411,35 +340,33 @@ processPlateExperiment <- function(path, meta=readMeta(path), rename=TRUE,
   if(file.exists(file.path(outDir, "sealed")) & rename) {
     message("not renaming files since the experiment has already been sealed")
   } else {
-    rnm_df <- ddply(mf, "timepoint", function(dd) {
+    rnmDf <- ddply(mf, "timepoint", function(dd) {
       daydir <- unique(dirname(as.character(dd$image)))
       dd <- dd[with(dd, order(BLOCK, position)),]
-      first_region <- unique(dd$germplasm_region)[1]
+      first_region <- unique(dd$genotype_region)[1]
       expected_pics <-
-        basename(as.character(subset(dd, dd$germplasm_region ==
+        basename(as.character(subset(dd, dd$genotype_region ==
                                        first_region)$image))
       renamingDf(cleanPath(file.path(path, daydir), mustWork=TRUE),
                   expected_pics)
     })
-    renameImages(path, rnm_df, dry=!rename, verbose=FALSE)
-    rdf <- with(rnm_df, data.frame(image=file.path(".", subdir, newname),
+    renameImages(path, rnmDf, dry=!rename, verbose=FALSE)
+    rdf <- with(rnmDf, data.frame(image=file.path(".", subdir, newname),
                                    oldname=image, date=date))
     mf <- merge(mf, rdf, by="image", all=TRUE)
-    missing_images <- Filter(Negate(file.exists), unique(mf$image))
-    if(length(missing_images > 0)) {
+    missingImages <- Filter(Negate(file.exists), file.path(path, unique(mf$image)))
+    if(length(missingImages > 0)) {
       warning(sprintf("%d missing images for %s, dropping them from manifest",
-                      length(missing_images), path))
+                      length(missingImages), path))
       mf <- mf[file.exists(mf$image),]
     }
     file.create(file.path(path, "Output", "sealed"))
-    writeManifest(path, mf)
+    writeManifest(mf, path)
   }
   res <- NULL
   if(analyze) {
     message("processing images..")
     res <- processPlateImages(path, ...)
-    message("making plate gallery..")
-    plateGallery(path, "qc")
   }
   invisible(res)
 }
@@ -474,24 +401,22 @@ processPlateExperiment <- function(path, meta=readMeta(path), rename=TRUE,
 #' good to save this data frame to be able to revert file renaming
 #' @export
 #' @examples
-#' \dontrun{
-#' dummyExperimentId <- createDummyPlateExperiment(242)
-#' newnames <- c('plate003.jpg', 'plate002.jpg', 'plate004.jpg', 'plate001.jpg')
+#' path <- makeTestExperiment(tempdir())
+#' newnames <- c("plate003.jpg", "plate002.jpg", "plate004.jpg", "plate001.jpg",
+#'               "plate005.jpg", "plate006.jpg")
 #' ## simulate renaming all files
-#' renamePlateImages(dummyExperimentId, newnames)
+#' renamePlateImages(path, newnames)
 #' ## simulate for a single directory
-#' renamePlateImages(dummyExperimentId, newnames, subdirs="D11")
+#' renamePlateImages(path, newnames, subdirs="D11")
 #' ## to actually make changes
-#' renaming <- renamePlateImages(dummyExperimentId, newnames, dry=FALSE)
-#' list.files(file.path(expdir(dummyExperimentId), 'D11'))
+#' renaming <- renamePlateImages(path, newnames, dry=FALSE)
+#' list.files(file.path(path, "D11"))
 #' ## undo the renaming
-#' with(renaming, mapply(file.rename, file.path(expdir(dummyExperimentId), subdir, newname),
-#' file.path(expdir(dummyExperimentId), subdir, intermediate)))
-#' with(renaming, mapply(file.rename, file.path(expdir(dummyExperimentId), subdir, intermediate),
-#' file.path(expdir(dummyExperimentId), subdir, image)))
-#' list.files(file.path(expdir(dummyExperimentId), 'D11'))
-#' trashExperiment(as(dummyExperimentId, "Oni"))
-#' }
+#' with(renaming, mapply(file.rename, file.path(path, subdir, newname),
+#' file.path(path, subdir, intermediate)))
+#' with(renaming, mapply(file.rename, file.path(path, subdir, intermediate),
+#' file.path(path, subdir, image)))
+#' list.files(file.path(path, 'D11'))
 #' @author Henning Redestig
 renamePlateImages <- function(path, newnames, dry=TRUE, verbose=TRUE,
                                 subdirs=NULL) {
@@ -571,31 +496,124 @@ renameImages <- function(path, df, dry, verbose) {
   df
 }
 
-#" Create a dummy plate experiment
-#"
-#" To be used for testing purposed in documentation and unit-tests. Creates an
-#" experiment with an entry in the database.
-#" @param number Either experiment 242 or 999 (two different examples that have
-#" historically been used for testing purposed)
-#" @param id optionally give the experiment an identifier
-#" @return the created experiment identifier
-#" @export 
-#" @author Henning Redestig
-## createDummyPlateExperiment <- function(number, id) {
-##   if(missing(id))
-##     dummyExperimentId <- basename(tempfile(pattern="bcsphenotypingUnitTest"))
-##   else
-##     dummyExperimentId <- id
-##   meta <- oni(env=readRDS(system.file(sprintf("examples/plate/exampleMeta%d.rda", number),
-##                 package="BCS.Phenotyping"))$env)
-##   meta$set_value("id", dummyExperimentId)
-##   currentConfig <- getVar("_name", .pkg)
-##   setVar('root_path', tempdir(), 'BCS.Phenotyping')
-##   setVar("meta_template", meta, "BCS.Phenotyping")
-##   createExperiment()
-##   loadConfig(currentConfig, .pkg)
-##   untar(system.file(sprintf('examples/plate/EXP%d.tar.gz', number), 
-##                     package='BCS.Phenotyping'), exdir=expdir(dummyExperimentId),
-##       extras='-o')
-##   dummyExperimentId
-## }
+#' Comparison table
+#'
+#' In the plate experiments supported by rosettR we are concerned with comparing
+#' all genotypes against a reference genotypes across different treatments.
+#' Used in template reports in this package to perform ANOVA.
+#' @param levelsA the levels of the first factor, e.g. the treatments
+#' @param levelsB the levels of the second factor, e.g. the genotypes
+#' @param reference the reference in the second factor (e.g. wildtype if
+#' genotypes)
+#' @return a data frame detailing the comparisons to make
+#' @noRd
+#' @examples
+#' comparisonTable(c("control", "osmotic_stress"),
+#'                 c("ko1", "ox1", "col8"), reference="col8")
+comparisonTable <- function(levelsA, levelsB, reference) {
+  left <- expand.grid(Var1=levelsB, Var2=levelsA)
+  right <- ldply(reference, function(r) {
+                   left$Var1 <- r
+                   left
+                 })
+  left <- ldply(reference, function(r) left)
+  skip <- (apply(left, 1, paste, collapse="") ==
+             apply(right, 1, paste, collapse=""))
+  left <- as.matrix(left[!skip,])
+  right <- as.matrix(right[!skip,])
+  ldply(1:nrow(left), function(i) {
+    leftValue <- paste(left[i,], collapse="_")
+    rightValue <- paste(right[i,], collapse="_")
+    data.frame(
+      comparison=paste(leftValue, rightValue, sep="_vs_"),
+      left=leftValue, right=rightValue,
+      stringsAsFactors=FALSE
+    )
+  })
+}
+
+#' Create a simple contrast matrix for two-factor linear model
+#'
+#' In the plate experiments supported by rosettR we are concerned with comparing
+#' all genotypes against a reference genotypes across different treatments.
+#' Used in template reports in this package to perform ANOVA.
+#' @param comparisons data frame with the left hand and right hand level of the
+#' studied factor for each comparison, and a columnt 'comparison' naming the
+#' comparison to make
+#' @return a matrix with 0, 1 an -1 indicating the comparison to be made
+#' @noRd
+#' @examples
+#' comp <- comparisonTable(c("control", "osmotic_stress"),
+#'                         c("ko1", "ox1", "col8"), reference="col8")
+#' contrastMatrixForComparisons(comp)
+contrastMatrixForComparisons <- function(comparisons) {
+  levels <- sort(unique(c(comparisons$right, comparisons$left)))
+  contMat <- matrix(0, nrow=nrow(comparisons), ncol=length(levels),
+                    dimnames=list(comparisons$comparison,
+                      levels))
+  for(iRow in 1:nrow(comparisons)) {
+    contMat[iRow, comparisons[iRow, "left"]] <- 1
+    contMat[iRow, comparisons[iRow, "right"]] <- -1
+  }
+  contMat
+}
+
+statsTable <- function(data, comparisons, response) {
+  stats <- ddply(data, "genotypeTreatment", function(dd) {
+    data.frame(mean=mean(dd[[response]], na.rm=TRUE),
+               sd=sd(dd[[response]], na.rm=TRUE))
+  })
+  comparisonData <- melt(comparisons, id.vars="comparison",
+                         value.name="genotypeTreatment",
+                         variable.name="direction")
+  joinedData <- merge(stats, comparisonData, by="genotypeTreatment")
+  mjoinedData <- melt(joinedData,
+                      id.vars=c("direction", "genotypeTreatment", "comparison"))
+  dcast(mjoinedData, comparison ~ variable + direction, value.var="value")
+}
+
+#' Perform ANOVA for the comparisons in a plate experiment
+#' @param data a data frame with plate phenotyping results, such as output from
+#' \code{\link{createPlateTestDf}}
+#' @param reference the reference genotype
+#' @param responseVariables the response variable(s) to compute the contrasts
+#' statistics for. The pvalues are corrected for multiple comparisons.
+#' @export
+#' @examples
+#' # TODO
+#' @return a data frame with one contrast per row
+#' @seealso \code{\link{glht}} which is used to make the multiple comparisons
+simpleAnovaTableGT <- function(data, reference, responseVariables) {
+  data$genotypeTreatment <- factor(paste(as.character(data$GENOTYPE),
+                                          as.character(data$treatment), sep="_"))
+  stopifnot(all(reference %in% data$GENOTYPE))
+  ldply(responseVariables, function(response) {
+    subData <- data[!is.na(data[[response]]), ]
+    comparisons <- comparisonTable(
+        levels(factor(as.character(subData$treatment))),
+        levels(factor(as.character(subData$GENOTYPE))),
+        reference
+        )
+    contrasts <- contrastMatrixForComparisons(comparisons)
+    formula <- as.formula(paste(response, "~ genotypeTreatment + BLOCK"))
+    aModel <- aov(formula, data=subData)
+    multiComparison <- glht(aModel, linfct=mcp(genotypeTreatment=contrasts))
+    resultTable <- glhtTable(multiComparison)
+    stats <- statsTable(data, comparisons, response)
+    stats$response <- response
+    merge(resultTable, stats, by="comparison")
+  })
+}
+
+glhtTable <- function(fit) {
+  glhtSummary <- summary(fit)
+  glhtConfint <- as.data.frame(confint(fit)$confint)
+  glhtConfint$comparison <- rownames(glhtConfint)
+  pq <- glhtSummary$test
+  mtests <- data.frame(Estimate=pq$coefficients,
+                       StdError=pq$sigma,
+                       tvalue=pq$tstat,
+                       pvalue=pq$pvalues,
+                       comparison=names(pq$tstat))
+  merge(glhtConfint[, -1], mtests, by="comparison")
+}
