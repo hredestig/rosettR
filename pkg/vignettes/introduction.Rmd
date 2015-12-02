@@ -1,5 +1,5 @@
 ---
-title: "Introduction to *rosettR*"
+title: "Introduction to rosettR"
 author: Henning Redestig
 email: henning.red@gmail.com
 date: "22nd November 2015"
@@ -17,7 +17,8 @@ vignette: >
 
 ```{r pre-fix, echo=FALSE}
 library(knitr)
-opts_knit$set(upload.fun=image_uri)
+opts_knit$set(upload.fun=image_uri, out.format="html")
+knit_theme$set("zenburn")
 ```
 
 # Introduction to *rosettR*
@@ -56,7 +57,7 @@ creating a meta-data object that details the specifics of the
 experiment. As a toy-example, let's study genotypes named foo, bar,
 baz and qux subjected to two treatments: control condition and osmotic
 stress. Each plate is in this design divided in four regions with 8
-boxes each (aka /wells/) of which all are occupied by a single seed of
+boxes each (aka *wells*) of which all are occupied by a single seed of
 the same genotype. In our test experiment, we have only four genotypes
 so all plates have the same layout. In addition to genotypes and
 treatment, we define the time-points (days) at which pictures are
@@ -299,12 +300,10 @@ In the event of contamination, e.g. fungal growth on the plate you may
 want to prematurely discard plates. In that case, it is important to
 take place-holder images to get the order of images right. The
 recommendation is to replace the bad plate with an empty one and keep
-taking images of that empty plate. Such plates are detected by
-counting the fraction between 'dark' pixels and light pixels. If this
-fraction falls below 0.0001, the plate is considered empty and the
-analysis will be skipped. The QC picture will be replace by a place
-holder indicated that the plate was empty. See the experiment results
-above for an example.
+taking images of that empty plate. Such empty plates are detected
+during image analysis and areas are indicated as missing values. The
+QC picture will be replace by a place holder indicated that the plate
+was empty.
 
 ## Parallel computing
 
@@ -325,3 +324,10 @@ and then processing images adding the argument `.parallel=TRUE`. The
 memory consumption is quite low so you can safely use as many CPUs as
 you have minus 1 (to not make your computer unresponsive).
 
+# Session info
+
+Here is the output of sessionInfo() on the system on which this document was compiled:
+
+```{r echo=FALSE}
+sessionInfo()
+```

@@ -180,3 +180,5 @@ easy, use templates
   - State "DONE"       from "TODO"       [2015-11-22 Sun 21:12]
 * TODO test by re-analyzing some old experiment
 * TODO add zygosity stat report
+* TODO make dateTaken not crash
+on jpegs without exif an tag
