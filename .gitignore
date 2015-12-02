@@ -9,10 +9,7 @@
 .RData
 .*.dll
 .*.so
-man/*.Rd
-NAMESPACE
 vignettes/*pdf
-/pkg/man/
 *.tar.gz
 pkg/src-i386
 pkg/src-x64
