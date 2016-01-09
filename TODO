@@ -178,7 +178,35 @@ easy, use templates
   - State "DONE"       from "TODO"       [2015-11-22 Sun 18:58]
 * DONE add unit tests
   - State "DONE"       from "TODO"       [2015-11-22 Sun 21:12]
-* TODO test by re-analyzing some old experiment
+* DONE test by re-analyzing some old experiment
+  SCHEDULED: <2015-12-03 Thu>
+  - State "DONE"       from "TODO"       [2015-12-06 Sun 11:34]
+
+EXP128_SALK_BS works well
+* TODO filipas points
+1) when i open the sowing summary, the control and osmotic stress tabs are defined as date, i guess this a problem of my excel but not sure if we can fix this somehow? (see excel attached)
+
+2) the plates in the example are not correctly centered, is this a problem? (only D11)
+
+3) the plates provided are already renamed, so could not test if the renaming works.
+
+4) the make report overview opens an html with all the plates, but with no reference - only when we click on the plate we see the details. would be handy to have some kind of grid or explanation on the order of the plates in the html (as far as i understood, its days on the x axis and plate number on the y axis, right?)
+
+5) I could not understand immediatelly  what i had to do with the calibrateScale(pathToExperiment)... first it said choose the distance to indicate [default=80mm] but i had to press enter, and only then something appeared to click on the plates. The first time i just typed 80mm and nothing happened. maybe a better explanation there is needed.
+
+6) after analysis i had this error (below plate) so I could not proceed any further...! could it be because i could not properly set the scale in the plate? see how i made it here -
+I did not type
+
+unzip(system.file("examples/rosettrTestResults.zip", package="rosettR"),
+      exdir=".") 
+
+because i pasted the pictures in the folders, so I assume i did not have to do this.
 * TODO add zygosity stat report
+  SCHEDULED: <2015-12-05 Sat>
 * TODO make dateTaken not crash
+  SCHEDULED: <2015-12-05 Sat>
 on jpegs without exif an tag
+* TODO improve website
+
+
+
