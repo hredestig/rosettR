@@ -1,0 +1,96 @@
+# Compare areas of plate grown plants across treatments, genotypes and zygosity
+
+```{r read-chunks, echo=FALSE, warning=FALSE}
+suppressMessages(library(knitr))
+suppressMessages(library(BCS.Phenotyping))
+suppressMessages(library(reshape2))
+suppressMessages(library(BCS.PhenoData))
+suppressMessages(library(xlsx))
+suppressMessages(library(plyr))
+suppressMessages(library(markdown))
+suppressMessages(library(ggplot2))
+opts_chunk$set(fig.width=5, fig.height=5, tidy=TRUE, fig.align='center', 
+               fig.show='hold', dev=c('png', 'pdf'), error=TRUE)
+options(width=68)
+options(markdown.HTML.options="mathjax")
+
+meta <- as(path, "Oni")
+path <- outdir(path, "BCS.Phenotyping")
+df <- read.csv(file.path(path, "data.csv"), header=TRUE, stringsAsFactors=FALSE, row.names=1)
+expdf <- create_plate_test_df(subset(df, !removed))
+show(meta)
+```
+
+## Hypothesis testing
+
+```{r create_phenodata, echo=FALSE}
+traits <- colnames(expdf)[c(grep('^AREA', colnames(expdf)),
+                            grep('^RGR', colnames(expdf)))]
+vars <- intersect(c('treatment', 'reference', 'zygosity'), names(expdf))
+nmeta <-
+  suppressMessages(BCS.PhenoData::make.metadata(traits=traits,
+                                                treats=vars,
+                                                formats=rep("NUM.2", length(traits)),
+                                                short=traits,
+                                                units=c(rep("mm2", sum(grepl('^AREA',
+                                                  colnames(expdf)))),
+                                                  rep("", sum(grepl('^RGR', colnames(expdf)))))))
+data <- data.frame(EXPT=expid(meta), GENOTYPE=expdf$GENOTYPE, BLOCK=expdf$BLOCK, 
+                   SUBBLOCK=NA, SUBSUBBLOCK=NA, ROW=expdf$ROW, RANGE=expdf$RANGE, 
+                   expdf[, c(vars, traits)])
+data$TRT <- apply(data[,c('GENOTYPE', vars)], 1, paste, collapse='_')
+pheno <- BCS.PhenoData::make.phenodata(data, nmeta)
+```
+
+We fit a linear model for the estimated areas, \\(y\\), according to the model
+
+\\(y=\beta\_0b + \sum\_{i=1}\^{n}\left(\beta\_{i}w\_{i}\right) + \epsilon\\)
+
+where \\(w\_{1\ldots{}n}\\) encode an identification vector corresponding to the levels of a factor created from a concatenation of the genotype, zygosity and treatment and \\(b\\) is the experiment block (replicate). We perform ANOVA for comparisons between homozygous and azygous plants to assess the null-hypotheses
+\\(H\_{0\_{j,k}}: \beta\_j = \beta\_k\\)
+for \\(j\\) and \\(k\\) corresponding to samples of the same genotype and treatment but different zygosity.
+
+```{r anova, echo=FALSE}
+warning('outlier removal is not yet implemented')
+treats <- levels(factor(dataset(pheno)$treatment))
+germs <- levels(factor(dataset(pheno)$GENOTYPE))
+zygs <- levels(factor(dataset(pheno)$zygosity))
+left <- data.frame(genotype=rep(germs, length(treats)),
+                   treatment=rep(treats, each=length(germs)),
+                   zygosity=zygs[2], stringsAsFactors=FALSE)
+right <- data.frame(genotype=rep(germs, length(treats)),
+                    treatment=rep(treats, each=length(germs)),
+                    zygosity=zygs[1], stringsAsFactors=FALSE)
+
+mat <-
+  plyr::laply(1:nrow(left), function(i) c(paste(left[i,], collapse='_'),
+                                          paste(right[i,], collapse='_')))
+cm <- BCS.PhenoData::create.cm(contrasts=mat, levels=levels(factor(dataset(pheno)$TRT)))
+results <- BCS.PhenoData::anova.phenodata(pheno, factor="TRT",  random="~ BLOCK", cm=cm)
+results_df <- BCS.Phenotyping:::anova_phenodata_to_data_frame(results, pheno, left)
+
+write.xlsx(results_df, 'anova-results.xlsx')
+write.csv(results_df, 'anova-results.csv')
+```
+
+The test results are given as [anova-results.xlsx](anova-results.xlsx) and  [anova-results.csv](anova-results.csv)
+
+We create effect plots for all comparsions where the mean is indicated by the dot, and the 95% confidence interval indicated by a horizontal line.
+
+```{r effectplots, echo=FALSE, warning=FALSE, fig.with=7, fig.height=7}
+for(i in 1:length(traits)){
+  trait <- traits[i]
+  res_df <- results[[trait]]
+  colnames(res_df) <- gsub(paste(".", trait, sep = ""), "", colnames(res_df))
+  res_df$Comp <- rownames(res_df)
+  m <- max(c(abs(res_df$LCL), abs(res_df$UCL)), na.rm=TRUE) * 1.1
+  txt <- paste("BCS.Base::effectplot.data.frame(res_df, unitname=\"Comp\", center=\"Effect\",
+                                  lower=\"LCL\", upper=\"UCL\", labels.loc=\"above\",
+                                  refline=0, col.ref=\"red\", 
+                                  main=\"", trait,"\",
+                                  xlim=c(", paste(-m,m, sep=','), "))")
+  eval(parse(text=txt, n=-1))
+}
+```
+
+## Session information
