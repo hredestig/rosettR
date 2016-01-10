@@ -10,7 +10,7 @@ CharacterVector date_original(SEXP file) {
   try{
     Rcpp::CharacterVector cfile(file);
     Rcpp::CharacterVector res(cfile.size());
-
+    
     for(int i = 0; i < cfile.size(); i++) {
       FILE *fp = fopen(cfile(i), "rb");
       if(!fp) { 
@@ -28,7 +28,11 @@ CharacterVector date_original(SEXP file) {
       try{
 	if(fsize > 0.1) {
 	  EXIFInfo result;
-	  ParseEXIF(buf, fsize, result);
+	  int retval;
+	  retval = ParseEXIF(buf, fsize, result);
+	  if(retval != 0) {
+	    ::Rf_error("failed to read exif tag");
+	  }
 	  res(i) = result.dateTimeOriginal;
 	} else {
 	  res(i) = "NA";
