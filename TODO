@@ -16,6 +16,7 @@
   file.copy("pkg/inst/examples/rosettrTest.zip",
             file.path(.libPaths()[1], "rosettR/examples/rosettrTest.zip"),
             overwrite=TRUE)
+
   makeTestExperiment()
 #+END_SRC
 * DONE create a new experiment and get the sowing report
@@ -23,10 +24,11 @@
   library(rosettR)
   file.copy("pkg/inst/templates/template.html",
             file.path(.libPaths()[1], "rosettR/templates"), overwrite=TRUE)
-  file.copy("pkg/inst/reports/sowing.Rmd",
+
+  file.copy("pkg/inst/reports/layout.Rmd",
             file.path(.libPaths()[1], "rosettR/reports"), overwrite=TRUE)
 
-  makeReport("rosettrTest", "sowing")
+  makeReport("rosettrTest", "layout")
 #+END_SRC
 * DONE raw image gallery
   - State "DONE"       from "TODO"       [2015-11-05 Thu 22:49]
@@ -48,7 +50,7 @@
   file.copy("pkg/inst/reports/quality-check.Rmd",
             file.path(.libPaths()[1], "rosettR/reports"), overwrite=TRUE)
 
-  makeReport("rosettrTest", "quality-check", "qc-report2")
+  makeReport("rosettrTest", "quality-check")
 #+END_SRC
 
 * DONE test removing some boxes and redo
@@ -183,30 +185,87 @@ easy, use templates
   - State "DONE"       from "TODO"       [2015-12-06 Sun 11:34]
 
 EXP128_SALK_BS works well
-* TODO filipas points
-1) when i open the sowing summary, the control and osmotic stress tabs are defined as date, i guess this a problem of my excel but not sure if we can fix this somehow? (see excel attached)
-
-2) the plates in the example are not correctly centered, is this a problem? (only D11)
-
-3) the plates provided are already renamed, so could not test if the renaming works.
-
-4) the make report overview opens an html with all the plates, but with no reference - only when we click on the plate we see the details. would be handy to have some kind of grid or explanation on the order of the plates in the html (as far as i understood, its days on the x axis and plate number on the y axis, right?)
-
-5) I could not understand immediatelly  what i had to do with the calibrateScale(pathToExperiment)... first it said choose the distance to indicate [default=80mm] but i had to press enter, and only then something appeared to click on the plates. The first time i just typed 80mm and nothing happened. maybe a better explanation there is needed.
-
-6) after analysis i had this error (below plate) so I could not proceed any further...! could it be because i could not properly set the scale in the plate? see how i made it here -
+* DONE filipas points
+  - State "DONE"       from "TODO"       [2016-01-09 Sat 20:24]
+** DONE when i open the sowing summary, the control 
+   - State "DONE"       from "STARTED"    [2016-01-09 Sat 20:13]
+   - State "STARTED"    from "TODO"       [2016-01-09 Sat 12:59]
+and osmotic stress tabs are defined as date, i guess this a problem of my excel but not sure if we can fix this somehow? (see excel attached)
+** DONE the plates in the example are not correctly
+   - State "DONE"       from "STARTED"    [2016-01-09 Sat 20:24]
+   - State "STARTED"    from "TODO"       [2016-01-09 Sat 16:15]
+centered, is this a problem? (only D11)
+** DONE the plates provided are 
+   - State "DONE"       from "STARTED"    [2016-01-09 Sat 20:24]
+   - State "STARTED"    from "TODO"       [2016-01-09 Sat 19:16]
+already renamed, so could not test if the renaming works.
+** DONE the make report overview opens
+   - State "DONE"       from "TODO"       [2016-01-09 Sat 19:36]
+an html with all the plates, but with no reference - only when we click on the plate we see the details. would be handy to have some kind of grid or explanation on the order of the plates in the html (as far as i understood, its days on the x axis and plate number on the y axis, right?)
+** DONE I could not understand immediatelly 
+   - State "DONE"       from "TODO"       [2016-01-09 Sat 19:57]
+what i had to do with the calibrateScale(pathToExperiment)... first it said choose the distance to indicate [default=80mm] but i had to press enter, and only then something appeared to click on the plates. The first time i just typed 80mm and nothing happened. maybe a better explanation there is needed.
+** CANCELED after analysis i had this error (below plate) 
+   - State "CANCELED"   from "TODO"       [2016-01-09 Sat 19:58] \\
+     due to calibration mistake
+so I could not proceed any further...! could it be because i could not properly set the scale in the plate? see how i made it here -
 I did not type
 
 unzip(system.file("examples/rosettrTestResults.zip", package="rosettR"),
       exdir=".") 
 
 because i pasted the pictures in the folders, so I assume i did not have to do this.
-* TODO add zygosity stat report
+* CANCELED add zygosity stat report
   SCHEDULED: <2015-12-05 Sat>
-* TODO make dateTaken not crash
+  - State "CANCELED"   from "DONE"       [2016-01-09 Sat 21:09] \\
+    not really needed.
+  - State "DONE"       from "TODO"       [2016-01-09 Sat 21:09]
+* DONE make dateTaken not crash
   SCHEDULED: <2015-12-05 Sat>
+  - State "DONE"       from "TODO"       [2016-01-09 Sat 20:53]
 on jpegs without exif an tag
+#+BEGIN_SRC R
+  library(rosettR)
+  ## crashes R
+  dateTaken(system.file("examples/empty-qc.jpg", package="rosettR"))
+#+END_SRC
+* Testing
+** rosettrTest
+#+BEGIN_SRC R
+  reportFiles <- list.files("pkg/inst/reports", pattern=".*Rmd$", full.names=TRUE)
+  lapply(reportFiles, file.copy,
+         to=file.path(.libPaths()[1], "rosettR/reports"),
+         overwrite=TRUE)
+
+  library(rosettR)
+  makeTestExperiment()
+  makeReport("rosettrTest", "layout")
+  makeReport("rosettrTest", "overview")
+  processPlateExperiment("rosettrTest")
+  makeReport("rosettrTest", "quality-check")
+  makeReport("rosettrTest", "compare-areas")
+#+END_SRC
+** Test a single image
+#+BEGIN_SRC R
+  library(EBImage)
+  library(rosettR)
+  file <- "c:/git/rosettr/diff.jpg"
+
+  file <- "c:/git/rosettr/rosettrTest/D11/plate004.jpg"
+
+  file <- "c:/git/rosettr/pkg/inst/examples/rosettrTest/D11/plate001.jpg"
+
+  meta <- metaTemplate(letters[1:4], LETTERS[1:2])
+  df <- analyzeImage(file, meta$griddf, 7.538, 20, 6, 75, verbose=TRUE,
+                     checkrotation=TRUE)
+
+  display(readImage(df$qc_picture[1]), method="raster")
+#+END_SRC
+* DONE growth curves in the qc report
+  SCHEDULED: <2016-01-10 Sun>
+  - State "DONE"       from "TODO"       [2016-01-10 Sun 11:26]
 * TODO improve website
+  SCHEDULED: <2016-01-10 Sun>
 
 
 

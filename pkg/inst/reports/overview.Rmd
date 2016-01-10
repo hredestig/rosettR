@@ -6,15 +6,21 @@ opts_chunk$set(tidy=FALSE, fig.align='left', error=TRUE)
 options(width=150)
 ```
 
-Plate experiment
+Plate experiment with the following description:
 
-```{r desc, results="asis"}
-cat(meta$description)
+```{r desc, results="asis", echo=FALSE}
+meta <- readMeta("../..")
+desc <- meta$description
+if(is.null(desc)) desc <- "missing description"
+cat(desc)
 ```
 
-An overview of the taken images are given below. Make sure that the
-image ordering is correct and that all images are of sufficient
-quality.
+An overview of the taken images are given below. Each row is the same
+plate over the different days in columns. Hover with the mouse cursor
+over an image to see the plate number.
+
+Make sure that the image ordering is correct and that all images are
+of sufficient quality.
 
 ```{r image-overview, results="asis", echo=FALSE}
 plateGallery("../../", "raw")

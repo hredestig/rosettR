@@ -1,11 +1,11 @@
-# Sowing report
+# Overview of the experiment design
 
 ```{r read-chunks, echo=FALSE, warning=FALSE}
 suppressMessages(library(rosettR))
 opts_chunk$set(fig.width=5, fig.height=5, tidy=TRUE, fig.align='center',
                fig.show='hold', dev=c('png', 'pdf'), error=TRUE)
 options(width=68)
-options(markdown.HTML.options="mathjax")
+options(markdown.HTML.options='mathjax')
 
 meta <- readMeta('../..')
 manifest <- readManifest('../..')
@@ -13,8 +13,11 @@ manifest <- readManifest('../..')
 
 Plate phenotyping experiment:
 
-```{r desc, results="asis"}
-cat(meta$description)
+```{r desc, results="asis", echo=FALSE}
+meta <- readMeta("../..")
+desc <- meta$description
+if(is.null(desc)) desc <- "missing description"
+cat(desc)
 ```
 
 - **report compiled with working directory**: `r getwd()`
@@ -122,7 +125,7 @@ for (i in treatments){
     for(i in seq(res)){
       s.i <- s[which(cs == i)]
       if(length(s.i) > 2){
-        res[[i]] <- paste(min(s.i), max(s.i), sep="-")
+        res[[i]] <- paste(min(s.i), max(s.i), sep=" to ")
       } else {
         res[[i]] <- as.character(s.i)
       }

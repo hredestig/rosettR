@@ -238,7 +238,9 @@ makeGrey <- function(im, channels=3) {
 }
 
 makeSquare <- function(im, cx=NULL) {
-  if(!is.null(cx)) if(cx == 0) return(im)
+  if(!is.null(cx))
+    if(cx == 0)
+      return(im)
   if(nrow(im) > ncol(im)) {
     if(is.null(cx))
       cx <- (nrow(im) / 2)
@@ -456,6 +458,7 @@ analyzeImage <- function(file, griddf, pixelsmm, boxWidth, nBoxGrid, plateRadius
     if(!any(is.na(overlapping), overlapping))
         break
   }
+  
   df <- ddply(df, c("ROW", "RANGE"), function(dd) {
     totpix <- 0
     inThisBox <- feats$home_box == dd$box_num
@@ -505,9 +508,7 @@ analyzeImage <- function(file, griddf, pixelsmm, boxWidth, nBoxGrid, plateRadius
                       col="black")
     param_lab <- sprintf("dx=%.2f\ndy=%.2f\nr=%.2f",
                          location$deltax, location$deltay, rotation)
-    param_xy <- c(min(xy[,1]) - .5 * (boxWidth * pixelsmmSmall),
-                  min(xy[,2]) - .5 * (boxWidth * pixelsmmSmall))
-    qcpic <- drawText(qcpic, x=param_xy[1], y=param_xy[2],
+    qcpic <- drawText(qcpic, x=nrow(qcpic) * 0.15, y=ncol(qcpic) * 0.15,
                       labels=param_lab)
     if(!file.exists(savedir))
       dir.create(savedir, recursive=TRUE)
@@ -529,12 +530,23 @@ analyzeImage <- function(file, griddf, pixelsmm, boxWidth, nBoxGrid, plateRadius
 
 #' Calibrate the scale of an image
 #'
-#' Used to figure out how many pixels there are on 1 mm by allowing
-#' the user to click on an image. Updates the meta data with the
-#' calculated pixels per millimeter
+#' In order to make results comparable across different experiments,
+#' it is necessary to know how many pixels correspond to 1
+#' millimeter. To record this pixels-to-millimeter conversion, measure
+#' the distance on a plate between two points that you can easily
+#' recognize in the image. On the plates used to test this package, 80
+#' mm correspondss to 4 wells. Then left click with the mouse on the
+#' same two points separated by that distance. The pixels/mm is then
+#' automatically recorded in the meta-data associated with the given
+#' experiment and used in following image analysis.
 #' @param path path to the experiment to calibrate the scale for
 #' @return the number of pixels per mm
 #' @export
+#' @examples
+#' \dontrun{
+#' makeTestExperiment("rosettrTest")
+#' calibrateScale("rosettrTest")
+#' }
 calibrateScale <- function(path) {
   meta <- readMeta(path)
   mf <- readManifest(path)
@@ -542,13 +554,14 @@ calibrateScale <- function(path) {
   done <- FALSE
   while(!done) {
     display(im, method="raster")
-    answer <- readline("choose the distance to indicate [default=80mm]: ")
+    answer <- readline("first, choose the distance to indicate [default=80mm]: ")
     selectedDistance <- ifelse(answer == "", 80, as.integer(answer))
-    message("left-click on two points separated ", selectedDistance, "mm")
+    message("left-click on two points on the image separated by ", 
+            selectedDistance, "mm on the actual plate")
     pp <- locator(n=2, type="l")
     npixels <- sqrt(diff(pp$x)^2 + diff(pp$y)^2)
     answer <- readline("try again? [default=n]: ")
-    done <- ifelse(answer %in% c("", "No", "NO", "n", "nO"), TRUE, FALSE)
+    done <- grepl("no*", answer, ignore.case=TRUE)
   }
   meta$pixelsmm <- npixels / selectedDistance
   writeMeta(meta, path)

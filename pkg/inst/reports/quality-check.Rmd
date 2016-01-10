@@ -16,10 +16,13 @@ phenodata <- readPhenodata("../..")
 mf <- readManifest("../..")
 ```
 
-Plate experiment:
+Plate experiment with the following description:
 
-```{r desc, results="asis"}
-cat(meta$description)
+```{r desc, results="asis", echo=FALSE}
+meta <- readMeta("../..")
+desc <- meta$description
+if(is.null(desc)) desc <- "missing description"
+cat(desc)
 ```
 
 ## Plate layout
@@ -40,7 +43,15 @@ print(xtable::xtable(fi), "html",
 
 ## Image analysis
 
-An overview of the analyzed images are given below. Make sure that the black outline of the plate is directly around the plate. If not, consider re-calibrating the zoom factor using `calibrateScale()`. Also check that each plant is colored with its own color, and not merged with plants in neighboring boxes.
+An overview of the analyzed images are given below. Each row is the same
+plate over the different days in columns. Hover with the mouse cursor
+over an image to see the plate number.
+
+
+Make sure that the black outline of the plate is directly around the
+plate. If not, consider re-calibrating the zoom factor using
+`calibrateScale()`. Also check that each plant is colored with its own
+color, and not merged with plants in neighboring boxes.
 
 If any plate look like it is not correctly corrected in terms of
 
@@ -48,10 +59,43 @@ If any plate look like it is not correctly corrected in terms of
 * horizontal or vertical displacement
 * threshold (separating background from the plant)
 
-you may want to re-process those images (see package vignettes for how to do that). If a plate has contamination or in any other way bad data you may want to mark those as 'removed' by using the `removeBoxes()` function.
+you may want to re-process those images (see package vignettes for how
+to do that). If a plate has contamination or in any other way bad data
+you may want to mark those as 'removed' by using the `removeBoxes()`
+function.
 
 ```{r qc-image-overview, results="asis", echo=FALSE}
 plateGallery("../..", "qc")
+```
+
+### Growth curves
+
+These are the growth curves over the monitored days as estimated by the image analysis. Negative day to day differences most likely indicates some technical problem that needs to be corrected.
+
+```{r growth-curves, echo=FALSE, fig.width=8, fig.height=4, warning=FALSE}
+
+df <- subset(phenodata, !removed)
+negGrowth <-
+  ddply(df, c("plate", "RANGE", "ROW"), function(x) {
+          data.frame(negativeGrowth=any(diff(na.omit(x$AREA[order(x$timepoint)])) < 0))
+        })
+df <- merge(df, negGrowth, by=c("plate", "RANGE", "ROW"))
+
+g <- ggplot(df, aes(timepoint, AREA, color=negativeGrowth)) +
+  geom_line(aes(group=paste(plate, box_num)), alpha=0.4) +
+  geom_line(data=subset(df, negativeGrowth),
+            aes(group=paste(plate, box_num)), lwd=2) +
+  scale_color_manual(values=c("black", "red")) +
+  geom_point() +
+  facet_wrap(~treatment)
+suppressWarnings(print(g))
+
+```
+
+Wells that had decreasing estimated plant areas (and therefore likely problematic) were:
+
+```{r neg-growth, echo=FALSE, results="asis"}
+kable(unique(subset(df[, c("plate", "RANGE", "ROW", "negativeGrowth")], negativeGrowth)))
 ```
 
 ## Quality control results
