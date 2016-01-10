@@ -4,7 +4,7 @@ author: Henning Redestig
 email: henning.red@gmail.com
 date: "22nd November 2015"
 package: "`r packageVersion('rosettR')`"
-abstract: The rosettR package implements a fully described, self contained, high-throughput and affordable phenotyping platform for measuring growth rate in Arabidopsis.
+abstract: The rosettR package implements a fully described, self-contained, high-throughput and affordable phenotyping platform for measuring growth rate in Arabidopsis.
 output:
   html_document
 graphics: yes
@@ -23,35 +23,24 @@ knit_theme$set("zenburn")
 
 # Introduction to *rosettR*
 
-This package implements a high-throughput and affordable growth
-phenotyping assay for plate grown seedlings. Briefly, plants
-are grown on solid medium in tissue culture plates and photographed at regular
-intervals. Images are then analyzed using the functions implemented in
-this package to estimate area and relative growth rate of the seedlings over time. These values are then used to compare the differences between genotypes
-and the effect of applied treatments.
+This package implements a high-throughput and affordable growth phenotyping assay for plate grown seedlings. Briefly, plants are grown on solid medium in tissue culture plates and photographed at regular intervals. Images are then analyzed using the functions implemented in this package to estimate area and relative growth rate of the seedlings over time. These estimated areas can then used to compare the differences between genotypes and the effect of applied treatments.
 
-In this vignette, the creation of a new experiment, analysis of images,
-and generation of template statistical reports are described. Useful experimental details are given as block quotes. The examples are reproducible and with a working installation of `rosettR`
-you can copy-paste code to your R terminal to try it out. All functions have dedicated documentation, accessible by typing ?[function name]. 
+In this vignette, the creation of a new experiment, analysis of images, and generation of template statistical reports are described. Useful experimental details are given as block quotes. The examples are reproducible and with a working installation of `rosettR` you can copy-paste code to your R terminal to try it out. All functions have their own specific documentation and you can reach those documentation pages in R by typing ?*function_name*. 
 
 ## Installation
 
-This package is not yet available on CRAN so the easiest way to
-install it is to use the [devtools](http://github.com/hadley/devtools)
-package.
+This package is not yet available on CRAN so the easiest way to install it is to use the [devtools](http://github.com/hadley/devtools) package.
 
 ```{r eval=FALSE}
 library(devtools)
-install_github("hredestig/rosettR")
+install_github("hredestig/rosettR", subdir="pkg")
 ```
 
 The package is tested on Windows 7 and Linux.
 
 # Experiment design
 
-A new experiment starts by loading the package and
-creating a meta-data object that details the specifics of the
-experiment. The information we need is: 
+A new experiment is started by loading the package and creating a meta-data object that details the specifics of the experiment. The information that is needed is: 
 
 * **genotypes** the names of the studied genotype
 * **treatments** the applied treatment conditions.
@@ -61,14 +50,9 @@ experiment. The information we need is:
   compared 
 * **description** an optional short description of the experiment
 
-*NB:* Avoid using special characters such as greek letters. If
-you must have spaces within an element, make sure to quote it as
-`"genotype with space"`. 
+*NB:* Avoid using special characters such as greek letters. If you must have spaces within an element, make sure to quote it as `"genotype with space"`. 
 
-As a toy-example, let's study genotypes named foo, bar,
-baz, and qux subjected to two treatments: control condition and osmotic
-stress. 
-The meta-data object (a simple list with key-value pairs) is created with
+As a toy-example, let's study genotypes named foo, bar, baz, and qux subjected to two treatments: control condition and osmotic stress.  The meta-data object (a simple list with key-value pairs) is created with
 
 ```{r setup}
 library(rosettR)
@@ -80,40 +64,34 @@ meta <- metaTemplate(genotypes=c("foo", "bar", "baz", "qux"),
                      description="a test experiment")
 ```
 
-> The plates used are 150 x 25 mm tissue culture dishes, supplied with a grid that divides the plate in 32 boxes (aka *wells*). In our test experiment, we have only four genotypes
-so all plates have the same layout. Each plate is divided in four regions with 8 boxes each, of which all are occupied by a single seed of the same genotype. (where should we say we like to use multiples of 4 genotypes??)
+> The plates used are 150 x 25 mm tissue culture dishes, supplied with a grid that divides the plate in 32 boxes (aka *wells*). In our test experiment, we have only four genotypes so all plates have the same layout. Each plate is divided in four regions with 8 boxes each, of which all are occupied by a single seed of the same genotype.
 
-> RosetteR allows the testing of a wide variety of treatments. Stress treatments like heat, darkness, or different light regimes (intensity, light quality, etc) can be tested by simply moving the plates to the desired condition. Other treatments like testing different sugars or sugar concentrations, salt, or osmotic stress require the addition of the chemical to the medium. These type of treatments can either be applied from germination, by placing the seeds directly on top of the medium with the desired addition, or at a later point in the experiment. For the latter, the use of sefar membranes is required. They are placed on top of the solidified medium, and the seeds placed on top of the membranes. When the treatment needs to be applied, new plates are made with the desired addition, and the membranes with the seedlings on top are transferred to the new plates.  
+<!-- where should we say we like to use multiples of 4 genotypes?? -->
 
+> rosettR allows the testing of a wide variety of treatments. Stress treatments like heat, darkness, or different light regimes (intensity, light quality, etc) can be tested by simply moving the plates to the desired condition. Other treatments like testing different sugars or sugar concentrations, salt, or osmotic stress require the addition of the chemical to the medium. These type of treatments can either be applied from germination, by placing the seeds directly on top of the medium with the desired addition, or at a later point in the experiment. For the latter, the use of sefar membranes is required. They are placed on top of the solidified medium, and the seeds placed on top of the membranes. When the treatment needs to be applied, new plates are made with the desired addition, and the membranes with the seedlings on top are transferred to the new plates.
 
-Next we 'create' the experiment which generates the metadata-file, which is the
-directory structure in which to place the taken pictures, and the
-manifest file that defines the randomized block design.
+Next we 'create' the experiment which generates the metadata-file, which is the directory structure in which to place the taken pictures, and the manifest file that defines the randomized block design.
 
 ```{r create-experiment}
 pathToExperiment <- "rosettrTest"
 newExperiment(pathToExperiment, meta)
 ```
 
-The manifest file can be opened in your favorite spread-sheet editor or
-just inspected directly by
+The manifest file can be opened in your favorite spread-sheet editor or just inspected directly by
 
 ```{r example-manifest}
 head(readManifest(pathToExperiment))
 ```
 
-To obtain an overview of the created experiment, to support preparing
-the plates, compile the template 'layout' report.
+To obtain an overview of the created experiment, to support preparing the plates, compile the template 'layout' report (the use of the `quiet=TRUE` argument here is solely to avoid cluttering the vignette, in actual use you can safely ignore that argument).
 
 ```{r layout-report, results="hide"}
 makeReport(pathToExperiment, "layout", quiet=TRUE)
 ```
 
-> The layout report gives an overview of the experimental design and important information for the sowing setup. Each genotype is assigned a letter (a to d) and a region in the plate, and the seeds must be placed in the corresponding region. The plates should be numbered and marked so that it is possible to identify the axis of the plate (reference to figure). We further recommend labelling the plates in the margin of the lid, visible to the camera but not covering any plants, so that you can later confirm that the order is correct. Growth medium is poured in the plates in sterile conditions. When the medium solidifies, sterile seeds can be placed in the corresponding well with a Vaccumseed. The plates are then sealed with Urgopore tape, wrapped in groups of 10-15 in transparent foil, and placed at 4 degrees and darkness for three nights for seed stratification. The plates are then placed in the shelf of the growth chamber following the placement setup, according to a random block design where each block will have a unique plate from each combination of genotypes and treatment. 
+> The layout report gives an overview of the experimental design and important information for the sowing setup. Each genotype is assigned a letter (a to d) and a region in the plate, and the seeds must be placed in the corresponding region. The plates should be numbered and marked so that it is possible to identify the axis of the plate (reference to figure). We further recommend labelling the plates in the margin of the lid, visible to the camera but not covering any plants, so that you can later confirm that the order is correct. Growth medium is poured in the plates in sterile conditions. When the medium solidifies, sterile seeds can be placed in the corresponding well with a Vacuumseed. The plates are then sealed with Urgopore tape, wrapped in groups of 10-15 in transparent foil, and placed at 4 degrees and darkness for three nights for seed stratification. The plates are then placed in the shelf of the growth chamber following the placement setup, according to a random block design where each block will have a unique plate from each combination of genotypes and treatment. 
 
-When the seedlings reach the desired age, top view pictures of all plates are taken (in jpg format) at fixed time points, which are then copied to the corresponding folder previously created. pictures of the plates are taken exactly in the order they are listed in the manifest and saved in the designated directories for each monitored day. Make sure that your camera's internal watch is
-correctly set as the time the photo was taken will be used to match
-each image to the corresponding line in the manifest. Further ensure that
+When the seedlings reach the desired age, top-view pictures of all plates are taken (in jpg format) at fixed time points, and image files are then copied to the corresponding folder previously created. pictures of the plates are taken exactly in the order they are listed in the manifest and saved in the designated directories for each monitored day. **Make sure that your camera's internal clock is correctly set as the time the photo was taken will be used to match each image to the corresponding line in the manifest**. Further ensure that
 
 * each plate is exactly in the centre of the image
 * that it is straight, with the grid parallel to the edges of the
@@ -121,18 +99,13 @@ each image to the corresponding line in the manifest. Further ensure that
 * the background color and light is the same across all days
 * that the zoom factor is the same across all days
 
-Thanks to to auto-correction steps in the analysis, it is possible to
-analyze image also with slight deviations from these rules but the
-result is likely to be better if they are kept.
+Auto-correction steps are included in the analysis so it is possible to analyze image also with slight deviations from these rules but the result is likely to be better if they are kept.
 
 > Image capturing is performed by placing the plates in a Copy Stands Lighting Equipment (Kaiser Fototechnic). A Canon 450D camera is placed 66.4 cm above the plates, with a Canon 50 mm prime lens, an aperture of F11, and shutter speed of 1/125. The use of fixed camera settings eliminates the need for camera distance calculations. 
 
 # Image analysis
 
-Before detailing the process of analyzing a whole experiment, we give
-a brief description of the analysis of a single image. This process is
-defined in the function `analyzeImage` and consists of the
-following main steps:
+Before detailing the process of analyzing a whole experiment, we  a brief description of the analysis of a single image. This process is defined in the function `analyzeImage` and consists of the following main steps:
 
 * image files are renamed from e.g. IMGxxxx.jpg to plate001.jpg to
   match the names in the manifest (order obtained from time the
@@ -150,8 +123,7 @@ following main steps:
   their distances to box-centers and total occupancy of boxes.
 * generating a quality control picture.
 
-For testing purposes, we first unzip some example images to our
-example and set the scale directly
+For testing purposes, we first unzip some example images to our example and set the scale directly
 
 ```{r unzip-example}
 meta <- readMeta(pathToExperiment)
@@ -167,16 +139,13 @@ When all images have been taken you can generate an overview of them by
 makeReport(pathToExperiment, "overview", quiet=TRUE)
 ```
 
-If all images look as expected, it is time to analyze them. First
-however, you should calibrate the scale of the images to get the right
-pixels to millimeter mapping. Do this by
+If all images look as expected, it is time to analyze them. First however, you should calibrate the scale of the images to get the right pixels to millimeter mapping. Do this by (see `?calibrateScale` for further details)
 
 ```{r calibrate, eval=FALSE}
 calibrateScale(pathToExperiment)
 ```
 
-Which will record the conversion in the meta-data file for future
-reference.
+Which will record the conversion in the meta-data file for future reference.
 
 Next, we analyze the images using `processPlateExperiment` function.
 
@@ -188,49 +157,25 @@ unzip(system.file("examples/rosettrTestResults.zip", package="rosettR"),
       exdir=".")
 ```
 
-we turn off the plate location detection to speedup this test analysis (and
-for demonstration purposed later in this vignette)
+we turn off the plate location detection to speedup this test analysis (and for demonstration purposed later in this vignette)
 
 ## Perform quality control
 
-Once images have been analyzed, statistical analysis can be done by
-compiling a suitable template report. This is done by running
-`makeReport` that creates a report for the experiment
-in the designated output directory (`[path to
-    experiment]/Output/reports/`). The first report to compile is
-typically a quality control report.
+Once images have been analyzed, statistical analysis can be done by compiling a suitable template report. This is done by running `makeReport` that creates a report for the experiment in the designated output directory (`[path to experiment]/Output/reports/`). The first report to compile is typically a quality control report.
 
 ```{r qc-check, results="hide"}
 makeReport(pathToExperiment, "quality-check", quiet=TRUE)
 ```
 
-The final report can then be found in the `Output` folder of the
-experiment which shows QC images for all plates as well as graphs to
-indicate the presence of outliers.
+The final report can then be found in the `Output` folder of  experiment which shows QC images for all plates as well as graphs to indicate the presence of outliers.
 
-In the QC images, the grid is indicated by black boxes and features
-are shown with randomly chosen colors. Boxes in which features were
-found that could not be sorted to a distinct box are indicated by a
-red border. In a successful scenario, all boxes are black and each box
-contains a plant of color different from the plants in all neighboring
-boxes. However, when overlapping plants are identified, the
-corresponding boxes are cut out and all the area estimate of the plant
-in that box becomes the sum of all features in the box. This process
-will often yield poor area estimates and plates with many ambiguous
-boxes may be considered for removal using the `removeBoxes` function,
-or reprocessed with tuned image analysis (arguments for
-`analyzeImage`) parameters.
+In the QC images, the grid is indicated by black boxes and features are shown with randomly chosen colors. Boxes in which features were found that could not be sorted to a distinct box are indicated by a red border. In a successful scenario, all box-frames are black and each box contains a plant of color different from the plants in all neighboring boxes. However, when overlapping plants are identified, corresponding boxes are cut out and all the area estimate of the seedling in that box becomes the sum of all features in the box. This may yield poor area estimates and plates with many ambiguous boxes may be considered for removal using the `removeBoxes` function, or reprocessed with tuned image analysis (see `?analyzeImage` for arguments) parameters.
 
 ## Re-processing failed images
 
-If the analysis has gone wrong due to e.g the plate location not
-correctly identified, it is possible to reprocess the picture with
-improved parameters to image threshold, angle correction, plate
-displacement etc.
+If the analysis has gone wrong due to e.g the plate location not correctly identified, it is possible to reprocess the picture with improved parameters to image threshold, angle correction, plate displacement etc.
 
-As can be seen when studying the QC images of our example experiment,
-one image failed since it was excessively out of the centre of the
-image.
+As can be seen when studying the QC images of our example experiment, one image failed since it was excessively out of the centre of the image.
 
 ```{r excentric}
 pda <- readPhenodata(pathToExperiment)
@@ -241,8 +186,7 @@ qcImage <- readImage(qcPath)
 display(qcImage, method="raster")
 ```
 
-To resolve this problem, we reprocess that single image but this time
-with the location correction turned on.
+To resolve this problem, we reprocess that single image but this time with the location correction turned on.
 
 ```{r fix, results="hide"}
 mf <- readManifest(pathToExperiment)
@@ -259,8 +203,7 @@ qcpic <- subset(pda, timepoint == 11 & plate == "plate001.jpg")$qc[1]
 display(readImage(file.path(pathToExperiment, qcpic)), method="raster")
 ```
 
-See the documenation for `analyzeImage` for other parameters that can
-be adjusted during image analysis.
+See the documenation for `analyzeImage` for other parameters that can be adjusted during image analysis.
 
 We can then re-compile the quality control report
 
@@ -270,8 +213,7 @@ makeReport(pathToExperiment, "quality-check", quiet=TRUE)
 
 # Interpretation
 
-To obtain the final results from the experiment, compile the report to
-compare areas by plots and by ANOVA.
+To obtain the final results from the experiment, compile the report to compare areas by plots and by ANOVA.
 
 ```{r compare, results="hide"}
 makeReport(pathToExperiment, "compare-areas", quiet=TRUE)
@@ -283,42 +225,24 @@ You can also simply run
 readPhenodata(pathToExperiment)
 ```
 
-to get a dataframe with the results with which you can perform your
-own tailored statistical analysis.
-
-
+to get a dataframe with the results with which you can perform your own tailored statistical analysis.
 
 # Additional topics
 
 ## Failed plates
 
-In the event of contamination, e.g. fungal growth on the plate you may
-want to prematurely discard plates. In that case, it is important to
-take place-holder images to get the order of images right. The
-recomendation is to replace the bad plate with an empty one and keep
-taking images of that empty plate. Such empty plates are detected
-during image analysis and areas are indicated as missing values. The
-QC picture will be replace by a place holder indicated that the plate
-was empty.
+In the event of contamination, e.g. fungal growth on the plate you may want to prematurely discard plates. In that case, it is important to take place-holder images to get the order of images right. The recomendation is to replace the bad plate with an empty one and keep taking images of that empty plate. Such empty plates are detected during image analysis and areas are indicated as missing values. The QC picture will be replace by a place holder indicated that the plate was empty.
 
 ## Parallel computing
 
-Image analysis can be done in parallel to speed up computation
-considerably. The `rosettR` package uses
-[plyr](https://cran.r-project.org/web/packages/plyr/index.html) which
-support using multiple CPUs on a single host via the
-[doParallel](https://cran.r-project.org/web/packages/doParallel/index.html)
-package. Simple register a parallel backend by for using e.g. 4 CPUs
-by
+Image analysis can be done in parallel to speed up computation considerably. The `rosettR` package uses [plyr](https://cran.r-project.org/web/packages/plyr/index.html) which support using multiple CPUs on a single host via the [doParallel](https://cran.r-project.org/web/packages/doParallel/index.html) package. Simple register a parallel backend by for using e.g. 4 CPUs by
 
 ```{r eval=FALSE}
 library(doParallel)
 registerDoParallel(cores=4)
 ```
 
-and then processing images adding the argument `.parallel=TRUE`. The
-memory consumption is quite low so you can safely use as many CPUs as
-you have minus 1 (to not make your computer unresponsive).
+and then processing images adding the argument `.parallel=TRUE`. The memory consumption is quite low so you can safely use as many CPUs as you have minus 1 (to not make your computer unresponsive).
 
 # Session info
 
