@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>compare-areas</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="text/javascript" charset="utf8" src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
+    
+    <!-- Optional theme -->
+    <!-- <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-theme.min.css"> -->
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
+    <script src="http://yandex.st/highlightjs/7.3/highlight.min.js"></script>
+    <script src="http://yandex.st/highlightjs/7.3/languages/r.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <link rel="stylesheet" href="http://yandex.st/highlightjs/7.3/styles/default.min.css">
+    <link rel="stylesheet" type="text/css" href="http://cdn.datatables.net/1.10.3/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="http://cdn.datatables.net/1.10.3/js/jquery.dataTables.js"></script>
+    <style type="text/css">
+      p{clear:both;}
+    </style>
+
+
+    <!-- MathJax scripts -->
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+    
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="row">
+	<h1>Compare plant areas across all treatments and genotypes against the reference genotypes</h1>
+
+<p>Plate experiment:</p>
+
+<pre><code class="r">cat(meta$description)
+</code></pre>
+
+<p>We perform ANOVA suitable for multiple comparisons of the area or relative growth rate a each day, \(y\) as </p>
+
+<p>\(y = \beta_{1,i}x + \beta_{2}b + \epsilon\)</p>
+
+<p>where \(x\) is factor encoding each examined combination (\(i\)) of genotype and treatment and \(b\) is a factor encoding the repeats (blocks) in the experiment. We then get statistics assessing the null hypothesis</p>
+
+<p>\(H_{0_{j,k}}: \beta_{1,i} = \beta_{1,j}\) for \(j\) and \(k\) corresponding to samples of the genotype to be tested, versus the designated reference genotype within the same treatment.</p>
+
+<p>Multiple comparisons were performed using the <a href="https://cran.r-project.org/web/packages/multcomp/index.html">multcomp</a> package. P-values are adjusted for multiple testing.</p>
+
+<table id="anova_results" class="table table-hover">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> comparison </th>
+   <th style="text-align:left;"> lwr </th>
+   <th style="text-align:left;"> upr </th>
+   <th style="text-align:left;"> Estimate </th>
+   <th style="text-align:left;"> StdError </th>
+   <th style="text-align:left;"> tvalue </th>
+   <th style="text-align:left;"> pvalue </th>
+   <th style="text-align:left;"> mean_left </th>
+   <th style="text-align:left;"> mean_right </th>
+   <th style="text-align:left;"> sd_left </th>
+   <th style="text-align:left;"> sd_right </th>
+   <th style="text-align:left;"> response </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> bar_control_vs_foo_control </td>
+   <td style="text-align:left;"> -4.2514 </td>
+   <td style="text-align:left;"> 2.724 </td>
+   <td style="text-align:left;"> -0.7639 </td>
+   <td style="text-align:left;"> 1.3236 </td>
+   <td style="text-align:left;"> -0.577 </td>
+   <td style="text-align:left;"> 0.9880 </td>
+   <td style="text-align:left;"> 16.66 </td>
+   <td style="text-align:left;"> 17.43 </td>
+   <td style="text-align:left;"> 5.978 </td>
+   <td style="text-align:left;"> 5.301 </td>
+   <td style="text-align:left;"> AREA_11 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> bar_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -5.0652 </td>
+   <td style="text-align:left;"> 3.477 </td>
+   <td style="text-align:left;"> -0.7939 </td>
+   <td style="text-align:left;"> 1.6211 </td>
+   <td style="text-align:left;"> -0.490 </td>
+   <td style="text-align:left;"> 0.9949 </td>
+   <td style="text-align:left;"> 20.72 </td>
+   <td style="text-align:left;"> 21.51 </td>
+   <td style="text-align:left;"> 3.126 </td>
+   <td style="text-align:left;"> 2.811 </td>
+   <td style="text-align:left;"> AREA_11 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> baz_control_vs_foo_control </td>
+   <td style="text-align:left;"> -1.0276 </td>
+   <td style="text-align:left;"> 6.023 </td>
+   <td style="text-align:left;"> 2.4976 </td>
+   <td style="text-align:left;"> 1.3380 </td>
+   <td style="text-align:left;"> 1.867 </td>
+   <td style="text-align:left;"> 0.2885 </td>
+   <td style="text-align:left;"> 19.93 </td>
+   <td style="text-align:left;"> 17.43 </td>
+   <td style="text-align:left;"> 6.628 </td>
+   <td style="text-align:left;"> 5.301 </td>
+   <td style="text-align:left;"> AREA_11 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> baz_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -7.8191 </td>
+   <td style="text-align:left;"> 0.866 </td>
+   <td style="text-align:left;"> -3.4766 </td>
+   <td style="text-align:left;"> 1.6481 </td>
+   <td style="text-align:left;"> -2.109 </td>
+   <td style="text-align:left;"> 0.1777 </td>
+   <td style="text-align:left;"> 18.24 </td>
+   <td style="text-align:left;"> 21.51 </td>
+   <td style="text-align:left;"> 5.795 </td>
+   <td style="text-align:left;"> 2.811 </td>
+   <td style="text-align:left;"> AREA_11 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> qux_control_vs_foo_control </td>
+   <td style="text-align:left;"> -2.0092 </td>
+   <td style="text-align:left;"> 4.966 </td>
+   <td style="text-align:left;"> 1.4783 </td>
+   <td style="text-align:left;"> 1.3236 </td>
+   <td style="text-align:left;"> 1.117 </td>
+   <td style="text-align:left;"> 0.7912 </td>
+   <td style="text-align:left;"> 18.91 </td>
+   <td style="text-align:left;"> 17.43 </td>
+   <td style="text-align:left;"> 6.394 </td>
+   <td style="text-align:left;"> 5.301 </td>
+   <td style="text-align:left;"> AREA_11 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> qux_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -6.7293 </td>
+   <td style="text-align:left;"> 1.813 </td>
+   <td style="text-align:left;"> -2.4580 </td>
+   <td style="text-align:left;"> 1.6211 </td>
+   <td style="text-align:left;"> -1.516 </td>
+   <td style="text-align:left;"> 0.5104 </td>
+   <td style="text-align:left;"> 19.06 </td>
+   <td style="text-align:left;"> 21.51 </td>
+   <td style="text-align:left;"> 3.438 </td>
+   <td style="text-align:left;"> 2.811 </td>
+   <td style="text-align:left;"> AREA_11 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> bar_control_vs_foo_control </td>
+   <td style="text-align:left;"> -7.9507 </td>
+   <td style="text-align:left;"> 4.274 </td>
+   <td style="text-align:left;"> -1.8381 </td>
+   <td style="text-align:left;"> 2.3203 </td>
+   <td style="text-align:left;"> -0.792 </td>
+   <td style="text-align:left;"> 0.9456 </td>
+   <td style="text-align:left;"> 29.03 </td>
+   <td style="text-align:left;"> 30.87 </td>
+   <td style="text-align:left;"> 9.745 </td>
+   <td style="text-align:left;"> 8.412 </td>
+   <td style="text-align:left;"> AREA_14 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> bar_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -9.1505 </td>
+   <td style="text-align:left;"> 5.822 </td>
+   <td style="text-align:left;"> -1.6641 </td>
+   <td style="text-align:left;"> 2.8418 </td>
+   <td style="text-align:left;"> -0.586 </td>
+   <td style="text-align:left;"> 0.9871 </td>
+   <td style="text-align:left;"> 33.16 </td>
+   <td style="text-align:left;"> 34.83 </td>
+   <td style="text-align:left;"> 6.420 </td>
+   <td style="text-align:left;"> 6.062 </td>
+   <td style="text-align:left;"> AREA_14 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> baz_control_vs_foo_control </td>
+   <td style="text-align:left;"> -0.5721 </td>
+   <td style="text-align:left;"> 11.785 </td>
+   <td style="text-align:left;"> 5.6066 </td>
+   <td style="text-align:left;"> 2.3454 </td>
+   <td style="text-align:left;"> 2.390 </td>
+   <td style="text-align:left;"> 0.0934 </td>
+   <td style="text-align:left;"> 36.47 </td>
+   <td style="text-align:left;"> 30.87 </td>
+   <td style="text-align:left;"> 11.799 </td>
+   <td style="text-align:left;"> 8.412 </td>
+   <td style="text-align:left;"> AREA_14 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> baz_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -11.7509 </td>
+   <td style="text-align:left;"> 3.471 </td>
+   <td style="text-align:left;"> -4.1397 </td>
+   <td style="text-align:left;"> 2.8892 </td>
+   <td style="text-align:left;"> -1.433 </td>
+   <td style="text-align:left;"> 0.5703 </td>
+   <td style="text-align:left;"> 30.96 </td>
+   <td style="text-align:left;"> 34.83 </td>
+   <td style="text-align:left;"> 8.582 </td>
+   <td style="text-align:left;"> 6.062 </td>
+   <td style="text-align:left;"> AREA_14 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> qux_control_vs_foo_control </td>
+   <td style="text-align:left;"> -3.9290 </td>
+   <td style="text-align:left;"> 8.296 </td>
+   <td style="text-align:left;"> 2.1836 </td>
+   <td style="text-align:left;"> 2.3203 </td>
+   <td style="text-align:left;"> 0.941 </td>
+   <td style="text-align:left;"> 0.8882 </td>
+   <td style="text-align:left;"> 33.05 </td>
+   <td style="text-align:left;"> 30.87 </td>
+   <td style="text-align:left;"> 8.752 </td>
+   <td style="text-align:left;"> 8.412 </td>
+   <td style="text-align:left;"> AREA_14 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> qux_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -10.2690 </td>
+   <td style="text-align:left;"> 4.704 </td>
+   <td style="text-align:left;"> -2.7826 </td>
+   <td style="text-align:left;"> 2.8418 </td>
+   <td style="text-align:left;"> -0.979 </td>
+   <td style="text-align:left;"> 0.8697 </td>
+   <td style="text-align:left;"> 32.05 </td>
+   <td style="text-align:left;"> 34.83 </td>
+   <td style="text-align:left;"> 7.545 </td>
+   <td style="text-align:left;"> 6.062 </td>
+   <td style="text-align:left;"> AREA_14 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> bar_control_vs_foo_control </td>
+   <td style="text-align:left;"> -10.6369 </td>
+   <td style="text-align:left;"> 6.982 </td>
+   <td style="text-align:left;"> -1.8277 </td>
+   <td style="text-align:left;"> 3.3435 </td>
+   <td style="text-align:left;"> -0.547 </td>
+   <td style="text-align:left;"> 0.9909 </td>
+   <td style="text-align:left;"> 41.03 </td>
+   <td style="text-align:left;"> 42.86 </td>
+   <td style="text-align:left;"> 13.412 </td>
+   <td style="text-align:left;"> 11.486 </td>
+   <td style="text-align:left;"> AREA_16 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> bar_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -12.2967 </td>
+   <td style="text-align:left;"> 9.281 </td>
+   <td style="text-align:left;"> -1.5076 </td>
+   <td style="text-align:left;"> 4.0949 </td>
+   <td style="text-align:left;"> -0.368 </td>
+   <td style="text-align:left;"> 0.9989 </td>
+   <td style="text-align:left;"> 45.06 </td>
+   <td style="text-align:left;"> 46.56 </td>
+   <td style="text-align:left;"> 10.044 </td>
+   <td style="text-align:left;"> 8.888 </td>
+   <td style="text-align:left;"> AREA_16 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> baz_control_vs_foo_control </td>
+   <td style="text-align:left;"> -0.2883 </td>
+   <td style="text-align:left;"> 17.521 </td>
+   <td style="text-align:left;"> 8.6161 </td>
+   <td style="text-align:left;"> 3.3796 </td>
+   <td style="text-align:left;"> 2.549 </td>
+   <td style="text-align:left;"> 0.0626 </td>
+   <td style="text-align:left;"> 51.48 </td>
+   <td style="text-align:left;"> 42.86 </td>
+   <td style="text-align:left;"> 16.116 </td>
+   <td style="text-align:left;"> 11.486 </td>
+   <td style="text-align:left;"> AREA_16 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> baz_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -13.2460 </td>
+   <td style="text-align:left;"> 8.692 </td>
+   <td style="text-align:left;"> -2.2771 </td>
+   <td style="text-align:left;"> 4.1632 </td>
+   <td style="text-align:left;"> -0.547 </td>
+   <td style="text-align:left;"> 0.9909 </td>
+   <td style="text-align:left;"> 44.57 </td>
+   <td style="text-align:left;"> 46.56 </td>
+   <td style="text-align:left;"> 12.950 </td>
+   <td style="text-align:left;"> 8.888 </td>
+   <td style="text-align:left;"> AREA_16 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> qux_control_vs_foo_control </td>
+   <td style="text-align:left;"> -4.3495 </td>
+   <td style="text-align:left;"> 13.269 </td>
+   <td style="text-align:left;"> 4.4597 </td>
+   <td style="text-align:left;"> 3.3435 </td>
+   <td style="text-align:left;"> 1.334 </td>
+   <td style="text-align:left;"> 0.6423 </td>
+   <td style="text-align:left;"> 47.32 </td>
+   <td style="text-align:left;"> 42.86 </td>
+   <td style="text-align:left;"> 10.808 </td>
+   <td style="text-align:left;"> 11.486 </td>
+   <td style="text-align:left;"> AREA_16 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> qux_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -13.6049 </td>
+   <td style="text-align:left;"> 7.973 </td>
+   <td style="text-align:left;"> -2.8158 </td>
+   <td style="text-align:left;"> 4.0949 </td>
+   <td style="text-align:left;"> -0.688 </td>
+   <td style="text-align:left;"> 0.9715 </td>
+   <td style="text-align:left;"> 43.75 </td>
+   <td style="text-align:left;"> 46.56 </td>
+   <td style="text-align:left;"> 10.753 </td>
+   <td style="text-align:left;"> 8.888 </td>
+   <td style="text-align:left;"> AREA_16 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> bar_control_vs_foo_control </td>
+   <td style="text-align:left;"> -14.3027 </td>
+   <td style="text-align:left;"> 8.794 </td>
+   <td style="text-align:left;"> -2.7546 </td>
+   <td style="text-align:left;"> 4.3832 </td>
+   <td style="text-align:left;"> -0.628 </td>
+   <td style="text-align:left;"> 0.9816 </td>
+   <td style="text-align:left;"> 51.45 </td>
+   <td style="text-align:left;"> 54.21 </td>
+   <td style="text-align:left;"> 16.132 </td>
+   <td style="text-align:left;"> 14.713 </td>
+   <td style="text-align:left;"> AREA_18 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> bar_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -16.7853 </td>
+   <td style="text-align:left;"> 11.502 </td>
+   <td style="text-align:left;"> -2.6418 </td>
+   <td style="text-align:left;"> 5.3683 </td>
+   <td style="text-align:left;"> -0.492 </td>
+   <td style="text-align:left;"> 0.9947 </td>
+   <td style="text-align:left;"> 57.15 </td>
+   <td style="text-align:left;"> 59.79 </td>
+   <td style="text-align:left;"> 13.933 </td>
+   <td style="text-align:left;"> 11.980 </td>
+   <td style="text-align:left;"> AREA_18 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> baz_control_vs_foo_control </td>
+   <td style="text-align:left;"> 1.2004 </td>
+   <td style="text-align:left;"> 24.546 </td>
+   <td style="text-align:left;"> 12.8733 </td>
+   <td style="text-align:left;"> 4.4306 </td>
+   <td style="text-align:left;"> 2.906 </td>
+   <td style="text-align:left;"> 0.0234 </td>
+   <td style="text-align:left;"> 67.08 </td>
+   <td style="text-align:left;"> 54.21 </td>
+   <td style="text-align:left;"> 20.374 </td>
+   <td style="text-align:left;"> 14.713 </td>
+   <td style="text-align:left;"> AREA_18 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> baz_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -14.8664 </td>
+   <td style="text-align:left;"> 13.892 </td>
+   <td style="text-align:left;"> -0.4871 </td>
+   <td style="text-align:left;"> 5.4578 </td>
+   <td style="text-align:left;"> -0.089 </td>
+   <td style="text-align:left;"> 1.0000 </td>
+   <td style="text-align:left;"> 59.57 </td>
+   <td style="text-align:left;"> 59.79 </td>
+   <td style="text-align:left;"> 17.783 </td>
+   <td style="text-align:left;"> 11.980 </td>
+   <td style="text-align:left;"> AREA_18 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> qux_control_vs_foo_control </td>
+   <td style="text-align:left;"> -5.6701 </td>
+   <td style="text-align:left;"> 17.426 </td>
+   <td style="text-align:left;"> 5.8781 </td>
+   <td style="text-align:left;"> 4.3832 </td>
+   <td style="text-align:left;"> 1.341 </td>
+   <td style="text-align:left;"> 0.6371 </td>
+   <td style="text-align:left;"> 60.08 </td>
+   <td style="text-align:left;"> 54.21 </td>
+   <td style="text-align:left;"> 13.124 </td>
+   <td style="text-align:left;"> 14.713 </td>
+   <td style="text-align:left;"> AREA_18 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> qux_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -18.2265 </td>
+   <td style="text-align:left;"> 10.061 </td>
+   <td style="text-align:left;"> -4.0830 </td>
+   <td style="text-align:left;"> 5.3683 </td>
+   <td style="text-align:left;"> -0.761 </td>
+   <td style="text-align:left;"> 0.9546 </td>
+   <td style="text-align:left;"> 55.70 </td>
+   <td style="text-align:left;"> 59.79 </td>
+   <td style="text-align:left;"> 13.791 </td>
+   <td style="text-align:left;"> 11.980 </td>
+   <td style="text-align:left;"> AREA_18 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> bar_control_vs_foo_control </td>
+   <td style="text-align:left;"> -0.0339 </td>
+   <td style="text-align:left;"> 0.026 </td>
+   <td style="text-align:left;"> -0.0042 </td>
+   <td style="text-align:left;"> 0.0113 </td>
+   <td style="text-align:left;"> -0.368 </td>
+   <td style="text-align:left;"> 0.9989 </td>
+   <td style="text-align:left;"> 0.19 </td>
+   <td style="text-align:left;"> 0.19 </td>
+   <td style="text-align:left;"> 0.034 </td>
+   <td style="text-align:left;"> 0.039 </td>
+   <td style="text-align:left;"> RGR_11.14 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> bar_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -0.0402 </td>
+   <td style="text-align:left;"> 0.033 </td>
+   <td style="text-align:left;"> -0.0037 </td>
+   <td style="text-align:left;"> 0.0138 </td>
+   <td style="text-align:left;"> -0.270 </td>
+   <td style="text-align:left;"> 0.9998 </td>
+   <td style="text-align:left;"> 0.15 </td>
+   <td style="text-align:left;"> 0.16 </td>
+   <td style="text-align:left;"> 0.031 </td>
+   <td style="text-align:left;"> 0.035 </td>
+   <td style="text-align:left;"> RGR_11.14 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> baz_control_vs_foo_control </td>
+   <td style="text-align:left;"> -0.0223 </td>
+   <td style="text-align:left;"> 0.038 </td>
+   <td style="text-align:left;"> 0.0078 </td>
+   <td style="text-align:left;"> 0.0114 </td>
+   <td style="text-align:left;"> 0.680 </td>
+   <td style="text-align:left;"> 0.9730 </td>
+   <td style="text-align:left;"> 0.20 </td>
+   <td style="text-align:left;"> 0.19 </td>
+   <td style="text-align:left;"> 0.029 </td>
+   <td style="text-align:left;"> 0.039 </td>
+   <td style="text-align:left;"> RGR_11.14 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> baz_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -0.0109 </td>
+   <td style="text-align:left;"> 0.063 </td>
+   <td style="text-align:left;"> 0.0262 </td>
+   <td style="text-align:left;"> 0.0141 </td>
+   <td style="text-align:left;"> 1.859 </td>
+   <td style="text-align:left;"> 0.2927 </td>
+   <td style="text-align:left;"> 0.18 </td>
+   <td style="text-align:left;"> 0.16 </td>
+   <td style="text-align:left;"> 0.074 </td>
+   <td style="text-align:left;"> 0.035 </td>
+   <td style="text-align:left;"> RGR_11.14 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> qux_control_vs_foo_control </td>
+   <td style="text-align:left;"> -0.0285 </td>
+   <td style="text-align:left;"> 0.031 </td>
+   <td style="text-align:left;"> 0.0013 </td>
+   <td style="text-align:left;"> 0.0113 </td>
+   <td style="text-align:left;"> 0.117 </td>
+   <td style="text-align:left;"> 1.0000 </td>
+   <td style="text-align:left;"> 0.20 </td>
+   <td style="text-align:left;"> 0.19 </td>
+   <td style="text-align:left;"> 0.046 </td>
+   <td style="text-align:left;"> 0.039 </td>
+   <td style="text-align:left;"> RGR_11.14 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> qux_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -0.0261 </td>
+   <td style="text-align:left;"> 0.047 </td>
+   <td style="text-align:left;"> 0.0104 </td>
+   <td style="text-align:left;"> 0.0138 </td>
+   <td style="text-align:left;"> 0.750 </td>
+   <td style="text-align:left;"> 0.9574 </td>
+   <td style="text-align:left;"> 0.17 </td>
+   <td style="text-align:left;"> 0.16 </td>
+   <td style="text-align:left;"> 0.043 </td>
+   <td style="text-align:left;"> 0.035 </td>
+   <td style="text-align:left;"> RGR_11.14 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> bar_control_vs_foo_control </td>
+   <td style="text-align:left;"> -0.0176 </td>
+   <td style="text-align:left;"> 0.038 </td>
+   <td style="text-align:left;"> 0.0100 </td>
+   <td style="text-align:left;"> 0.0105 </td>
+   <td style="text-align:left;"> 0.954 </td>
+   <td style="text-align:left;"> 0.8806 </td>
+   <td style="text-align:left;"> 0.18 </td>
+   <td style="text-align:left;"> 0.17 </td>
+   <td style="text-align:left;"> 0.046 </td>
+   <td style="text-align:left;"> 0.033 </td>
+   <td style="text-align:left;"> RGR_14.16 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> bar_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -0.0398 </td>
+   <td style="text-align:left;"> 0.029 </td>
+   <td style="text-align:left;"> -0.0054 </td>
+   <td style="text-align:left;"> 0.0130 </td>
+   <td style="text-align:left;"> -0.416 </td>
+   <td style="text-align:left;"> 0.9978 </td>
+   <td style="text-align:left;"> 0.15 </td>
+   <td style="text-align:left;"> 0.15 </td>
+   <td style="text-align:left;"> 0.032 </td>
+   <td style="text-align:left;"> 0.032 </td>
+   <td style="text-align:left;"> RGR_14.16 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> baz_control_vs_foo_control </td>
+   <td style="text-align:left;"> -0.0194 </td>
+   <td style="text-align:left;"> 0.036 </td>
+   <td style="text-align:left;"> 0.0085 </td>
+   <td style="text-align:left;"> 0.0106 </td>
+   <td style="text-align:left;"> 0.798 </td>
+   <td style="text-align:left;"> 0.9429 </td>
+   <td style="text-align:left;"> 0.17 </td>
+   <td style="text-align:left;"> 0.17 </td>
+   <td style="text-align:left;"> 0.045 </td>
+   <td style="text-align:left;"> 0.033 </td>
+   <td style="text-align:left;"> RGR_14.16 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> baz_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -0.0086 </td>
+   <td style="text-align:left;"> 0.061 </td>
+   <td style="text-align:left;"> 0.0263 </td>
+   <td style="text-align:left;"> 0.0133 </td>
+   <td style="text-align:left;"> 1.982 </td>
+   <td style="text-align:left;"> 0.2302 </td>
+   <td style="text-align:left;"> 0.18 </td>
+   <td style="text-align:left;"> 0.15 </td>
+   <td style="text-align:left;"> 0.042 </td>
+   <td style="text-align:left;"> 0.032 </td>
+   <td style="text-align:left;"> RGR_14.16 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> qux_control_vs_foo_control </td>
+   <td style="text-align:left;"> -0.0081 </td>
+   <td style="text-align:left;"> 0.047 </td>
+   <td style="text-align:left;"> 0.0195 </td>
+   <td style="text-align:left;"> 0.0105 </td>
+   <td style="text-align:left;"> 1.861 </td>
+   <td style="text-align:left;"> 0.2905 </td>
+   <td style="text-align:left;"> 0.18 </td>
+   <td style="text-align:left;"> 0.17 </td>
+   <td style="text-align:left;"> 0.053 </td>
+   <td style="text-align:left;"> 0.033 </td>
+   <td style="text-align:left;"> RGR_14.16 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> qux_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -0.0354 </td>
+   <td style="text-align:left;"> 0.033 </td>
+   <td style="text-align:left;"> -0.0010 </td>
+   <td style="text-align:left;"> 0.0130 </td>
+   <td style="text-align:left;"> -0.080 </td>
+   <td style="text-align:left;"> 1.0000 </td>
+   <td style="text-align:left;"> 0.15 </td>
+   <td style="text-align:left;"> 0.15 </td>
+   <td style="text-align:left;"> 0.018 </td>
+   <td style="text-align:left;"> 0.032 </td>
+   <td style="text-align:left;"> RGR_14.16 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> bar_control_vs_foo_control </td>
+   <td style="text-align:left;"> -0.0246 </td>
+   <td style="text-align:left;"> 0.019 </td>
+   <td style="text-align:left;"> -0.0027 </td>
+   <td style="text-align:left;"> 0.0083 </td>
+   <td style="text-align:left;"> -0.326 </td>
+   <td style="text-align:left;"> 0.9995 </td>
+   <td style="text-align:left;"> 0.11 </td>
+   <td style="text-align:left;"> 0.12 </td>
+   <td style="text-align:left;"> 0.041 </td>
+   <td style="text-align:left;"> 0.036 </td>
+   <td style="text-align:left;"> RGR_16.18 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> bar_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -0.0340 </td>
+   <td style="text-align:left;"> 0.020 </td>
+   <td style="text-align:left;"> -0.0072 </td>
+   <td style="text-align:left;"> 0.0102 </td>
+   <td style="text-align:left;"> -0.708 </td>
+   <td style="text-align:left;"> 0.9674 </td>
+   <td style="text-align:left;"> 0.12 </td>
+   <td style="text-align:left;"> 0.12 </td>
+   <td style="text-align:left;"> 0.024 </td>
+   <td style="text-align:left;"> 0.029 </td>
+   <td style="text-align:left;"> RGR_16.18 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> baz_control_vs_foo_control </td>
+   <td style="text-align:left;"> -0.0052 </td>
+   <td style="text-align:left;"> 0.039 </td>
+   <td style="text-align:left;"> 0.0169 </td>
+   <td style="text-align:left;"> 0.0084 </td>
+   <td style="text-align:left;"> 2.013 </td>
+   <td style="text-align:left;"> 0.2174 </td>
+   <td style="text-align:left;"> 0.13 </td>
+   <td style="text-align:left;"> 0.12 </td>
+   <td style="text-align:left;"> 0.037 </td>
+   <td style="text-align:left;"> 0.036 </td>
+   <td style="text-align:left;"> RGR_16.18 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> baz_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -0.0053 </td>
+   <td style="text-align:left;"> 0.049 </td>
+   <td style="text-align:left;"> 0.0219 </td>
+   <td style="text-align:left;"> 0.0103 </td>
+   <td style="text-align:left;"> 2.118 </td>
+   <td style="text-align:left;"> 0.1744 </td>
+   <td style="text-align:left;"> 0.14 </td>
+   <td style="text-align:left;"> 0.12 </td>
+   <td style="text-align:left;"> 0.025 </td>
+   <td style="text-align:left;"> 0.029 </td>
+   <td style="text-align:left;"> RGR_16.18 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> qux_control_vs_foo_control </td>
+   <td style="text-align:left;"> -0.0183 </td>
+   <td style="text-align:left;"> 0.025 </td>
+   <td style="text-align:left;"> 0.0036 </td>
+   <td style="text-align:left;"> 0.0083 </td>
+   <td style="text-align:left;"> 0.434 </td>
+   <td style="text-align:left;"> 0.9973 </td>
+   <td style="text-align:left;"> 0.12 </td>
+   <td style="text-align:left;"> 0.12 </td>
+   <td style="text-align:left;"> 0.029 </td>
+   <td style="text-align:left;"> 0.036 </td>
+   <td style="text-align:left;"> RGR_16.18 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> qux_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -0.0303 </td>
+   <td style="text-align:left;"> 0.023 </td>
+   <td style="text-align:left;"> -0.0036 </td>
+   <td style="text-align:left;"> 0.0102 </td>
+   <td style="text-align:left;"> -0.351 </td>
+   <td style="text-align:left;"> 0.9992 </td>
+   <td style="text-align:left;"> 0.12 </td>
+   <td style="text-align:left;"> 0.12 </td>
+   <td style="text-align:left;"> 0.018 </td>
+   <td style="text-align:left;"> 0.029 </td>
+   <td style="text-align:left;"> RGR_16.18 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> bar_control_vs_foo_control </td>
+   <td style="text-align:left;"> -0.0181 </td>
+   <td style="text-align:left;"> 0.019 </td>
+   <td style="text-align:left;"> 0.0003 </td>
+   <td style="text-align:left;"> 0.0070 </td>
+   <td style="text-align:left;"> 0.043 </td>
+   <td style="text-align:left;"> 1.0000 </td>
+   <td style="text-align:left;"> 0.16 </td>
+   <td style="text-align:left;"> 0.16 </td>
+   <td style="text-align:left;"> 0.031 </td>
+   <td style="text-align:left;"> 0.027 </td>
+   <td style="text-align:left;"> RGR_11.18 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> bar_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -0.0245 </td>
+   <td style="text-align:left;"> 0.021 </td>
+   <td style="text-align:left;"> -0.0020 </td>
+   <td style="text-align:left;"> 0.0085 </td>
+   <td style="text-align:left;"> -0.230 </td>
+   <td style="text-align:left;"> 0.9999 </td>
+   <td style="text-align:left;"> 0.14 </td>
+   <td style="text-align:left;"> 0.14 </td>
+   <td style="text-align:left;"> 0.023 </td>
+   <td style="text-align:left;"> 0.023 </td>
+   <td style="text-align:left;"> RGR_11.18 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> baz_control_vs_foo_control </td>
+   <td style="text-align:left;"> -0.0080 </td>
+   <td style="text-align:left;"> 0.029 </td>
+   <td style="text-align:left;"> 0.0106 </td>
+   <td style="text-align:left;"> 0.0070 </td>
+   <td style="text-align:left;"> 1.500 </td>
+   <td style="text-align:left;"> 0.5221 </td>
+   <td style="text-align:left;"> 0.17 </td>
+   <td style="text-align:left;"> 0.16 </td>
+   <td style="text-align:left;"> 0.023 </td>
+   <td style="text-align:left;"> 0.027 </td>
+   <td style="text-align:left;"> RGR_11.18 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> baz_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> 0.0053 </td>
+   <td style="text-align:left;"> 0.051 </td>
+   <td style="text-align:left;"> 0.0282 </td>
+   <td style="text-align:left;"> 0.0087 </td>
+   <td style="text-align:left;"> 3.248 </td>
+   <td style="text-align:left;"> 0.0082 </td>
+   <td style="text-align:left;"> 0.17 </td>
+   <td style="text-align:left;"> 0.14 </td>
+   <td style="text-align:left;"> 0.038 </td>
+   <td style="text-align:left;"> 0.023 </td>
+   <td style="text-align:left;"> RGR_11.18 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> qux_control_vs_foo_control </td>
+   <td style="text-align:left;"> -0.0112 </td>
+   <td style="text-align:left;"> 0.026 </td>
+   <td style="text-align:left;"> 0.0072 </td>
+   <td style="text-align:left;"> 0.0070 </td>
+   <td style="text-align:left;"> 1.028 </td>
+   <td style="text-align:left;"> 0.8438 </td>
+   <td style="text-align:left;"> 0.17 </td>
+   <td style="text-align:left;"> 0.16 </td>
+   <td style="text-align:left;"> 0.036 </td>
+   <td style="text-align:left;"> 0.027 </td>
+   <td style="text-align:left;"> RGR_11.18 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> qux_osmotic_vs_foo_osmotic </td>
+   <td style="text-align:left;"> -0.0161 </td>
+   <td style="text-align:left;"> 0.029 </td>
+   <td style="text-align:left;"> 0.0064 </td>
+   <td style="text-align:left;"> 0.0085 </td>
+   <td style="text-align:left;"> 0.747 </td>
+   <td style="text-align:left;"> 0.9582 </td>
+   <td style="text-align:left;"> 0.15 </td>
+   <td style="text-align:left;"> 0.14 </td>
+   <td style="text-align:left;"> 0.021 </td>
+   <td style="text-align:left;"> 0.023 </td>
+   <td style="text-align:left;"> RGR_11.18 </td>
+  </tr>
+</tbody>
+</table>
+
+<p>The test results are also given as <a href="anova-results.csv">anova-results.csv</a></p>
+
+<p>We create effect plots for all comparsions where the mean is indicated by the dot, and the 95% confidence interval indicated by a horizontal line. Red-dots indicate estimates associated with a p-value lower than 0.05.</p>
+
+<p><img src="figure/effectplots-area-1.png" title="plot of chunk effectplots-area" alt="plot of chunk effectplots-area" style="display: block; margin: auto;" /></p>
+
+<p><img src="figure/effectplots-rgr-1.png" title="plot of chunk effectplots-rgr" alt="plot of chunk effectplots-rgr" style="display: block; margin: auto;" /></p>
+
+<p>This report was compiled on Sat Jan 09 20:57:27 2016 by gbfjc
+   on Windows using rosettR v0.0.3</p>
+
+      </div>
+    </div>
+    <script type="text/javascript">
+      $(document).ready(function() {
+      $('#anova_results').DataTable();
+      } );
+    </script>
+  </body>
+</html>
+<!-- from http://watson.nci.nih.gov/~sdavis/blog/a_simple_bootstrap-based_knitr_template/ -->

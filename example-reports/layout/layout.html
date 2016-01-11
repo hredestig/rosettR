@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>layout</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
+    
+    <!-- Optional theme -->
+    <!-- <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-theme.min.css"> -->
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
+    <script src="http://yandex.st/highlightjs/7.3/highlight.min.js"></script>
+    <script src="http://yandex.st/highlightjs/7.3/languages/r.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <link rel="stylesheet" href="http://yandex.st/highlightjs/7.3/styles/default.min.css">
+    
+    
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="row">
+	<h1>Overview of the experiment design</h1>
+
+<p>Plate phenotyping experiment:</p>
+
+<p>Example experiment</p>
+
+<ul>
+<li><strong>report compiled with working directory</strong>: c:/git/rosettr/rosettrTest/Output/layout</li>
+<li><strong>genotypes:</strong> foo, bar, baz, qux</li>
+<li><strong>timepoints:</strong> 11, 14, 16, 18</li>
+<li><strong>treatments:</strong> control, osmotic</li>
+<li><strong>number of replicates:</strong> 3</li>
+<li><strong>number of used plates:</strong> 6</li>
+<li><strong>configuration:</strong> 6x6.abcd</li>
+</ul>
+
+<h2>Plate layout</h2>
+
+<p>The images will be interpreted like this, using plate001.jpg
+as an example</p>
+
+<!-- html table generated in R 3.2.2 by xtable 1.8-0 package -->
+
+<!-- Sat Jan 09 20:13:05 2016 -->
+
+<table class='table table-hover'>
+<tr> <th> 1 </th> <th> 2 </th> <th> 3 </th> <th> 4 </th> <th> 5 </th> <th> 6 </th> <th>  </th>  </tr>
+  <tr> <td>  </td> <td> c,1,foo </td> <td> c,2,foo </td> <td> d,1,bar </td> <td> d,2,bar </td> <td>  </td> <td>  </td> </tr>
+  <tr> <td> c,3,foo </td> <td> c,4,foo </td> <td> c,5,foo </td> <td> d,3,bar </td> <td> d,4,bar </td> <td> d,5,bar </td> <td>  </td> </tr>
+  <tr> <td> c,6,foo </td> <td> c,7,foo </td> <td> c,8,foo </td> <td> d,6,bar </td> <td> d,7,bar </td> <td> d,8,bar </td> <td> &lt;- Mark </td> </tr>
+  <tr> <td> b,1,baz </td> <td> b,2,baz </td> <td> b,3,baz </td> <td> a,1,qux </td> <td> a,2,qux </td> <td> a,3,qux </td> <td>  </td> </tr>
+  <tr> <td> b,4,baz </td> <td> b,5,baz </td> <td> b,6,baz </td> <td> a,4,qux </td> <td> a,5,qux </td> <td> a,6,qux </td> <td>  </td> </tr>
+  <tr> <td>  </td> <td> b,7,baz </td> <td> b,8,baz </td> <td> a,7,qux </td> <td> a,8,qux </td> <td>  </td> <td>  </td> </tr>
+   </table>
+
+<p>and the plates should be sown like this using the same example</p>
+
+<!-- html table generated in R 3.2.2 by xtable 1.8-0 package -->
+
+<!-- Sat Jan 09 20:13:05 2016 -->
+
+<table class='table table-hover'>
+<tr> <th>  </th> <th> 1 </th> <th> 2 </th> <th> 3 </th> <th> 4 </th> <th> 5 </th> <th> 6 </th>  </tr>
+  <tr> <td>  </td> <td>  </td> <td> a,8,qux </td> <td> a,7,qux </td> <td> b,8,baz </td> <td> b,7,baz </td> <td>  </td> </tr>
+  <tr> <td>  </td> <td> a,6,qux </td> <td> a,5,qux </td> <td> a,4,qux </td> <td> b,6,baz </td> <td> b,5,baz </td> <td> b,4,baz </td> </tr>
+  <tr> <td> Mark -&gt; </td> <td> a,3,qux </td> <td> a,2,qux </td> <td> a,1,qux </td> <td> b,3,baz </td> <td> b,2,baz </td> <td> b,1,baz </td> </tr>
+  <tr> <td>  </td> <td> d,8,bar </td> <td> d,7,bar </td> <td> d,6,bar </td> <td> c,8,foo </td> <td> c,7,foo </td> <td> c,6,foo </td> </tr>
+  <tr> <td>  </td> <td> d,5,bar </td> <td> d,4,bar </td> <td> d,3,bar </td> <td> c,5,foo </td> <td> c,4,foo </td> <td> c,3,foo </td> </tr>
+  <tr> <td>  </td> <td>  </td> <td> d,2,bar </td> <td> d,1,bar </td> <td> c,2,foo </td> <td> c,1,foo </td> <td>  </td> </tr>
+   </table>
+
+<h2>Plate sowing</h2>
+
+<p>Sowing order is indicated below and also given as
+<a href="sowing-order.csv">sowing-order.csv</a> and in long format with one row
+per genotype in <a href="sowing-order-long.csv">sowing-order-long.csv</a>, and
+as short printable summary in
+<a href="sowing-summary.csv">sowing-summary.csv</a></p>
+
+<!-- html table generated in R 3.2.2 by xtable 1.8-0 package -->
+
+<!-- Sat Jan 09 20:13:05 2016 -->
+
+<table class='table table-hover'>
+<tr> <th> plate </th> <th> label </th> <th> block </th> <th> position </th> <th> treatment </th> <th> genotypes </th> <th> regions </th>  </tr>
+  <tr> <td> plate001 </td> <td> A1 </td> <td align="right">   1 </td> <td align="right">   1 </td> <td> control </td> <td> foo,bar,baz,qux </td> <td> c,d,b,a </td> </tr>
+  <tr> <td> plate004 </td> <td> A2 </td> <td align="right">   1 </td> <td align="right">   2 </td> <td> osmotic </td> <td> foo,bar,baz,qux </td> <td> c,d,b,a </td> </tr>
+  <tr> <td> plate006 </td> <td> B1 </td> <td align="right">   2 </td> <td align="right">   1 </td> <td> osmotic </td> <td> foo,bar,baz,qux </td> <td> c,d,b,a </td> </tr>
+  <tr> <td> plate002 </td> <td> B2 </td> <td align="right">   2 </td> <td align="right">   2 </td> <td> control </td> <td> foo,bar,baz,qux </td> <td> c,d,b,a </td> </tr>
+  <tr> <td> plate003 </td> <td> C1 </td> <td align="right">   3 </td> <td align="right">   1 </td> <td> control </td> <td> foo,bar,baz,qux </td> <td> c,d,b,a </td> </tr>
+  <tr> <td> plate005 </td> <td> C2 </td> <td align="right">   3 </td> <td align="right">   2 </td> <td> osmotic </td> <td> foo,bar,baz,qux </td> <td> c,d,b,a </td> </tr>
+   </table>
+
+<p>A compact listing over which plates are to subjected to which treatment:</p>
+
+<!-- html table generated in R 3.2.2 by xtable 1.8-0 package -->
+
+<!-- Sat Jan 09 20:13:05 2016 -->
+
+<table class='table table-hover'>
+<tr> <th> GENOTYPE </th> <th> genotype_region </th> <th> control </th> <th> osmotic </th>  </tr>
+  <tr> <td> bar </td> <td> d </td> <td> 1 to 3 </td> <td> 4 to 6 </td> </tr>
+  <tr> <td> baz </td> <td> b </td> <td> 1 to 3 </td> <td> 4 to 6 </td> </tr>
+  <tr> <td> foo </td> <td> c </td> <td> 1 to 3 </td> <td> 4 to 6 </td> </tr>
+  <tr> <td> qux </td> <td> a </td> <td> 1 to 3 </td> <td> 4 to 6 </td> </tr>
+   </table>
+
+<p>This report was compiled on Sat Jan 09 20:13:05 2016 by gbfjc
+   on Windows using rosettR v0.0.2</p>
+
+      </div>
+    </div>
+  </body>
+</html>
+<!-- from http://watson.nci.nih.gov/~sdavis/blog/a_simple_bootstrap-based_knitr_template/ -->

@@ -1,0 +1,7 @@
+"plate","label","block","position","treatment","genotypes","regions"
+"plate001","A1",1,1,"control","foo,bar,baz,qux","c,d,b,a"
+"plate004","A2",1,2,"osmotic","foo,bar,baz,qux","c,d,b,a"
+"plate006","B1",2,1,"osmotic","foo,bar,baz,qux","c,d,b,a"
+"plate002","B2",2,2,"control","foo,bar,baz,qux","c,d,b,a"
+"plate003","C1",3,1,"control","foo,bar,baz,qux","c,d,b,a"
+"plate005","C2",3,2,"osmotic","foo,bar,baz,qux","c,d,b,a"
