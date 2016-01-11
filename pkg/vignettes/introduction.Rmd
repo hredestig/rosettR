@@ -153,6 +153,7 @@ Next, we analyze the images using `processPlateExperiment` function.
 processPlateExperiment(pathToExperiment, checklocation=FALSE)
 ```
 ```{r echo=FALSE}
+processPlateExperiment(pathToExperiment, analyze=FALSE)
 unzip(system.file("examples/rosettrTestResults.zip", package="rosettR"),
       exdir=".")
 ```
@@ -235,7 +236,7 @@ In the event of contamination, e.g. fungal growth on the plate you may want to p
 
 ## Parallel computing
 
-Image analysis can be done in parallel to speed up computation considerably. The `rosettR` package uses [plyr](https://cran.r-project.org/web/packages/plyr/index.html) which support using multiple CPUs on a single host via the [doParallel](https://cran.r-project.org/web/packages/doParallel/index.html) package. Simple register a parallel backend by for using e.g. 4 CPUs by
+Image analysis can be done in parallel to speed up computation considerably. The `rosettR` package uses [plyr](https://cran.r-project.org/web/packages/plyr/index.html) which support using multiple CPUs on a single host via the [doParallel](https://cran.r-project.org/web/packages/doParallel/index.html) package. Simply register a parallel backend by for using e.g. 4 CPUs by
 
 ```{r eval=FALSE}
 library(doParallel)
