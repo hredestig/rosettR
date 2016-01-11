@@ -267,6 +267,13 @@ on jpegs without exif an tag
 * DONE add readme
   SCHEDULED: <2016-01-10 Sun>
   - State "DONE"       from "TODO"       [2016-01-10 Sun 15:03]
-* TODO io website
+* DONE io website
   SCHEDULED: <2016-01-16 Sat>
+  - State "DONE"       from "TODO"       [2016-01-11 Mon 09:16]
 
+* TODO flowcharts
+  SCHEDULED: <2016-01-16 Sat>
+* TODO add builds
+  SCHEDULED: <2016-01-11 Mon>
+* TODO add link to vignette
+  SCHEDULED: <2016-01-11 Mon>
