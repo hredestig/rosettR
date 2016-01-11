@@ -46,7 +46,7 @@ order to facilitate transition from legacy software.
 }
 \examples{
 path <- makeTestExperiment(file.path(tempdir(), "xyz"))
-newnames <- c("plate003.jpg", "plate002.jpg", "plate004.jpg", "plate001.jpg",
+newnames <- c("plate001.jpg", "plate002.jpg", "plate003.jpg", "plate004.jpg",
               "plate005.jpg", "plate006.jpg")
 ## simulate renaming all files
 renamePlateImages(path, newnames)

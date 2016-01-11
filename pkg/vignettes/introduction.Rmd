@@ -204,18 +204,22 @@ display(qcImage, method="raster")
 To resolve this problem, we reprocess that single image but this time with the location correction turned on.
 
 ```{r fix, results="hide"}
+
 mf <- readManifest(pathToExperiment)
-mf <- subset(mf, timepoint == 11 & plate  == "plate002.jpg")
+mf <- subset(mf, timepoint == 11 & plate  == "plate003.jpg")
 ## reprocess the plate where using the plate location correction
 pda <- reprocessPlateImages(pathToExperiment, mf, checklocation=TRUE)
+
 ```
 
 Inspect the result
 
 ```{r inspect-fix}
+
 pda <- readPhenodata(pathToExperiment)
 qcpic <- subset(pda, timepoint == 11 & plate == "plate002.jpg")$qc[1]
 display(readImage(file.path(pathToExperiment, qcpic)), method="raster")
+
 ```
 
 See the documenation for `analyzeImage` for other parameters that can be adjusted during image analysis.
