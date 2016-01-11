@@ -344,11 +344,11 @@ processPlateExperiment <- function(path, meta=readMeta(path), rename=TRUE,
       daydir <- unique(dirname(as.character(dd$image)))
       dd <- dd[with(dd, order(BLOCK, position)),]
       first_region <- unique(dd$genotype_region)[1]
-      expected_pics <-
+      expectedPics <-
         basename(as.character(subset(dd, dd$genotype_region ==
                                        first_region)$image))
       renamingDf(cleanPath(file.path(path, daydir), mustWork=TRUE),
-                  expected_pics)
+                  expectedPics)
     })
     renameImages(path, rnmDf, dry=!rename, verbose=FALSE)
     rdf <- with(rnmDf, data.frame(image=file.path(".", subdir, newname),
@@ -402,7 +402,7 @@ processPlateExperiment <- function(path, meta=readMeta(path), rename=TRUE,
 #' @export
 #' @examples
 #' path <- makeTestExperiment(file.path(tempdir(), "xyz"))
-#' newnames <- c("plate003.jpg", "plate002.jpg", "plate004.jpg", "plate001.jpg",
+#' newnames <- c("plate001.jpg", "plate002.jpg", "plate003.jpg", "plate004.jpg",
 #'               "plate005.jpg", "plate006.jpg")
 #' ## simulate renaming all files
 #' renamePlateImages(path, newnames)

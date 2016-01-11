@@ -42,7 +42,6 @@ makeTestExperiment <- function(exdir=".") {
                        timepoints=c(11, 14, 16, 18),
                        pixelsmm=7.538, nblocks=3,
                        reference="foo")
-  writeManifest(expandManifest(meta), path)
   writeMeta(meta, path)
   invisible(path)
 }

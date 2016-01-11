@@ -14,31 +14,31 @@ CharacterVector date_original(SEXP file) {
     for(int i = 0; i < cfile.size(); i++) {
       FILE *fp = fopen(cfile(i), "rb");
       if(!fp) { 
-	throw std::invalid_argument("Can't open file.\n"); 
+		throw std::invalid_argument("Can't open file.\n"); 
       }
       fseek(fp, 0, SEEK_END);
       unsigned long fsize = ftell(fp);
       rewind(fp);
       unsigned char *buf = new unsigned char[fsize];
       if(fread(buf, 1, fsize, fp) != fsize) {
-	throw std::invalid_argument("Can't read file.\n"); 
+		throw std::invalid_argument("Can't read file.\n"); 
       }
       fclose(fp);
       // Parse exif
       try{
-	if(fsize > 0.1) {
-	  EXIFInfo result;
-	  int retval;
-	  retval = ParseEXIF(buf, fsize, result);
-	  if(retval != 0) {
-	    ::Rf_error("failed to read exif tag");
-	  }
-	  res(i) = result.dateTimeOriginal;
-	} else {
-	  res(i) = "NA";
-	}
+		if(fsize > 0.1) {
+		  EXIFInfo result;
+		  int retval;
+		  retval = ParseEXIF(buf, fsize, result);
+		  if(retval != 0) {
+			::Rf_error("failed to read exif tag");
+		  }
+		  res(i) = result.dateTimeOriginal;
+		} else {
+		  res(i) = "NA";
+		}
       } catch (...){
-	return R_NilValue;
+		return R_NilValue;
       }
     }
     return res;

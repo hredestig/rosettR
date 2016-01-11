@@ -16,3 +16,5 @@ pkg/src-x64
 pkg/src/*.dll
 rosettrTest
 /etc/EXP128_SALK_BS/
+/pkg/src/rosettR.so
+/rosettR/

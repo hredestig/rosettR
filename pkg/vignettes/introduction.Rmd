@@ -193,7 +193,7 @@ As can be seen when studying the QC images of our example experiment, one image 
 ```{r excentric}
 
 pda <- readPhenodata(pathToExperiment)
-qcpic <- subset(pda, timepoint == 11 & plate == "plate002.jpg")$qc[1]
+qcpic <- subset(pda, timepoint == 11 & plate == "plate003.jpg")$qc[1]
 library(EBImage)
 qcPath <- file.path(pathToExperiment, qcpic)
 qcImage <- readImage(qcPath)
