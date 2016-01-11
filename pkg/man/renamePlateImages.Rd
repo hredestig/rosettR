@@ -60,7 +60,7 @@ with(renaming, mapply(file.rename, file.path(path, subdir, newname),
 file.path(path, subdir, intermediate)))
 with(renaming, mapply(file.rename, file.path(path, subdir, intermediate),
 file.path(path, subdir, image)))
-list.files(file.path(path, 'D11'))
+list.files(file.path(path, "D11"))
 }
 \author{
 Henning Redestig

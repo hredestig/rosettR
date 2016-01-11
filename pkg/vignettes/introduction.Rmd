@@ -55,6 +55,7 @@ A new experiment is started by loading the package and creating a meta-data obje
 As a toy-example, let's study genotypes named foo, bar, baz, and qux subjected to two treatments: control condition and osmotic stress.  The meta-data object (a simple list with key-value pairs) is created with
 
 ```{r setup}
+
 library(rosettR)
 meta <- metaTemplate(genotypes=c("foo", "bar", "baz", "qux"),
                      treatments=c("control", "osmotic_stress"),
@@ -62,6 +63,7 @@ meta <- metaTemplate(genotypes=c("foo", "bar", "baz", "qux"),
                      nblocks=3,
                      reference="foo",
                      description="a test experiment")
+
 ```
 
 > The plates used are 150 x 25 mm tissue culture dishes, supplied with a grid that divides the plate in 32 boxes (aka *wells*). In our test experiment, we have only four genotypes so all plates have the same layout. Each plate is divided in four regions with 8 boxes each, of which all are occupied by a single seed of the same genotype.
@@ -73,20 +75,26 @@ meta <- metaTemplate(genotypes=c("foo", "bar", "baz", "qux"),
 Next we 'create' the experiment which generates the metadata-file, which is the directory structure in which to place the taken pictures, and the manifest file that defines the randomized block design.
 
 ```{r create-experiment}
+
 pathToExperiment <- "rosettrTest"
 newExperiment(pathToExperiment, meta)
+
 ```
 
 The manifest file can be opened in your favorite spread-sheet editor or just inspected directly by
 
 ```{r example-manifest}
+
 head(readManifest(pathToExperiment))
+
 ```
 
 To obtain an overview of the created experiment, to support preparing the plates, compile the template 'layout' report (the use of the `quiet=TRUE` argument here is solely to avoid cluttering the vignette, in actual use you can safely ignore that argument).
 
 ```{r layout-report, results="hide"}
+
 makeReport(pathToExperiment, "layout", quiet=TRUE)
+
 ```
 
 > The layout report gives an overview of the experimental design and important information for the sowing setup. Each genotype is assigned a letter (a to d) and a region in the plate, and the seeds must be placed in the corresponding region. The plates should be numbered and marked so that it is possible to identify the axis of the plate (reference to figure). We further recommend labelling the plates in the margin of the lid, visible to the camera but not covering any plants, so that you can later confirm that the order is correct. Growth medium is poured in the plates in sterile conditions. When the medium solidifies, sterile seeds can be placed in the corresponding well with a Vacuumseed. The plates are then sealed with Urgopore tape, wrapped in groups of 10-15 in transparent foil, and placed at 4 degrees and darkness for three nights for seed stratification. The plates are then placed in the shelf of the growth chamber following the placement setup, according to a random block design where each block will have a unique plate from each combination of genotypes and treatment. 
@@ -126,11 +134,13 @@ Before detailing the process of analyzing a whole experiment, we  a brief descri
 For testing purposes, we first unzip some example images to our example and set the scale directly
 
 ```{r unzip-example}
+
 meta <- readMeta(pathToExperiment)
 meta$pixelsmm <- 7.54 # 7.54 pixels per millimeter
 writeMeta(meta, pathToExperiment)
 unzip(system.file("examples/rosettrTest.zip", package="rosettR"),
       exdir=".")
+
 ```
 
 When all images have been taken you can generate an overview of them by
@@ -153,9 +163,11 @@ Next, we analyze the images using `processPlateExperiment` function.
 processPlateExperiment(pathToExperiment, checklocation=FALSE)
 ```
 ```{r echo=FALSE}
+
 processPlateExperiment(pathToExperiment, analyze=FALSE)
 unzip(system.file("examples/rosettrTestResults.zip", package="rosettR"),
       exdir=".")
+
 ```
 
 we turn off the plate location detection to speedup this test analysis (and for demonstration purposed later in this vignette)
@@ -179,19 +191,21 @@ If the analysis has gone wrong due to e.g the plate location not correctly ident
 As can be seen when studying the QC images of our example experiment, one image failed since it was excessively out of the centre of the image.
 
 ```{r excentric}
+
 pda <- readPhenodata(pathToExperiment)
-qcpic <- subset(pda, timepoint == 11 & plate == "plate001.jpg")$qc[1]
+qcpic <- subset(pda, timepoint == 11 & plate == "plate002.jpg")$qc[1]
 library(EBImage)
 qcPath <- file.path(pathToExperiment, qcpic)
 qcImage <- readImage(qcPath)
 display(qcImage, method="raster")
+
 ```
 
 To resolve this problem, we reprocess that single image but this time with the location correction turned on.
 
 ```{r fix, results="hide"}
 mf <- readManifest(pathToExperiment)
-mf <- subset(mf, timepoint == 11 & plate  == "plate001.jpg")
+mf <- subset(mf, timepoint == 11 & plate  == "plate002.jpg")
 ## reprocess the plate where using the plate location correction
 pda <- reprocessPlateImages(pathToExperiment, mf, checklocation=TRUE)
 ```
@@ -200,7 +214,7 @@ Inspect the result
 
 ```{r inspect-fix}
 pda <- readPhenodata(pathToExperiment)
-qcpic <- subset(pda, timepoint == 11 & plate == "plate001.jpg")$qc[1]
+qcpic <- subset(pda, timepoint == 11 & plate == "plate002.jpg")$qc[1]
 display(readImage(file.path(pathToExperiment, qcpic)), method="raster")
 ```
 
