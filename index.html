@@ -1,345 +1,124 @@
 <!DOCTYPE html>
 <html>
-
   <head>
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="description" content="rosettR : A high-throughput affordable in vitro growth assay for Arabidopsis">
-
     <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
-
     <title>rosettR</title>
   </head>
 
   <body>
-
     <!-- HEADER -->
     <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/hredestig/rosettR">View on GitHub</a>
+      <header class="inner">
+        <a id="forkme_banner" href="https://github.com/hredestig/rosettR">View on GitHub</a>
 
-          <h1 id="project_title">rosettR</h1>
-          <h2 id="project_tagline">A high-throughput affordable in vitro growth assay for Arabidopsis</h2>
+        <h1 id="project_title">rosettR</h1>
+        <h2 id="project_tagline">A high-throughput affordable in vitro growth assay for Arabidopsis</h2>
 
-            <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/hredestig/rosettR/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/hredestig/rosettR/tarball/master">Download this project as a tar.gz file</a>
-            </section>
-        </header>
+        <section id="downloads">
+          <a class="zip_download_link" href="https://github.com/hredestig/rosettR/zipball/master">Download this project as a .zip file</a>
+          <a class="tar_download_link" href="https://github.com/hredestig/rosettR/tarball/master">Download this project as a tar.gz file</a>
+        </section>
+      </header>
     </div>
 
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
         <h1>
-<a id="introduction-to-rosettr" class="anchor" href="#introduction-to-rosettr" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction to <em>rosettR</em>
-</h1>
-
-<p>This package implements a high-throughput and affordable growth
-phenotyping assay for plate grown Arabidopsis plants. Briefly, plants
-are grown in petri dishes on solid medium and photographed at regular
-intervals. Images are then analyzed using the functions implmented in
-this package to calculate area and relative growth rate of the rosetts
-which then can be used to compare the differences between genotypes
-and the effect of applied treatments such as starvation, osmotic or
-heat stress.</p>
-
-<p>In this vignette, the creation of a new experiment, analysis of images
-and generation of template statistical reports are described. The
-examples are reproducible and with a working installation of <code>rosettR</code>
-you can copy-paste code to your R terminal to try it out.</p>
-
-<h2>
-<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h2>
-
-<p>This package is not yet available on CRAN so the easiest way to
-install it is to use the <a href="http://github.com/hadley/devtools">devtools</a>
-package.</p>
-
-<div class="highlight highlight-source-r"><pre>library(<span class="pl-smi">devtools</span>)
-install_github(<span class="pl-s"><span class="pl-pds">"</span>hredestig/rosettR<span class="pl-pds">"</span></span>, <span class="pl-v">subdir</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>pkg<span class="pl-pds">"</span></span>)</pre></div>
-
-<p>The package is tested on Windows 7 and Linux.</p>
-
-<h1>
-<a id="experiment-design" class="anchor" href="#experiment-design" aria-hidden="true"><span class="octicon octicon-link"></span></a>Experiment design</h1>
-
-<p>A new experiment can be started by first loading the package and
-creating a meta-data object that details the specifics of the
-experiment. As a toy-example, let's study genotypes named foo, bar,
-baz and qux subjected to two treatments: control condition and osmotic
-stress. Each plate is in this design divided in four regions with 8
-boxes each (aka <em>wells</em>) of which all are occupied by a single seed of
-the same genotype. In our test experiment, we have only four genotypes
-so all plates have the same layout. In addition to genotypes and
-treatment, we define the time-points (days) at which pictures are
-taken, the number of repetition blocks and short description of the
-experiment to add to each report.</p>
-
-<ul>
-<li>
-<strong>genotypes</strong> the names of the studied genotype</li>
-<li>
-<strong>treatments</strong> the applied treatment conditions.</li>
-<li>
-<strong>time-points</strong> the considered time-points (days)</li>
-<li>
-<strong>number of repetition blocks</strong> the number of times the experiment
-is repeated to obtain biological replication</li>
-<li>
-<strong>reference</strong> the genotype with which all other genotypes should be
-compared </li>
-<li>
-<strong>description</strong> a optional short description of what the experiment
-is meant for</li>
-</ul>
-
-<p><em>NB:</em> Avoid using special character such as greek letters. If
-you must have spaces within an element, make sure to quote it as
-<code>"genotype with space"</code>. </p>
-
-<p>We start an experiment by first creating a meta-data object (a simple
-list with key-value pairs)</p>
-
-<div class="highlight highlight-source-r"><pre>library(<span class="pl-smi">rosettR</span>)
-<span class="pl-smi">meta</span> <span class="pl-k">&lt;-</span> metaTemplate(<span class="pl-v">genotypes</span><span class="pl-k">=</span>c(<span class="pl-s"><span class="pl-pds">"</span>foo<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>bar<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>baz<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>qux<span class="pl-pds">"</span></span>),
-                     <span class="pl-v">treatments</span><span class="pl-k">=</span>c(<span class="pl-s"><span class="pl-pds">"</span>control<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>osmotic_stress<span class="pl-pds">"</span></span>),
-                     <span class="pl-v">timepoints</span><span class="pl-k">=</span>c(<span class="pl-c1">11</span>, <span class="pl-c1">14</span>, <span class="pl-c1">16</span>, <span class="pl-c1">18</span>),
-                     <span class="pl-v">nblocks</span><span class="pl-k">=</span><span class="pl-c1">3</span>,
-                     <span class="pl-v">reference</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>foo<span class="pl-pds">"</span></span>,
-                     <span class="pl-v">description</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>a test experiment<span class="pl-pds">"</span></span>)</pre></div>
-
-<p>Next we 'create' the experiment which generates the metadata-file, the
-directory structure in which to place the taken pictures and the
-manifest file that defines the randomized block design.</p>
-
-<div class="highlight highlight-source-r"><pre><span class="pl-smi">pathToExperiment</span> <span class="pl-k">&lt;-</span> <span class="pl-s"><span class="pl-pds">"</span>rosettrTest<span class="pl-pds">"</span></span>
-newExperiment(<span class="pl-smi">pathToExperiment</span>, <span class="pl-smi">meta</span>)</pre></div>
-
-<p>The manifest file can be open in your favor spread-sheet editor or
-just inspected directly by</p>
-
-<div class="highlight highlight-source-r"><pre>head(readManifest(<span class="pl-smi">pathToExperiment</span>))</pre></div>
-
-<p>To obtain an overview of the created experiment, to support preparing
-the plates, compile the template 'layout' report.</p>
-
-<div class="highlight highlight-source-r"><pre>makeReport(<span class="pl-smi">pathToExperiment</span>, <span class="pl-s"><span class="pl-pds">"</span>layout<span class="pl-pds">"</span></span>, <span class="pl-v">quiet</span><span class="pl-k">=</span><span class="pl-c1">TRUE</span>)</pre></div>
-
-<p>Let plants grow, take images (in jpg format) exactly in the order they
-are listed in the manifest and save them in the designated directories
-for each monitored day. Make sure that your camera's internal watch is
-correctly set as the time the photo was taken will be used to match
-each image to the corresponding line in the manifest. You are further
-adviced to lavel the plates (in the margin of the lid, visible to the
-camera but not covering any plants) so that you can be sure the order
-is correct. Further ensure that</p>
-
-<ul>
-<li>each plate is exactly in the centre of the image</li>
-<li>that it is straight, with the grid parallel to the edges of the
-image</li>
-<li>the background color and light is the same across all days</li>
-<li>that the zoom factor is the same across all days</li>
-</ul>
-
-<p>Thanks to to auto-correction steps in the analysis, it is possible to
-analyze image also with slight deviations from these rules but it
-result is likely to be better if they are kept.</p>
-
-<h1>
-<a id="image-analysis" class="anchor" href="#image-analysis" aria-hidden="true"><span class="octicon octicon-link"></span></a>Image analysis</h1>
-
-<p>Before detailing the process of analyzing a whole experiment, we give
-a brief description of the analysis of a single image. This process is
-defined in the function <code>analyzeImage</code> and consists of the
-following main steps:</p>
-
-<ul>
-<li>image files are renamed from e.g. IMGxxxx.jpg to plate001.jpg to
-match the names in the manifest (order obtained from time the
-picture was taken as recorded in the exif tag of the jpeg file)</li>
-<li>re-size the image to the <code>hires</code> width - default to 1500 pixels
-width (smaller gives faster analysis but too small will introduce
-noise)</li>
-<li>test for eccentricity of the plate in which the plate is detected
-and its eccentricity is recorded and correcte for.</li>
-<li>adjustment for plate location (using an optimization algorithm)</li>
-<li>made binary by clustering</li>
-<li>adjustment for plate rotation (using a mixture model algorithm)</li>
-<li>extracting contiguous features</li>
-<li>sorting features to different boxes in the grid by checking
-their distances to box-centers and total occupancy of boxes.</li>
-<li>generating a quality control picture.</li>
-</ul>
-
-<p>For testing purposes, we first unzip some example images to our
-example and set the scale directly</p>
-
-<div class="highlight highlight-source-r"><pre><span class="pl-smi">meta</span> <span class="pl-k">&lt;-</span> readMeta(<span class="pl-smi">pathToExperiment</span>)
-<span class="pl-smi">meta</span><span class="pl-k">$</span><span class="pl-smi">pixelsmm</span> <span class="pl-k">&lt;-</span> <span class="pl-c1">7.54</span> <span class="pl-c"># 7.54 pixels per millimeter</span>
-writeMeta(<span class="pl-smi">meta</span>, <span class="pl-smi">pathToExperiment</span>)
-unzip(system.file(<span class="pl-s"><span class="pl-pds">"</span>examples/rosettrTest.zip<span class="pl-pds">"</span></span>, <span class="pl-v">package</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>rosettR<span class="pl-pds">"</span></span>),
-      <span class="pl-v">exdir</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>.<span class="pl-pds">"</span></span>)</pre></div>
-
-<p>When all images have been taken you can generate an overview of them by</p>
-
-<div class="highlight highlight-source-r"><pre>makeReport(<span class="pl-smi">pathToExperiment</span>, <span class="pl-s"><span class="pl-pds">"</span>overview<span class="pl-pds">"</span></span>, <span class="pl-v">quiet</span><span class="pl-k">=</span><span class="pl-c1">TRUE</span>)</pre></div>
-
-<p>If all images look as expwcted, it is time to analyze them. First
-however, you should calibrate the scale of the images to get the right
-pixels to millimeter mapping. Do this by</p>
-
-<div class="highlight highlight-source-r"><pre>calibrateScale(<span class="pl-smi">pathToExperiment</span>)</pre></div>
-
-<p>Which will record the conversion in the meta-data file for future
-reference.</p>
-
-<p>Next, we analyze the images using <code>processPlateExperiment</code> function.</p>
+	  <a id="introduction-to-rosettr" class="anchor" href="#introduction-to-rosettr" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction to <em>rosettR</em>
+	</h1>
 
-<div class="highlight highlight-source-r"><pre>processPlateExperiment(<span class="pl-smi">pathToExperiment</span>, <span class="pl-v">checklocation</span><span class="pl-k">=</span><span class="pl-c1">FALSE</span>)</pre></div>
-
-<div class="highlight highlight-source-r"><pre>unzip(system.file(<span class="pl-s"><span class="pl-pds">"</span>examples/rosettrTestResults.zip<span class="pl-pds">"</span></span>, <span class="pl-v">package</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>rosettR<span class="pl-pds">"</span></span>),
-      <span class="pl-v">exdir</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>.<span class="pl-pds">"</span></span>)</pre></div>
-
-<p>we turn off the plate location detection to speedup this test analysis (and
-for demonstration purposed later in this vignette)</p>
-
-<h2>
-<a id="perform-quality-control" class="anchor" href="#perform-quality-control" aria-hidden="true"><span class="octicon octicon-link"></span></a>Perform quality control</h2>
-
-<p>Once images have been analyzed, statistical analysis can be done by
-compiling a suitable template report. This is done by running
-<code>makeReport</code> that creates a report for the experiment
-in the designated output directory (<code>[path to
-    experiment]/Output/reports/</code>). The first report to compile is
-typically a quality control report.</p>
-
-<div class="highlight highlight-source-r"><pre>makeReport(<span class="pl-smi">pathToExperiment</span>, <span class="pl-s"><span class="pl-pds">"</span>quality-check<span class="pl-pds">"</span></span>, <span class="pl-v">quiet</span><span class="pl-k">=</span><span class="pl-c1">TRUE</span>)</pre></div>
-
-<p>The final report can then be found in the <code>Output</code> folder of the
-experiment which shows QC images for all plates as well as graphs to
-indicate the presence of outliers.</p>
-
-<p>In the QC images, the grid is indicated by black boxes and features
-are shown with randomly chosen colors. Boxes in which features were
-found that could not be sorted to a distinct box are indicated by a
-red border. In a successful scenario, all boxes are black and each box
-contains a plant of color different from the plants in all neighboring
-boxes. However, when overlapping plants are identified, the
-corresponding boxes are cutout and all the area estimate of the plant
-in that box becomes the sum of all features in the box. This process
-will often yield poor area estimates and plates with many ambiguous
-boxes may be considered for removal using the <code>removeBoxes</code> function,
-or reprocessed with tuned image analysis (arguments for
-<code>analyzeImage</code>) parameters.</p>
-
-<h2>
-<a id="re-processing-failed-images" class="anchor" href="#re-processing-failed-images" aria-hidden="true"><span class="octicon octicon-link"></span></a>Re-processing failed images</h2>
-
-<p>If the analysis has gone wrong due to e.g the plate location not
-correctly identified, it is possible to reprocess the picture with
-improved parameters to image threshold, angle correction, plate
-displacement etc.</p>
-
-<p>As can be seen when studying the QC images of our example experiment,
-one image failed since it was excessively out of the centre of the
-image.</p>
-
-<div class="highlight highlight-source-r"><pre><span class="pl-smi">pda</span> <span class="pl-k">&lt;-</span> readPhenodata(<span class="pl-smi">pathToExperiment</span>)
-<span class="pl-smi">qcpic</span> <span class="pl-k">&lt;-</span> subset(<span class="pl-smi">pda</span>, <span class="pl-smi">timepoint</span> <span class="pl-k">==</span> <span class="pl-c1">11</span> <span class="pl-k">&amp;</span> <span class="pl-smi">plate</span> <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">"</span>plate001.jpg<span class="pl-pds">"</span></span>)<span class="pl-k">$</span><span class="pl-smi">qc</span>[<span class="pl-c1">1</span>]
-library(<span class="pl-smi">EBImage</span>)
-<span class="pl-smi">qcPath</span> <span class="pl-k">&lt;-</span> file.path(<span class="pl-smi">pathToExperiment</span>, <span class="pl-smi">qcpic</span>)
-<span class="pl-smi">qcImage</span> <span class="pl-k">&lt;-</span> readImage(<span class="pl-smi">qcPath</span>)
-display(<span class="pl-smi">qcImage</span>, <span class="pl-v">method</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>raster<span class="pl-pds">"</span></span>)</pre></div>
-
-<p>To resolve this problem, we reprocess that single image but this time
-with the location correction turned on.</p>
-
-<div class="highlight highlight-source-r"><pre><span class="pl-smi">mf</span> <span class="pl-k">&lt;-</span> readManifest(<span class="pl-smi">pathToExperiment</span>)
-<span class="pl-smi">mf</span> <span class="pl-k">&lt;-</span> subset(<span class="pl-smi">mf</span>, <span class="pl-smi">timepoint</span> <span class="pl-k">==</span> <span class="pl-c1">11</span> <span class="pl-k">&amp;</span> <span class="pl-smi">plate</span>  <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">"</span>plate001.jpg<span class="pl-pds">"</span></span>)
-<span class="pl-c">## reprocess the plate where using the plate location correction</span>
-<span class="pl-smi">pda</span> <span class="pl-k">&lt;-</span> reprocessPlateImages(<span class="pl-smi">pathToExperiment</span>, <span class="pl-smi">mf</span>, <span class="pl-v">checklocation</span><span class="pl-k">=</span><span class="pl-c1">TRUE</span>)</pre></div>
-
-<p>Inspect the result</p>
-
-<div class="highlight highlight-source-r"><pre><span class="pl-smi">pda</span> <span class="pl-k">&lt;-</span> readPhenodata(<span class="pl-smi">pathToExperiment</span>)
-<span class="pl-smi">qcpic</span> <span class="pl-k">&lt;-</span> subset(<span class="pl-smi">pda</span>, <span class="pl-smi">timepoint</span> <span class="pl-k">==</span> <span class="pl-c1">11</span> <span class="pl-k">&amp;</span> <span class="pl-smi">plate</span> <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">"</span>plate001.jpg<span class="pl-pds">"</span></span>)<span class="pl-k">$</span><span class="pl-smi">qc</span>[<span class="pl-c1">1</span>]
-display(readImage(file.path(<span class="pl-smi">pathToExperiment</span>, <span class="pl-smi">qcpic</span>)), <span class="pl-v">method</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>raster<span class="pl-pds">"</span></span>)</pre></div>
-
-<p>See the documenation for <code>analyzeImage</code> for other parameters that can
-be adjusted during image analysis.</p>
-
-<p>We ca then re-compile the quality control report</p>
-
-<div class="highlight highlight-source-r"><pre>makeReport(<span class="pl-smi">pathToExperiment</span>, <span class="pl-s"><span class="pl-pds">"</span>quality-check<span class="pl-pds">"</span></span>, <span class="pl-v">quiet</span><span class="pl-k">=</span><span class="pl-c1">TRUE</span>)</pre></div>
-
-<h1>
-<a id="interpretation" class="anchor" href="#interpretation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Interpretation</h1>
-
-<p>To obtain the final results from the experiment, compile the report to
-compare areas by plots and by ANOVA.</p>
-
-<div class="highlight highlight-source-r"><pre>makeReport(<span class="pl-smi">pathToExperiment</span>, <span class="pl-s"><span class="pl-pds">"</span>compare-areas<span class="pl-pds">"</span></span>, <span class="pl-v">quiet</span><span class="pl-k">=</span><span class="pl-c1">TRUE</span>)</pre></div>
-
-<p>You can also simply run</p>
-
-<div class="highlight highlight-source-r"><pre>readPhenodata(<span class="pl-smi">pathToExperiment</span>)</pre></div>
-
-<p>to get a dataframe with the results with which you can perform your
-own tailored statistical analysis.</p>
-
-<h1>
-<a id="additional-topics" class="anchor" href="#additional-topics" aria-hidden="true"><span class="octicon octicon-link"></span></a>Additional topics</h1>
-
-<h2>
-<a id="failed-plates" class="anchor" href="#failed-plates" aria-hidden="true"><span class="octicon octicon-link"></span></a>Failed plates</h2>
-
-<p>In the event of contamination, e.g. fungal growth on the plate you may
-want to prematurely discard plates. In that case, it is important to
-take place-holder images to get the order of images right. The
-recommendation is to replace the bad plate with an empty one and keep
-taking images of that empty plate. Such empty plates are detected
-during image analysis and areas are indicated as missing values. The
-QC picture will be replace by a place holder indicated that the plate
-was empty.</p>
-
-<h2>
-<a id="parallel-computing" class="anchor" href="#parallel-computing" aria-hidden="true"><span class="octicon octicon-link"></span></a>Parallel computing</h2>
-
-<p>Image analysis can be done in parallel to speed up computation
-considerably. The <code>rosettR</code> package uses
-<a href="https://cran.r-project.org/web/packages/plyr/index.html">plyr</a> which
-support using multiple CPUs on a single host via the
-<a href="https://cran.r-project.org/web/packages/doParallel/index.html">doParallel</a>
-package. Simple register a parallel backend by for using e.g. 4 CPUs
-by</p>
-
-<div class="highlight highlight-source-r"><pre>library(<span class="pl-smi">doParallel</span>)
-registerDoParallel(<span class="pl-v">cores</span><span class="pl-k">=</span><span class="pl-c1">4</span>)</pre></div>
-
-<p>and then processing images adding the argument <code>.parallel=TRUE</code>. The
-memory consumption is quite low so you can safely use as many CPUs as
-you have minus 1 (to not make your computer unresponsive).</p>
-
-<h1>
-<a id="session-info" class="anchor" href="#session-info" aria-hidden="true"><span class="octicon octicon-link"></span></a>Session info</h1>
-
-<p>Here is the output of sessionInfo() on the system on which this document was compiled:</p>
-
-<div class="highlight highlight-source-r"><pre>sessionInfo()</pre></div>
+	<p>A major area of interest in plant science is studying the effects that manipulating genes have on the plant phenotype. For example, if a plant lacks a certain gene and then grows much slower in the presence of salt in the growth medium versus a wildtype plant, one may speculate that that gene confers salt tolerance.</p>
+
+	<p>As often is the case in biology, such effects on phenotype can be subtle requiring experiments with large numbers biological replicates to enable accurate conclusions. To support our research, we wanted to perform a large number of phenotyping experiments for Arabidopsis and needed a solution that was</p>
+
+	<ul>
+	  <li>Easy to setup and operate</li>
+	  <li>Affordable</li>
+	  <li>High-throughput</li>
+	  <li>Fast</li>
+	  <li>Easy and efficient to use for studying multiple different treatments
+	    and genotypes</li>
+	</ul>
+
+	<p>Since none of the available solutions met our requirements, we decided to implement our own experiment protocol and to bundle the data analysis as an R-package. Since we found the package very useful, we provide it to the public in the hope that it will be valuable to other plant scientists with similar needs.</p>
+
+	<h2>
+	  <a id="experiment" class="anchor" href="#experiment" aria-hidden="true"><span class="octicon octicon-link"></span></a>The supported phenotyping experiment</h2>
+
+	<p>rosettR can be used to estimate the areas of seedlings that grow in predominantly two dimensions such as the rosettes of <em>Arabidopsis thaliana</em> seedlings. Briefly, plants are grown on solid medium in tissue culture plates and photographed at set intervals. Images are then analyzed using the functions implemented in this package to estimate area and relative growth rate of the seedlings over time. These estimated areas can then used to compare the differences between genotypes and the effect of applied treatments.</p>
+
+	<b>FLOWCHART FIGURE</b>
+
+	<h2><a id="automated" class="anchor" href="#automated" aria-hidden="true"><span class="octicon octicon-link"></span></a>Automated image analysis</h2>
+
+	<p>The image analysis is fully contained in the R-package and requires minimal user interaction. Simply place the image files in the directories created during experiment setup and start the analysis. Plate displacement and rotation is automatically taken care of.</p>
+
+	<b>FLOWCHART FIGURE</b>
+
+	<h2><a id="reports" class="anchor" href="#reports" aria-hidden="true"><span class="octicon octicon-link"></span></a>Automated reports</h2>
+
+	rosettR comes with template <a href="http://yihui.name/knitr">knitr</a> reports that directly can be compiled without editing.
+
+	<h3>The <a href="example-reports/layout/layout.html">layout report</a> provides a tailored randomized block design</h3>
+
+	<center><img src="images/layout.png" width="400px" alt="screenshot from the template layout report"></center>
+
+	<h3>The <a href="example-reports/quality-check/quality-check.html">quality control report</a> gives detailed information on the image analysis</h3>
+
+	<center><img src="images/qcpics.png" width="400px" alt="a QC visualization is made for each image"></center>
+
+	<center><img src="images/growth.png" width="400px" alt="growth curves for all seedlings, negative values indicate possible technical problems"></center>
+
+
+	<h3>The <a href="example-reports/quality-check/quality-check.html">are comparison report</a> shows significant effects of treatments and genotypes</h3>
+
+
+	<center><img src="images/comp1.png" width="400px" alt="estimated differences"></center>
+
+	<center><img src="images/comp2.png" width="400px" alt="html and spreadsheet tables of estimated differences in area and relative growth rate"></center>
+
+
+	<h2><a id="requirements" class="anchor" href="#requirements" aria-hidden="true"><span class="octicon octicon-link"></span></a>Requirements</h2>
+
+	<ul>
+	  <li>Any off-the-shelf digital camera</li>
+	  <li>Growth chamber and basic lab materials</li>
+	  <li>A PC (Windows, Linux) with R and the EBImage package</li>
+	</ul>
+
+	<h2><a id="availability" class="anchor" href="#availability" aria-hidden="true"><span class="octicon octicon-link"></span></a>Availability</h2>
+
+	Free for anyone to use, share and modify (<a href="http://www.gnu.org/licenses/gpl-3.0.en.html">GPL</a>).
+
+	<h2><a id="help" class="anchor" href="#help" aria-hidden="true"><span class="octicon octicon-link"></span></a>Help</h2>
+
+	If you have feedback, would like help, found a bug or want to make a contribution, open a ticket or submit a pull request to <a href="http://github.com/hredestig/rosettr">our github repository</a>.
+
       </section>
     </div>
-
+    
     <!-- FOOTER  -->
     <div id="footer_wrap" class="outer">
       <footer class="inner">
-        <p class="copyright">rosettR maintained by <a href="https://github.com/hredestig">hredestig</a></p>
-        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+	<p class="copyright">rosettR maintained by <a href="https://github.com/hredestig">hredestig</a></p>
+	<p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
       </footer>
     </div>
 
-    
+    <script type="text/javascript">
+      var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+      document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+      try {
+      var pageTracker = _gat._getTracker("UA-72247303-1");
+      pageTracker._trackPageview();
+      } catch(err) {}
+    </script>
 
   </body>
 </html>
