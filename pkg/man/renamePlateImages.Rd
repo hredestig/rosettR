@@ -45,7 +45,7 @@ take care of all file renaming. This function is only exported in
 order to facilitate transition from legacy software.
 }
 \examples{
-path <- makeTestExperiment(tempdir())
+path <- makeTestExperiment(file.path(tempdir(), "xyz"))
 newnames <- c("plate003.jpg", "plate002.jpg", "plate004.jpg", "plate001.jpg",
               "plate005.jpg", "plate006.jpg")
 ## simulate renaming all files

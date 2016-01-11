@@ -334,7 +334,7 @@ processPlateExperiment <- function(path, meta=readMeta(path), rename=TRUE,
                                    analyze=TRUE, ...) {
   outDir <- file.path(path, "Output")
   qcDir <- file.path(outDir, "qc")
-  if(file.exists(qcDir))
+  if(file.exists(qcDir) & analyze)
     stop("previous QC directory already exists ", qcDir)
   mf <- readManifest(path)
   if(file.exists(file.path(outDir, "sealed")) & rename) {
@@ -401,7 +401,7 @@ processPlateExperiment <- function(path, meta=readMeta(path), rename=TRUE,
 #' good to save this data frame to be able to revert file renaming
 #' @export
 #' @examples
-#' path <- makeTestExperiment(tempdir())
+#' path <- makeTestExperiment(file.path(tempdir(), "xyz"))
 #' newnames <- c("plate003.jpg", "plate002.jpg", "plate004.jpg", "plate001.jpg",
 #'               "plate005.jpg", "plate006.jpg")
 #' ## simulate renaming all files
@@ -416,7 +416,7 @@ processPlateExperiment <- function(path, meta=readMeta(path), rename=TRUE,
 #' file.path(path, subdir, intermediate)))
 #' with(renaming, mapply(file.rename, file.path(path, subdir, intermediate),
 #' file.path(path, subdir, image)))
-#' list.files(file.path(path, 'D11'))
+#' list.files(file.path(path, "D11"))
 #' @author Henning Redestig
 renamePlateImages <- function(path, newnames, dry=TRUE, verbose=TRUE,
                                 subdirs=NULL) {
