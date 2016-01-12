@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
-<title>Introduction to <em>rosettR</em></title>
+<title>Introduction to rosettR</title>
 
 <script type="text/javascript">
 window.onload = function() {
@@ -200,9 +200,6 @@ compared </li>
 <pre><code class="r">library(rosettR)
 </code></pre>
 
-<pre><code>## Note: the specification for S3 class &quot;AsIs&quot; in package &#39;jsonlite&#39; seems equivalent to one from package &#39;BiocGenerics&#39;: not turning on duplicate class definitions for this class.
-</code></pre>
-
 <pre><code class="r">meta &lt;- metaTemplate(genotypes=c(&quot;foo&quot;, &quot;bar&quot;, &quot;baz&quot;, &quot;qux&quot;),
                      treatments=c(&quot;control&quot;, &quot;osmotic_stress&quot;),
                      timepoints=c(11, 14, 16, 18),
@@ -330,9 +327,6 @@ unzip(system.file(&quot;examples/rosettrTest.zip&quot;, package=&quot;rosettR&qu
 <pre><code class="r">makeReport(pathToExperiment, &quot;quality-check&quot;, quiet=TRUE)
 </code></pre>
 
-<pre><code>## Warning: Removed 136 rows containing non-finite values (stat_boxplot).
-</code></pre>
-
 <p>The final report can then be found in the <code>Output</code> folder of  experiment which shows QC images for all plates as well as graphs to indicate the presence of outliers.</p>
 
 <p>In the QC images, the grid is indicated by black boxes and features are shown with randomly chosen colors. Boxes in which features were found that could not be sorted to a distinct box are indicated by a red border. In a successful scenario, all box-frames are black and each box contains a plant of color different from the plants in all neighboring boxes. However, when overlapping plants are identified, corresponding boxes are cut out and all the area estimate of the seedling in that box becomes the sum of all features in the box. This may yield poor area estimates and plates with many ambiguous boxes may be considered for removal using the <code>removeBoxes</code> function, or reprocessed with tuned image analysis (see <code>?analyzeImage</code> for arguments) parameters.</p>
@@ -375,9 +369,6 @@ display(readImage(file.path(pathToExperiment, qcpic)), method=&quot;raster&quot;
 <p>We can then re-compile the quality control report</p>
 
 <pre><code class="r">makeReport(pathToExperiment, &quot;quality-check&quot;, quiet=TRUE)
-</code></pre>
-
-<pre><code>## Warning: Removed 136 rows containing non-finite values (stat_boxplot).
 </code></pre>
 
 <h1>Interpretation</h1>
