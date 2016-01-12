@@ -58,94 +58,6 @@
 works now, see example reprocessPlateImages
 
 plus document this in qc report
-* DONE basic statistics report germplasm -- treatment
-  - State "DONE"       from "TODO"       [2015-11-11 Wed 18:19]
-Setting up the basic G - T comparison
-#+BEGIN_SRC R :session *R*
-  library(rosettR)
-  library(plyr)
-  library(multcomp)
-
-  ## prep data
-  file.copy("/data/prod/Projects/Arabidopsis/BIO1-032/phenotyping/plate/EXP029_MERIT/Output/data.csv",
-            "data.csv", overwrite = TRUE)
-  file.copy("/data/prod/Projects/Arabidopsis/BIO1-032/phenotyping/plate/EXP029_MERIT/Output/reports/plate-compare_areas_germplasm_treatments-Ler_wt/anova-results.csv",
-            "anova-results.csv", overwrite = TRUE)
-  expdf <- createPlateTestDf(read.csv("data.csv"))
-
-  ## new way
-  new <- simpleAnovaTableGT(expdf, "Ler_wt", "AREA_12")
-
-  ## old way
-  traits <- colnames(expdf)[c(grep('^AREA', colnames(expdf)),
-                              grep('^RGR', colnames(expdf)))]
-  expdf$reference <- "Ler_wt"
-  vars <- 'treatment'
-  expdf$TRT <- apply(expdf[, c('GERMPLASM', vars)], 1, paste, collapse='_')
-  nmeta <-
-    (BCS.PhenoData::make.metadata(traits=traits,
-                                   treats=vars,
-                                   formats=rep("NUM.2", length(traits)),
-                                   short=traits,
-                                   units=c(rep("mm2",
-                                     sum(grepl('^AREA', colnames(expdf)))),
-                                     rep("", sum(grepl('^RGR', colnames(expdf)))))))
-
-  data <- data.frame(EXPT="ba", GERMPLASM=expdf$GERMPLASM, BLOCK=expdf$BLOCK, 
-                     SUBBLOCK=NA, SUBSUBBLOCK=NA, ROW=expdf$ROW, RANGE=expdf$RANGE, 
-                     expdf[, c(vars, traits)])
-  data$TRT <- apply(data[, c('GERMPLASM', vars)], 1, paste, collapse='_')
-  pheno <- BCS.PhenoData::make.phenodata(data, nmeta)
-
-
-  left <- right <- data.frame(germplasm=character(), treatment=character())
-  for(g in as.character(unique(data$GERMPLASM))) {
-    for(t in as.character(unique(data$treatment))) {
-      for(r in "Ler_wt") {
-        if(g == r) next
-        left <- rbind(left, data.frame(germplasm=g, treatment=t, stringsAsFactors=FALSE))
-        right <- rbind(right, data.frame(germplasm=r, treatment=t, stringsAsFactors=FALSE))
-      }
-    }
-  }
-
-  skip <- apply(left, 1, paste, collapse='') == apply(right, 1, paste, collapse='')
-  left <- left[!skip,]
-  right <- right[!skip,]
-  mat <-
-    plyr::laply(1:nrow(left), function(i) c(paste(left[i,], collapse='_'),
-                                            paste(right[i,], collapse='_')))
-
-  cm <- BCS.PhenoData::create.cm(contrasts=mat, levels=levels(factor(data$TRT)))
-  results <- BCS.PhenoData::anova.phenodata(pheno, factor="TRT",
-                                            random="~ BLOCK", cm=cm)
-  cvIndex <- match("CV", names(results))
-  results_df <- BCS.Phenotyping:::anova_phenodata_to_data_frame(results[-cvIndex],
-                                                                pheno, left)
-
-  ## check that it's ok
-  results_df$comparison <- gsub(" ", "_", results_df$comparison)
-  old <- subset(results_df, trait == "AREA_12")
-  ba <- merge(old, new, by="comparison")
-  head(ba[, c("comparison", "Mean1.x", "Mean1.y")])
-  with(ba, cor(Mean2.y, Mean2.x))
-  with(ba, MASS::eqscplot(Mean1, mean_left))
-  abline(c(0,1))
-  with(ba, MASS::eqscplot(Mean2, mean_right))
-  abline(c(0,1))
-  with(ba, plot(Pvalue, pvalue))
-  with(ba, MASS::eqscplot(Effect, Estimate))
-  abline(c(0,1))
-
-#+END_SRC
-
-#+BEGIN_SRC R
-  file.copy("pkg/inst/reports/compare-areas.Rmd",
-            file.path(.libPaths()[1], "rosettR/reports"), overwrite=TRUE)
-  file.copy("pkg/inst/templates/compare-areas.html",
-            file.path(.libPaths()[1], "rosettR/templates"), overwrite=TRUE)
-  makeReport("rosettrTest", "compare-areas")
-#+END_SRC
 * DONE prettify reports with css and stuff
   - State "DONE"       from "TODO"       [2015-11-12 Thu 14:22]
 http://www.r-bloggers.com/fast-track-publishing-using-knitr-the-setup-using-rprofile-with-custom-css-some-html-goodies-part-ii/
@@ -270,10 +182,11 @@ on jpegs without exif an tag
 * DONE io website
   SCHEDULED: <2016-01-16 Sat>
   - State "DONE"       from "TODO"       [2016-01-11 Mon 09:16]
+* DONE add link to vignette
+  SCHEDULED: <2016-01-11 Mon>
+  - State "DONE"       from "TODO"       [2016-01-12 Tue 09:14]
+* TODO add builds
+  SCHEDULED: <2016-01-11 Mon>
 
 * TODO flowcharts
   SCHEDULED: <2016-01-16 Sat>
-* TODO add builds
-  SCHEDULED: <2016-01-11 Mon>
-* TODO add link to vignette
-  SCHEDULED: <2016-01-11 Mon>
