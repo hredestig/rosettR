@@ -13,8 +13,20 @@ calibrateScale(path)
 the number of pixels per mm
 }
 \description{
-Used to figure out how many pixels there are on 1 mm by allowing
-the user to click on an image. Updates the meta data with the
-calculated pixels per millimeter
+In order to make results comparable across different experiments,
+it is necessary to know how many pixels correspond to 1
+millimeter. To record this pixels-to-millimeter conversion, measure
+the distance on a plate between two points that you can easily
+recognize in the image. On the plates used to test this package, 80
+mm correspondss to 4 wells. Then left click with the mouse on the
+same two points separated by that distance. The pixels/mm is then
+automatically recorded in the meta-data associated with the given
+experiment and used in following image analysis.
+}
+\examples{
+\dontrun{
+makeTestExperiment("rosettrTest")
+calibrateScale("rosettrTest")
+}
 }
 

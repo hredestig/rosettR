@@ -45,8 +45,8 @@ take care of all file renaming. This function is only exported in
 order to facilitate transition from legacy software.
 }
 \examples{
-path <- makeTestExperiment(tempdir())
-newnames <- c("plate003.jpg", "plate002.jpg", "plate004.jpg", "plate001.jpg",
+path <- makeTestExperiment(file.path(tempdir(), "xyz"))
+newnames <- c("plate001.jpg", "plate002.jpg", "plate003.jpg", "plate004.jpg",
               "plate005.jpg", "plate006.jpg")
 ## simulate renaming all files
 renamePlateImages(path, newnames)
@@ -60,7 +60,7 @@ with(renaming, mapply(file.rename, file.path(path, subdir, newname),
 file.path(path, subdir, intermediate)))
 with(renaming, mapply(file.rename, file.path(path, subdir, intermediate),
 file.path(path, subdir, image)))
-list.files(file.path(path, 'D11'))
+list.files(file.path(path, "D11"))
 }
 \author{
 Henning Redestig
