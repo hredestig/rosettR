@@ -9,8 +9,16 @@ and provides data analysis with minimal required user interaction.
 ## Installation
 
 This package is not yet on CRAN so installation is best done using the
-[devtools package](https://github.com/hadley/devtools). After
-installing devtools, in R, do
+[devtools package](https://github.com/hadley/devtools). First, install
+EBImage which is a dependency from bioconductor that needs to be
+installed separately. In R do:
+
+```R
+source("http://www.bioconductor.org/biocLite.R")
+biocLite("EBImage")
+```
+
+Then, after installing devtools, do
 
 ```R
 library(devtools)
