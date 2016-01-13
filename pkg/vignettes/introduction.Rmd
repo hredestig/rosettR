@@ -1,19 +1,9 @@
----
-title: "Introduction to rosettR"
-author: Henning Redestig
-email: henning.red@gmail.com
-date: "22nd November 2015"
-package: "`r packageVersion('rosettR')`"
-abstract: The rosettR package implements a fully described, self-contained, high-throughput and affordable phenotyping platform for measuring growth rate in Arabidopsis.
-output:
-  html_document
-graphics: yes
-vignette: >
-  %\VignetteIndexEntry{Introduction to rosettR}
-  %\VignettePackage{rosettR}
-  %\VignetteEngine{knitr::knitr}
-  %\VignetteEncoding{UTF-8}
----
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Introduction to rosettR}
+-->
+
+
 
 ```{r pre-fix, echo=FALSE}
 library(knitr)
