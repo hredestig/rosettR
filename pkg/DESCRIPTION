@@ -1,14 +1,15 @@
 Package: rosettR
 Type: Package
 Title: Easy image based phenotyping of plants grown in plates
-Version: 0.0.5
+Version: 0.0.6
 Author: Henning Redestig
 Maintainer: Henning Redestig <henning.red@gmail.com>
 Description: Implement data management, image and statistical analysis
-   for a plate based in vitro growth assay of Arabidopsis seedlings.
+    for a plate based in vitro growth assay of Arabidopsis seedlings.
 License: GPL-3
 Suggests:
-    testthat
+    testthat,
+    ggplot2
 Imports:
     methods,
     EBImage,
@@ -22,5 +23,5 @@ Imports:
     multcomp
 LinkingTo: Rcpp
 SystemRequirements: Rcpp
-RoxygenNote: 5.0.0
+RoxygenNote: 5.0.1
 VignetteBuilder: knitr
