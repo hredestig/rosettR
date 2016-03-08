@@ -12,9 +12,9 @@ CharacterVector date_original(SEXP file) {
     Rcpp::CharacterVector res(cfile.size());
     
     for(int i = 0; i < cfile.size(); i++) {
-      FILE *fp = fopen(cfile(i), "rb");
+	  FILE *fp = fopen(cfile(i), "rb");
       if(!fp) { 
-		throw std::invalid_argument("Can't open file.\n"); 
+		throw std::invalid_argument("can't open image file.\n"); 
       }
       fseek(fp, 0, SEEK_END);
       unsigned long fsize = ftell(fp);
@@ -42,7 +42,8 @@ CharacterVector date_original(SEXP file) {
       }
     }
     return res;
-
+  } catch(std::exception &ex) {
+		forward_exception_to_r(ex);
   } catch(...) {
     ::Rf_error("unknown error in date_original");
   }

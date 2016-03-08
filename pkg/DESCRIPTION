@@ -1,7 +1,7 @@
 Package: rosettR
 Type: Package
 Title: Easy image based phenotyping of plants grown in plates
-Version: 0.0.7
+Version: 0.0.8
 Author: Henning Redestig
 Maintainer: Henning Redestig <henning.red@gmail.com>
 Description: Implement data management, image and statistical analysis

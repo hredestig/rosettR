@@ -98,7 +98,7 @@ createPlateQcDf <- function(df, html=TRUE) {
 #' @examples
 #' dateTaken(system.file("examples/plate001.jpg", package="rosettR"))
 dateTaken <- function(file) {
-  exifDate <- date_original(file)
+  exifDate <- date_original(normalizePath(file))
   if(is.null(exifDate))
     return(NA)
   as.POSIXct(strptime(exifDate,"%Y:%m:%d %H:%M:%S"))
