@@ -49,7 +49,7 @@ The test results are also given as [anova-results.csv](anova-results.csv)
 
 We create effect plots for all comparsions where the mean is indicated by the dot, and the 95% confidence interval indicated by a horizontal line. Red-dots indicate estimates associated with a p-value lower than 0.05.
 
-```{r effectplots-area, echo=FALSE, warning=FALSE, fig.width=10, fig.height=7}
+```{r effectplots-area, echo=FALSE, warning=FALSE, fig.width=10, fig.height=12}
 
 subData <- subset(anovaResults, grepl("^AREA", response))
 ggplot(subData, aes(Estimate, comparison)) +
@@ -63,7 +63,7 @@ ggplot(subData, aes(Estimate, comparison)) +
 
 ```
 
-```{r effectplots-rgr, echo=FALSE, warning=FALSE, fig.width=10, fig.height=7}
+```{r effectplots-rgr, echo=FALSE, warning=FALSE, fig.width=10, fig.height=12}
 
 subData <- subset(anovaResults, grepl("^RGR", response))
 ggplot(subData, aes(Estimate, comparison)) +
