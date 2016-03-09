@@ -39,7 +39,7 @@ Multiple comparisons were performed using the [multcomp](https://cran.r-project.
 
 traits <- colnames(expdf)[c(grep("^AREA", colnames(expdf)),
                             grep("^RGR", colnames(expdf)))]
-anovaResults <- simpleAnovaTableGT(expdf, meta$reference, traits)
+suppressWarnings(anovaResults <- simpleAnovaTableGT(expdf, meta$reference, traits))
 write.csv(anovaResults, "anova-results.csv")
 kable(format(anovaResults, digits=2), "html",
       table.attr='id="anova_results" class="table table-hover"')
