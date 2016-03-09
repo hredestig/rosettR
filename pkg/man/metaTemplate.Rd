@@ -7,7 +7,7 @@
 metaTemplate(genotypes, treatments = "control", timepoints = c(11, 14, 16,
   18), nblocks = 10, description = "", pixelsmm = 16,
   name = c("6x6.abcd", "6x6.ab"), plateRadius = 76, nBoxGrid = 6,
-  boxWidth = 20, reference = NULL)
+  boxWidth = 20, reference)
 }
 \arguments{
 \item{genotypes}{the names of the genotypes used in the experiment.}
@@ -35,7 +35,8 @@ left-out.}
 \item{boxWidth}{the width of a well in millimeter}
 
 \item{reference}{the genotype that is meant to be used as the
-reference}
+reference. Necessary for the 'compare areas' report but can be left
+\code{NULL} if not applicable.}
 }
 \value{
 a list with meta data for the experiment
@@ -63,6 +64,6 @@ half of the plate.}
 }
 \examples{
 metaTemplate(c("foo", "bar", "baz", "qux"),
-             c("control", "osmotic_stress"))
+             c("control", "osmotic_stress"), reference="foo")
 }
 

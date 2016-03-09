@@ -2,8 +2,16 @@
 #'
 #' This package comes with a set of pre-defined reports for facilitating
 #' preparing and evaluating your in-vitro plate phenotyping experiments. This
-#' function allows to conveniently compile reports for created experiments.
-#' @param path path on the file system to where the experiment directory is located
+#' function allows to conveniently compile reports for created experiments by
+#' copying a template report from the package itself to the your experiment
+#' directory and compiling it there.
+#'
+#' If you need to adjust the report, such as changing the figure sizes, you are
+#' advised to rename the directory where the report resides to avoid later calls
+#' to \code{makeReport} over-writing your adjusted report.
+#' @param path path on the file system to where the experiment directory is
+#' located. Any existing report with the same name in this location will be
+#' over-written.
 #' @param report the report to compile, see \code{\link{plate-reports}}
 #' @param name the name of the directory in which to place the report. Takes the
 #' name of the report if left as \code{NULL}.
@@ -12,7 +20,7 @@
 #' @return nothing, used for its side effect
 #' @export
 #' @examples
-#' meta <- metaTemplate(letters[1:4], treatments=c("control", "osmotic"))
+#' meta <- metaTemplate(letters[1:4], treatments=c("control", "osmotic"), reference="a")
 #' newExperiment(file.path(tempdir(), "testExperiment"), meta)
 #' makeReport(file.path(tempdir(), "testExperiment"), "layout")
 #' @author Henning Redestig
