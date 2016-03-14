@@ -442,14 +442,14 @@ renamingDf <- function(path, newnames, pattern="^(EXP.*_*)*D\\d+",
 }
 
 renamingDfSingle <- function(d, newnames) {
-  null_df <-
+  nullDf <-
     data.frame(image=character(), date=character(), newname=character(),
                subdir=character(),
                intermediate=character(), stringsAsFactors=FALSE)
   images <- list.files(d, pattern="[jJ][pP][eE]*[gG]$")
   if(length(images) == 0) {
     warning("no jpeg files in advertised directory ", d)
-    return(null_df)
+    return(nullDf)
   }
   if(!length(images) == length(newnames))
     stop("the number of images in ", d, " (", length(images),
