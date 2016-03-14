@@ -540,6 +540,7 @@ analyzeImage <- function(file, griddf, pixelsmm, boxWidth, nBoxGrid, plateRadius
 #' automatically recorded in the meta-data associated with the given
 #' experiment and used in following image analysis.
 #' @param path path to the experiment to calibrate the scale for
+#' @param imgFile the file name of an image to use to calibrate the scale
 #' @return the number of pixels per mm
 #' @export
 #' @examples
@@ -547,10 +548,13 @@ analyzeImage <- function(file, griddf, pixelsmm, boxWidth, nBoxGrid, plateRadius
 #' makeTestExperiment("rosettrTest")
 #' calibrateScale("rosettrTest")
 #' }
-calibrateScale <- function(path) {
+calibrateScale <- function(path, imgFile=NULL) {
   meta <- readMeta(path)
   mf <- readManifest(path)
-  im <- readImage(file.path(path, mf$image[1]))
+  if(is.null(imgFile))
+    imgFile <- list.files(file.path(path, dirname(mf$image[1])),
+                          full.names=TRUE)[1]
+  im <- readImage(imgFile)
   done <- FALSE
   while(!done) {
     display(im, method="raster")
