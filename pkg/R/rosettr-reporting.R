@@ -41,7 +41,7 @@ makeReport <- function(path, report, name=NULL, browse=interactive(),
   setwd(reportDir)
   cat("
    This report was compiled on `r date()` by `r Sys.info()['effective_user']`
-   on `r Sys.info()['sysname']` using rosettR v`r packageVersion('rosettR')`
+   on `r Sys.info()['sysname']` using rosettR v`r packageVersion('rosettR')`\n
   ", file=basename(allReports[chosen]), append=TRUE)
   template <- system.file(sprintf("templates/template.html", chosen), package=PKG)
   altTemplate <- system.file(sprintf("templates/%s.html", chosen), package=PKG)

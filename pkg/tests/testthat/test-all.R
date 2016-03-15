@@ -21,7 +21,7 @@ test_that("a plate rotation can be compensated", {
     ## display(binaryCorrected, method="raster")
     ## abline(v=260, col="red")
     ## curiosly some difference in results linux / windows
-    abs(estAngle + -origAngle + 4) < 2
+    abs(4 + origAngle + estAngle) < 2
   }, is_true())
 })
 
