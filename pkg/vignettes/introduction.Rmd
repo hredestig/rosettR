@@ -139,6 +139,8 @@ When all images have been taken you can generate an overview of them by
 makeReport(pathToExperiment, "overview", quiet=TRUE)
 ```
 
+The generation of thumbnails is rather fairly, expect a few seconds per image.
+
 If all images look as expected, it is time to analyze them. First however, you should calibrate the scale of the images to get the right pixels to millimeter mapping. Do this by (see `?calibrateScale` for further details)
 
 ```{r calibrate, eval=FALSE}
@@ -147,7 +149,7 @@ calibrateScale(pathToExperiment)
 
 Which will record the conversion in the meta-data file for future reference.
 
-Next, we analyze the images using `processPlateExperiment` function.
+Next, we analyze the images using `processPlateExperiment` function. This will take up to 20s per image.
 
 ```{r eval=FALSE} 
 processPlateExperiment(pathToExperiment, checklocation=FALSE)
@@ -222,7 +224,7 @@ makeReport(pathToExperiment, "quality-check", quiet=TRUE)
 
 # Interpretation
 
-To obtain the final results from the experiment, compile the report to compare areas by plots and by ANOVA.
+To obtain the final results from the experiment, compile the report to compare areas by plots and by ANOVA. The area comparisons take up to a few minutes per measurement day included in the experiment.
 
 ```{r compare, results="hide"}
 makeReport(pathToExperiment, "compare-areas", quiet=TRUE)

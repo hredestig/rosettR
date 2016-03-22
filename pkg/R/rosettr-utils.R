@@ -115,6 +115,7 @@ dateTaken <- function(file) {
 #' @param df a data frame containing analysis results for the given
 #' @param manifest a data frame containing the manifest (description
 #' of each plate and well for the whole experiment) experiment
+#' @param reference a genotype to record as the reference in the experiment.
 #' @return nothing, used for side effect
 #' @export
 #' @name rwMeta
@@ -125,6 +126,15 @@ writeMeta <- function(meta, path)
 #' @export
 readMeta <- function(path)
   fromJSON(file.path(path, "meta"))
+
+#' @name rwMeta
+#' @export
+setReference <- function(path, reference) {
+  meta <- readMeta(path)
+  meta$reference <- reference
+  writeMeta(meta, path)
+}
+
 
 #' @name rwMeta
 #' @export
@@ -442,14 +452,14 @@ renamingDf <- function(path, newnames, pattern="^(EXP.*_*)*D\\d+",
 }
 
 renamingDfSingle <- function(d, newnames) {
-  null_df <-
+  nullDf <-
     data.frame(image=character(), date=character(), newname=character(),
                subdir=character(),
                intermediate=character(), stringsAsFactors=FALSE)
   images <- list.files(d, pattern="[jJ][pP][eE]*[gG]$")
   if(length(images) == 0) {
     warning("no jpeg files in advertised directory ", d)
-    return(null_df)
+    return(nullDf)
   }
   if(!length(images) == length(newnames))
     stop("the number of images in ", d, " (", length(images),

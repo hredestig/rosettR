@@ -4,10 +4,12 @@
 \alias{calibrateScale}
 \title{Calibrate the scale of an image}
 \usage{
-calibrateScale(path)
+calibrateScale(path, imgFile = NULL)
 }
 \arguments{
 \item{path}{path to the experiment to calibrate the scale for}
+
+\item{imgFile}{the file name of an image to use to calibrate the scale}
 }
 \value{
 the number of pixels per mm

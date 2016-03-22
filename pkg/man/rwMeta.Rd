@@ -5,6 +5,7 @@
 \alias{readMeta}
 \alias{readPhenodata}
 \alias{rwMeta}
+\alias{setReference}
 \alias{writeManifest}
 \alias{writeMeta}
 \alias{writePhenodata}
@@ -13,6 +14,8 @@
 writeMeta(meta, path)
 
 readMeta(path)
+
+setReference(path, reference)
 
 readPhenodata(path)
 
@@ -26,6 +29,8 @@ readManifest(path)
 \item{meta}{the meta data object}
 
 \item{path}{path to the experiment directory}
+
+\item{reference}{a genotype to record as the reference in the experiment.}
 
 \item{df}{a data frame containing analysis results for the given}
 
