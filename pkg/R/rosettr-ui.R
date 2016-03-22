@@ -79,7 +79,7 @@ makeTestExperiment <- function(exdir=".") {
 #' plate. Layout is assumed to be square but with the corner wells
 #' left-out.
 #' @param boxWidth the width of a well in millimeter
-#' @param reference the genotype that is meant to be used as the
+#' @param reference a list of genotypes that is meant to be used as the
 #' reference. Necessary for the 'compare areas' report but can be left
 #' \code{NULL} if not applicable.
 #' @return a list with meta data for the experiment

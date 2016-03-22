@@ -34,7 +34,7 @@ left-out.}
 
 \item{boxWidth}{the width of a well in millimeter}
 
-\item{reference}{the genotype that is meant to be used as the
+\item{reference}{a list of genotypes that is meant to be used as the
 reference. Necessary for the 'compare areas' report but can be left
 \code{NULL} if not applicable.}
 }
