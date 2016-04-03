@@ -8,7 +8,9 @@ makeReport(path, report, name = NULL, browse = interactive(),
   quiet = FALSE)
 }
 \arguments{
-\item{path}{path on the file system to where the experiment directory is located}
+\item{path}{path on the file system to where the experiment directory is
+located. Any existing report with the same name in this location will be
+over-written.}
 
 \item{report}{the report to compile, see \code{\link{plate-reports}}}
 
@@ -25,10 +27,17 @@ nothing, used for its side effect
 \description{
 This package comes with a set of pre-defined reports for facilitating
 preparing and evaluating your in-vitro plate phenotyping experiments. This
-function allows to conveniently compile reports for created experiments.
+function allows to conveniently compile reports for created experiments by
+copying a template report from the package itself to the your experiment
+directory and compiling it there.
+}
+\details{
+If you need to adjust the report, such as changing the figure sizes, you are
+advised to rename the directory where the report resides to avoid later calls
+to \code{makeReport} over-writing your adjusted report.
 }
 \examples{
-meta <- metaTemplate(letters[1:4], treatments=c("control", "osmotic"))
+meta <- metaTemplate(letters[1:4], treatments=c("control", "osmotic"), reference="a")
 newExperiment(file.path(tempdir(), "testExperiment"), meta)
 makeReport(file.path(tempdir(), "testExperiment"), "layout")
 }

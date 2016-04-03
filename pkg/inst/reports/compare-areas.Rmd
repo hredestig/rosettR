@@ -22,8 +22,16 @@ Plate experiment:
 meta <- readMeta("../..")
 desc <- meta$description
 if(is.null(desc)) desc <- "missing description"
-cat(desc)
+cat("Experiment:", desc, ". Using", ifelse(length(meta$reference) == 0,
+                                           "MISSING REFERENCE", unlist(meta$reference)),
+    "as reference genotype")
+if(length(meta$reference) == 0)
+  cat("There is no reference defined for this experiment. ",
+      "This report is not applicable without a genotype reference. ",
+      "You can still analyze your data manually but in order to use this ",
+      "report, you first have to use setReference(path, 'genotype reference of choice')\n")
 ```
+
 
 We perform ANOVA suitable for multiple comparisons of the area or relative growth rate a each day, \(y\) as 
 
@@ -39,7 +47,7 @@ Multiple comparisons were performed using the [multcomp](https://cran.r-project.
 
 traits <- colnames(expdf)[c(grep("^AREA", colnames(expdf)),
                             grep("^RGR", colnames(expdf)))]
-anovaResults <- simpleAnovaTableGT(expdf, meta$reference, traits)
+suppressWarnings(anovaResults <- simpleAnovaTableGT(expdf, meta$reference, traits))
 write.csv(anovaResults, "anova-results.csv")
 kable(format(anovaResults, digits=2), "html",
       table.attr='id="anova_results" class="table table-hover"')
@@ -49,7 +57,7 @@ The test results are also given as [anova-results.csv](anova-results.csv)
 
 We create effect plots for all comparsions where the mean is indicated by the dot, and the 95% confidence interval indicated by a horizontal line. Red-dots indicate estimates associated with a p-value lower than 0.05.
 
-```{r effectplots-area, echo=FALSE, warning=FALSE, fig.width=10, fig.height=7}
+```{r effectplots-area, echo=FALSE, warning=FALSE, fig.width=10, fig.height=12}
 
 subData <- subset(anovaResults, grepl("^AREA", response))
 ggplot(subData, aes(Estimate, comparison)) +
@@ -63,7 +71,7 @@ ggplot(subData, aes(Estimate, comparison)) +
 
 ```
 
-```{r effectplots-rgr, echo=FALSE, warning=FALSE, fig.width=10, fig.height=7}
+```{r effectplots-rgr, echo=FALSE, warning=FALSE, fig.width=10, fig.height=12}
 
 subData <- subset(anovaResults, grepl("^RGR", response))
 ggplot(subData, aes(Estimate, comparison)) +

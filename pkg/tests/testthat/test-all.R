@@ -21,7 +21,7 @@ test_that("a plate rotation can be compensated", {
     ## display(binaryCorrected, method="raster")
     ## abline(v=260, col="red")
     ## curiosly some difference in results linux / windows
-    abs(estAngle + -origAngle + 4) < 2
+    abs(4 + origAngle + estAngle) < 2
   }, is_true())
 })
 
@@ -73,7 +73,7 @@ test_that("major plate dislocation can be compensated", {
 test_that("plant areas can be estimated", {
   expect_that({
     file <- system.file("examples", "plate.jpg", package="rosettR")
-    meta <- metaTemplate(letters[1:4], LETTERS[1:2])
+    meta <- metaTemplate(letters[1:4], LETTERS[1:2], reference="a")
     df <- analyzeImage(file, meta$griddf, 3.7454, 20, 6, 75, verbose=TRUE)
     answer <- c(0.43, 25.73, 23.03, 28.66, 17.89, 2.92, 18.46, 13.19, 18.25, 
                 21.31, 10.69, 10.91, 16.75, 16.04, 23.88, 14.61, 20.67, 18.75, 

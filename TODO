@@ -185,9 +185,14 @@ on jpegs without exif an tag
 * DONE add link to vignette
   SCHEDULED: <2016-01-11 Mon>
   - State "DONE"       from "TODO"       [2016-01-12 Tue 09:14]
-* TODO add builds
+* DONE add builds
   SCHEDULED: <2016-01-11 Mon>
+  - State "DONE"       from "TODO"       [2016-03-15 Tue 12:13]
 https://www.dropbox.com/s/i36ypkm4wihfcsu/rosettR_0.0.5.tar.gz?dl=0
 https://www.dropbox.com/s/ljlwiza85zoy8b8/rosettR_0.0.5.zip?dl=0
-* TODO flowcharts
+* DONE flowcharts
   SCHEDULED: <2016-01-16 Sat>
+  - State "DONE"       from "TODO"       [2016-03-15 Tue 12:13]
+*
+* TODO add auto links to new builds
+* TODO continue test experiment

@@ -21,7 +21,7 @@ function to create a new experiment with sowing instructions and
 directories in which to place pictures.
 }
 \examples{
-meta <- metaTemplate(letters[1:4], c("control", "osmotic_stress"))
+meta <- metaTemplate(letters[1:4], c("control", "osmotic_stress"), reference="a")
 newExperiment(file.path(tempdir(), "test"), meta)
 list.files(tempdir())
 }

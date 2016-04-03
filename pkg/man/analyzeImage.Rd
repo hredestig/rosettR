@@ -118,7 +118,7 @@ areas and generating quality control image.
 }
 \examples{
 file <- system.file("examples", "plate.jpg", package="rosettR")
-meta <- metaTemplate(letters[1:4], LETTERS[1:2])
+meta <- metaTemplate(letters[1:4], LETTERS[1:2], reference="a")
 df <- analyzeImage(file, meta$griddf, 3.7454, 20, 6, 75, verbose=TRUE,
                    checkrotation=FALSE)
 library(EBImage)

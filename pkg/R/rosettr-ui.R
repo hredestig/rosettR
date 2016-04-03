@@ -9,7 +9,7 @@
 #' @return nothing, used for the side effect of create a new experiment directory
 #' @export
 #' @examples
-#' meta <- metaTemplate(letters[1:4], c("control", "osmotic_stress"))
+#' meta <- metaTemplate(letters[1:4], c("control", "osmotic_stress"), reference="a")
 #' newExperiment(file.path(tempdir(), "test"), meta)
 #' list.files(tempdir())
 newExperiment <- function(path, meta) {
@@ -79,13 +79,14 @@ makeTestExperiment <- function(exdir=".") {
 #' plate. Layout is assumed to be square but with the corner wells
 #' left-out.
 #' @param boxWidth the width of a well in millimeter
-#' @param reference the genotype that is meant to be used as the
-#' reference
+#' @param reference a list of genotypes that is meant to be used as the
+#' reference. Necessary for the 'compare areas' report but can be left
+#' \code{NULL} if not applicable.
 #' @return a list with meta data for the experiment
 #' @export
 #' @examples
 #' metaTemplate(c("foo", "bar", "baz", "qux"),
-#'              c("control", "osmotic_stress"))
+#'              c("control", "osmotic_stress"), reference="foo")
 metaTemplate <- function(genotypes,
                          treatments="control",
                          timepoints=c(11, 14, 16, 18),
@@ -94,7 +95,7 @@ metaTemplate <- function(genotypes,
                          pixelsmm=16,
                          name=c("6x6.abcd", "6x6.ab"),
                          plateRadius=76, nBoxGrid=6, boxWidth=20,
-                         reference=NULL) {
+                         reference) {
   name <- match.arg(name)
   if(!is.null(reference))
     stopifnot(reference %in% genotypes)
