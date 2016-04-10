@@ -174,17 +174,18 @@ readManifest <- function(path) {
 #'
 #' Given the parameters defined in the metadata, expand the balanced
 #' design matrix with each germplasm and each treatment represented
-#' in each repeat of the experiment. 
-#' @param meta the meta data object that defines the experiment design; the
-#' number of repeats, timepoints, germplasms and treatments
+#' in each repeat of the experiment.
+#'
+#' If you want to be able to regenerate the exact same randomize
+#' allocation of genotypes to plates, then make sure to set the
+#' randomization seed prior to calling this function.
+#' @param meta the meta data object that defines the experiment
+#'   design; the number of repeats, timepoints, germplasms and
+#'   treatments
 #' @param plateName canonical file name of the plates to use with
-#' \code{\link{sprintf}}.
+#'   \code{\link{sprintf}}.
 #' @param plateOffset the number that the plate numbering should be
-#' offset to. The number of the first plate is 1 + plateoffset.
-#' @param plateOrder An pre-defined order of the plate after they
-#' have been randomized. The plate order \emph{must} sort to correct
-#' order when using \code{\link{rank}} but can be either numerical or
-#' character.
+#'   offset to. The number of the first plate is 1 + plateoffset.
 #' @param ... not used
 #' @return a data frame representing the suggested design of the
 #' experiment
@@ -192,11 +193,11 @@ readManifest <- function(path) {
 #' @examples
 #' data(exampleMetadata)
 #' exampleMetadata
+#' set.seed(123) # for reproducibility
 #' expandManifest(exampleMetadata)
 #' @author Henning Redestig
 expandManifest <- function(meta,
-                           plateName="plate%03d.jpg", plateOffset=0,
-                           plateOrder, ...) {
+                           plateName="plate%03d.jpg", plateOffset=0, ...) {
   if(length(meta$genotype) == 0)
     stop("no genotypes defined")
   if(length(meta$treatments) == 0)
@@ -230,17 +231,6 @@ expandManifest <- function(meta,
   df$position <-
     as.vector(replicate(nrep, rep(sample(chun), each=nreg)))
   df <- df[order(df$o),]
-  if(!missing(plateOrder)) {
-    if(!(length(plateOrder) * nreg) == nrow(df))
-      stop("plate order does not match experiment dimensions")
-    repdf <- data.frame( plt      =rep(rank(plateOrder) , each=nreg)
-                        ,BLOCK    =rep(gl(nrep, chun)    , each=nreg)
-                        ,position =rep(1:chun            , each=nreg)
-                        )
-    mm <- match(repdf$plt, df$o) + seq(0, (nreg - 1))
-    df[mm,c("BLOCK", "position")] <-
-      repdf[,c("BLOCK", "position")]
-  }
   df <- merge(df, data.frame(timepoint=meta$timepoints))
   if(nrep < length(LETTERS))
     df$label <- with(df, paste(LETTERS[BLOCK], position, sep=""))
