@@ -221,7 +221,9 @@ expandManifest <- function(meta,
                    each=nreg),
                chunk=rep(1:((nger / nreg) * ntre), each=nrep * nreg),
                treatment=rep(meta$treatments, each=nger  * nrep),
-               GENOTYPE=rep(meta$genotype, times=nrep),
+               ## this enables number of genotypes not multiple of genotype_region
+               GENOTYPE=as.vector(apply(matrix(meta$genotype, nrow=nreg),
+                                        2, rep, nrep)),
                genotype_region=genotype_region,
                BLOCK=as.vector(replicate(chun, rep(sample(nrep), each=nreg))),
                stringsAsFactors=FALSE)
