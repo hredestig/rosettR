@@ -213,33 +213,22 @@ expandManifest <- function(meta,
   nrep <- meta$nblocks
   genotype_region <- unique(meta$griddf$genotype_region)
   nreg <- length(genotype_region)
-  chun <- (nger / nreg) * ntre
-  platesPerBlock <- (nger / nreg) * ntre
-
+  chun <- ceiling(nger / nreg) * ntre
+  ## this enables number of genotypes not multiple of genotype_region
+  platesPerBlock <- ceiling(nger / nreg) * ntre
+ 
   df <- do.call("rbind", lapply(1:nrep, function(block) {
     thisOffset <- plateOffset + 1 + ((block - 1) * platesPerBlock)
-    data.frame(plate=sprintf(plateName,
-                             thisOffset:(thisOffset + platesPerBlock - 1)),
-               treatment=rep(meta$treatments, each=nger  * nrep),
-               ## this enables number of genotypes not multiple of genotype_region
-               GENOTYPE=as.vector(apply(matrix(meta$genotype, nrow=nreg),
-                                        2, rep, nrep)),
+    gen <- sample(as.vector(matrix(meta$genotype, nrow=nreg)))
+    data.frame(plate=rep(sprintf(plateName,
+                 thisOffset:(thisOffset + platesPerBlock - 1)), each=nreg),
+               treatment=rep(meta$treatments, each=length(gen)),
+               GENOTYPE=gen,
                genotype_region=genotype_region,
-               BLOCK=as.vector(replicate(chun, rep(sample(nrep), each=nreg))),
+               BLOCK=block,
                stringsAsFactors=FALSE)
   }))
-  
-  df <-
-    data.frame(plate=rep(sprintf(plateName,
-                   (plateOffset + 1):(plateOffset + (nger / nreg) * ntre * nrep)),
-                   each=nreg),
-               treatment=rep(meta$treatments, each=nger  * nrep),
-               ## this enables number of genotypes not multiple of genotype_region
-               GENOTYPE=as.vector(apply(matrix(meta$genotype, nrow=nreg),
-                                        2, rep, nrep)),
-               genotype_region=genotype_region,
-               BLOCK=as.vector(replicate(chun, rep(sample(nrep), each=nreg))),
-               stringsAsFactors=FALSE)
+
   df$o <- rep(1:(chun * nrep), each=nreg)
   df <- df[order(df$BLOCK),]
   df$position <-
