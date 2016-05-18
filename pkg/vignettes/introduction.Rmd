@@ -99,7 +99,9 @@ When the seedlings reach the desired age, top-view pictures of all plates are ta
 
 Auto-correction steps are included in the analysis so it is possible to analyze image also with slight deviations from these rules but the result is likely to be better if they are kept.
 
-> Image capturing is performed by placing the plates in a Copy Stands Lighting Equipment (Kaiser Fototechnic). A Canon 450D camera is placed 66.4 cm above the plates, with a Canon 50 mm prime lens, an aperture of F11, and shutter speed of 1/125. The use of fixed camera settings eliminates the need for camera distance calculations. 
+> Image capturing is performed by placing the plates in a Copy Stands Lighting Equipment (Kaiser Fototechnic). We used a Canon 450D camera  placed 66.4 cm above the plates, with a Canon 50 mm prime lens, an aperture of F11, and shutter speed of 1/125. The use of fixed camera settings eliminates the need for camera distance calculations. We expect any other digital camera to work as well but recommend an effective resolution for each seedling of 200x200 pixels (i.e. ca 3 mega-pixel).
+
+> We recommend to keep the imaging station inside the growth chamber as that minimizes temperature fluctuation of the plate thereby reducing the risk of condensation forming on the lid.
 
 # Image analysis
 
